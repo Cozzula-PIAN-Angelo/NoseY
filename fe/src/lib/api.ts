@@ -1,6 +1,7 @@
 // In sviluppo BASE e' vuota e il proxy di Vite inoltra /api alla 8080.
 // In produzione arriva da VITE_API_URL, iniettata durante la build.
-const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+// Esportata perche' la usa anche RTK Query (src/store/apiSlice.ts).
+export const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 
 export type Stato = {
   servizio: string

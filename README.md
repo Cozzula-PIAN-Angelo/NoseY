@@ -5,7 +5,7 @@ Piattaforma di gestione eventi - progetto finale Epicode (BE + FE + PostgreSQL, 
 | Parte | Tecnologia | In locale | Su Render |
 |---|---|---|---|
 | Backend | Spring Boot 4.1.1, Java 25, Maven wrapper | `be` sulla 8080 | Web Service (Docker) `nosey-be` |
-| Frontend | React 19, Vite, TypeScript, Tailwind 4 | `fe` sulla 5173 | Static Site `nosey-fe` |
+| Frontend | React 19, Vite, TypeScript, Tailwind 4, Redux Toolkit | `fe` sulla 5173 | Static Site `nosey-fe` |
 | Database | PostgreSQL | locale sulla 5432, database `nosey` | Render PostgreSQL `nosey-db` |
 
 ## Endpoint
@@ -79,7 +79,10 @@ be/
   src/main/resources/application.yml
 fe/
   src/lib/api.ts            base delle fetch, da VITE_API_URL
-  src/App.tsx               pagina di prova (stato FE -> BE -> DB)
-  src/pages/ components/ features/ hooks/ types/
+  src/store/index.ts        store Redux (configureStore)
+  src/store/apiSlice.ts     RTK Query: endpoint verso il backend
+  src/hooks/redux.ts        useAppDispatch / useAppSelector tipizzati
+  src/App.tsx               pagina di prova (stato FE -> BE -> DB, via useStatoQuery)
+  src/pages/ components/ features/ types/
   .env.example
 ```

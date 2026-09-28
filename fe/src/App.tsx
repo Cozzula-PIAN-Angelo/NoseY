@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react'
-import { api, type Stato } from '@/lib/api'
+import type { SerializedError } from '@reduxjs/toolkit'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { api } from '@/lib/api'
+import { useStatoQuery } from '@/store/apiSlice'
+
+function messaggioErrore(e: FetchBaseQueryError | SerializedError): string {
+  if ('status' in e) {
+    return 'error' in e ? e.error : `${e.status} ${typeof e.data === 'string' ? e.data : JSON.stringify(e.data)}`
+  }
+  return e.message ?? 'Errore sconosciuto'
+}
 
 export default function App() {
-  const [stato, setStato] = useState<Stato | null>(null)
-  const [errore, setErrore] = useState<string | null>(null)
-
-  useEffect(() => {
-    api
-      .stato()
-      .then(setStato)
-      .catch((e) => setErrore(e instanceof Error ? e.message : String(e)))
-  }, [])
+  const { data: stato, error } = useStatoQuery()
+  const errore = error ? messaggioErrore(error) : null
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
