@@ -1,4 +1,4 @@
-package it.epicode.nosey.user;
+package it.epicode.nosey.friendship;
 
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,11 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UtenteRepository extends JpaRepository<Utente, UUID> {
-
-	Optional<Utente> findByEmail(String email);
+public interface AmiciziaRepository extends JpaRepository<Amicizia, UUID> {
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	@Query("select u from Utente u where u.id = :id")
-	Optional<Utente> findConLockById(UUID id);
+	@Query("select a from Amicizia a where a.id = :id")
+	Optional<Amicizia> findConLockById(UUID id);
 }
