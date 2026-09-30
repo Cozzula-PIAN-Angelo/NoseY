@@ -28,6 +28,12 @@ public class AuthController {
 		return authService.verifica(richiesta);
 	}
 
+	@PostMapping("/resend-code")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void reinviaCodice(@RequestBody @Valid EmailRequest richiesta) {
+		authService.reinviaCodice(richiesta);
+	}
+
 	@PostMapping("/login")
 	public LoginResponse login(@RequestBody @Valid LoginRequest richiesta) {
 		return authService.login(richiesta);
@@ -37,5 +43,17 @@ public class AuthController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void logout(@AuthenticationPrincipal UtenteAutenticato utente) {
 		authService.logout(utente);
+	}
+
+	@PostMapping("/password/forgot")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void passwordDimenticata(@RequestBody @Valid EmailRequest richiesta) {
+		authService.passwordDimenticata(richiesta);
+	}
+
+	@PostMapping("/password/reset")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void reimpostaPassword(@RequestBody @Valid ReimpostaPasswordRequest richiesta) {
+		authService.reimpostaPassword(richiesta);
 	}
 }

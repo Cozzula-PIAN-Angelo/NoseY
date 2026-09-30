@@ -4,7 +4,9 @@ import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
 import it.epicode.nosey.common.Limite;
 import it.epicode.nosey.common.LimitiService;
+import it.epicode.nosey.mail.CodiceResetEmailEvent;
 import it.epicode.nosey.mail.CodiceVerificaEmailEvent;
+import it.epicode.nosey.mail.PasswordCambiataEmailEvent;
 import it.epicode.nosey.user.RuoloRepository;
 import it.epicode.nosey.user.ScopoCodice;
 import it.epicode.nosey.user.StatoUtente;
@@ -25,7 +27,8 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Registrazione, verifica, login e logout (progettazione v4, sezione 1).
+ * Registrazione, verifica, login, logout, reinvio del codice e password dimenticata
+ * (progettazione v4, sezione 1).
  * I controlli seguono l'ordine della progettazione: l'ordine decide quale errore vede il client.
  */
 @Service
@@ -157,6 +160,73 @@ public class AuthService {
 	@Transactional
 	public void logout(UtenteAutenticato utente) {
 		tokenService.revoca(utente.jti());
+	}
+
+	/**
+	 * Nuovo codice di verifica solo per un account non verificato e ATTIVO; negli altri casi
+	 * (inesistente, verificato, sospeso, anonimizzato) nessun effetto, e il client riceve 204.
+	 */
+	@Transactional
+	public void reinviaCodice(EmailRequest richiesta) {
+		Instant adesso = clock.instant();
+		// Lock sulla riga: due richieste insieme = un solo invio.
+		utenteRepository.findConLockByEmail(richiesta.email())
+				.filter(u -> !u.isVerificato() && u.getStato() == StatoUtente.ATTIVO)
+				.ifPresent(utente -> {
+					controllaLimitiInvio(utente, adesso);
+					String codice = nuovoCodice(utente, ScopoCodice.VERIFICA_EMAIL, adesso);
+					eventi.publishEvent(new CodiceVerificaEmailEvent(utente.getEmail(), utente.getNome(), codice));
+				});
+	}
+
+	/**
+	 * Codice di reset solo per un account verificato e ATTIVO; altrimenti nessun effetto, 204.
+	 * Un account non verificato usa ReinviaCodice: non ha una password "dimenticata".
+	 */
+	@Transactional
+	public void passwordDimenticata(EmailRequest richiesta) {
+		Instant adesso = clock.instant();
+		utenteRepository.findConLockByEmail(richiesta.email())
+				.filter(u -> u.isVerificato() && u.getStato() == StatoUtente.ATTIVO)
+				.ifPresent(utente -> {
+					controllaLimitiInvio(utente, adesso);
+					String codice = nuovoCodice(utente, ScopoCodice.RESET_PASSWORD, adesso);
+					eventi.publishEvent(new CodiceResetEmailEvent(utente.getEmail(), utente.getNome(), codice));
+				});
+	}
+
+	/**
+	 * noRollbackFor: come in verifica, il tentativo consumato resta salvato anche quando il
+	 * reset fallisce. Non fa il login: si entra con la nuova password.
+	 */
+	@Transactional(noRollbackFor = ApplicazioneException.class)
+	public void reimpostaPassword(ReimpostaPasswordRequest richiesta) {
+		Instant adesso = clock.instant();
+
+		// 1. inesistente, non verificato, non ATTIVO o senza codice RESET_PASSWORD
+		Utente utente = utenteRepository.findByEmail(richiesta.email())
+				.filter(u -> u.isVerificato() && u.getStato() == StatoUtente.ATTIVO)
+				.filter(u -> u.getCodice() != null && u.getCodiceScopo() == ScopoCodice.RESET_PASSWORD)
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.CODICE_NON_VALIDO, "Codice non valido"));
+		// 2. scaduto o 5 tentativi usati
+		if (!codiceUtilizzabile(utente, ScopoCodice.RESET_PASSWORD, adesso)) {
+			throw new ApplicazioneException(CodiceErrore.CODICE_SCADUTO, "Codice scaduto: richiedine uno nuovo");
+		}
+		// 3. tentativo consumato PRIMA del confronto
+		if (utenteRepository.consumaTentativoCodice(utente.getId(), MAX_TENTATIVI_CODICE) == 0) {
+			throw new ApplicazioneException(CodiceErrore.CODICE_SCADUTO, "Codice scaduto: richiedine uno nuovo");
+		}
+		if (!stessoCodice(utente.getCodice(), richiesta.codice())) {
+			throw new ApplicazioneException(CodiceErrore.CODICE_NON_VALIDO, "Codice non valido");
+		}
+
+		utente.setPasswordHash(passwordEncoder.encode(richiesta.nuovaPassword()));
+		utente.setCodice(null);
+		utente.setCodiceScopo(null);
+		utente.setCodiceTentativi(0);
+		// Logout ovunque: chi ha la vecchia password potrebbe avere ancora un token valido.
+		tokenService.revocaTutti(utente.getId());
+		eventi.publishEvent(new PasswordCambiataEmailEvent(utente.getEmail(), utente.getNome()));
 	}
 
 	private LoginResponse rispostaLogin(Utente utente) {
