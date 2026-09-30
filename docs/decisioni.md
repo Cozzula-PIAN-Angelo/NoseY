@@ -52,3 +52,70 @@ L'utente in memoria che Spring Boot creerebbe da solo e' disattivato
   resource server OAuth2 e piu' verboso per un token firmato con un segreto condiviso.
 - **Segreto di default in `application.yml` solo per lo sviluppo**: comodo, ma finirebbe in
   produzione appena qualcuno dimentica di impostare la variabile.
+
+## Decisione 3: interfaccia EmailService, con un profilo per la versione finta
+
+### Scelta
+
+Un'unica interfaccia `EmailService` (pacchetto `mail`) con 4 metodi, uno per ogni email del
+progetto (codice di verifica, ticket, codice di reset, password cambiata), parametri primitivi
+(non entita'). Due implementazioni, scelte da un profilo Spring:
+- `LogEmailService` (default, senza profilo "smtp"): scrive l'email nel log invece di inviarla,
+  per poter sviluppare senza credenziali SMTP vere.
+- `SmtpEmailService` (profilo "smtp", da attivare quando servono invii reali in locale):
+  Gmail SMTP con password per le app, variabili `MAIL_USERNAME` e `MAIL_PASSWORD`.
+`BrevoEmailService` (produzione, API HTTP) resta fuori da questa card: e' un'implementazione
+successiva della stessa interfaccia.
+
+I corpi delle 4 email sono template Thymeleaf (HTML), renderizzati da `SmtpEmailService` con
+`TemplateEngine` e inviati come `MimeMessage`. `LogEmailService` resta indipendente dai
+template: logga solo destinatario, tipo email e dati chiave, non l'HTML renderizzato — la resa
+grafica precisa dei template si rifinisce in una fase successiva.
+
+## Decisione 4: immagini salvate nel database, non su Cloudinary
+
+### Scelta
+
+Le immagini (avatar utente, foto evento, immagine artista) si salvano come `bytea` nelle
+tabelle stesse (`utente.immagine_profilo`, `foto_evento.contenuto`, `artista.immagine`), con
+una colonna `*_content_type` accanto per il MIME type. Niente `url`/`public_id` esterni, niente
+account Cloudinary. Migrazione `V2__immagini_nel_database.sql`.
+
+### Motivazione
+
+- Il team non ha mai configurato Cloudinary e non vuole gestire credenziali/account esterni
+  per la portata di questo progetto didattico.
+- Il database Postgres gestito (es. su Render) e' persistente: a differenza del filesystem
+  del servizio applicativo (effimero, sezione 18 della progettazione), non serve uno storage
+  esterno solo per sopravvivere ai riavvii/deploy.
+- Meno pezzi mobili: un solo sistema (il DB) da cui leggere e su cui scrivere, niente chiamata
+  di rete separata fuori transazione da gestire per l'upload.
+
+### Alternative scartate
+
+- **Cloudinary (previsto dalla progettazione v4)**: resta la soluzione "giusta" per un progetto
+  in produzione con molto traffico, ma il team ha scelto di non configurarla per restare
+  focalizzati sulle funzionalita' core nel tempo a disposizione.
+- **Base64 in una colonna `text`**: piu' semplice da vedere a occhio, ma spreca circa il 33% di
+  spazio in piu' rispetto a `bytea` e non ha vantaggi concreti qui.
+
+### Motivazione
+
+- Un'interfaccia sola disaccoppia chi invia l'email (i servizi applicativi) da come viene
+  inviata: cambiare implementazione non tocca il codice chiamante.
+- Parametri primitivi invece delle entita' (es. niente `Utente` o `Partecipante` nella firma):
+  l'email non deve conoscere JPA, e il messaggio testuale resta stabile anche se lo schema cambia.
+- La versione finta nel log permette di lavorare da subito (registrazione, reset password, ecc.)
+  senza dover configurare un account Gmail con password per le app fin dal primo giorno.
+- Il profilo Spring, non una variabile letta a mano, e' il modo standard per scegliere
+  l'implementazione: e' visibile in `application.yml` ed e' lo stesso meccanismo gia' usato
+  nel progetto per distinguere locale/produzione.
+
+### Alternative scartate
+
+- **Solo SmtpEmailService, senza versione finta**: costringerebbe ad avere credenziali Gmail
+  valide fin dai primi test, anche per funzionalita' che non riguardano le email.
+- **Flag booleano invece di un profilo** (es. `app.mail.finta=true`): funzionerebbe, ma il
+  progetto usa gia' i profili Spring per la stessa distinzione locale/produzione (vedi
+  `EmailService` in sezione 0 della progettazione, gia' pensato per due implementazioni
+  "scelte dal profilo").

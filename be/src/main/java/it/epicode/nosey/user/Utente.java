@@ -52,11 +52,12 @@ public class Utente {
 	@Column(name = "data_nascita")
 	private LocalDate dataNascita;
 
-	@Column(name = "immagine_profilo_url", columnDefinition = "text")
-	private String immagineProfiloUrl;
+	@JdbcTypeCode(SqlTypes.VARBINARY)
+	@Column(name = "immagine_profilo")
+	private byte[] immagineProfilo;
 
-	@Column(name = "immagine_profilo_public_id", length = 255)
-	private String immagineProfiloPublicId;
+	@Column(name = "immagine_profilo_content_type", length = 100)
+	private String immagineProfiloContentType;
 
 	@Column(nullable = false)
 	private boolean verificato = false;
