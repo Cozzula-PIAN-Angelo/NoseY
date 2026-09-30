@@ -5,13 +5,13 @@ spring:
   datasource:
     # In locale valgono i valori dopo i due punti. Su Render DatabaseUrl legge
     # DATABASE_URL e sovrascrive queste tre proprieta'.
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/nosey}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/NoseY-DB}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:admin}
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     properties:
       hibernate:
