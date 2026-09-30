@@ -148,3 +148,52 @@ una propria versione nella sua pagina.
   (es. un Combobox con ricerca).
 - **shadcn/ui, Mantine e simili**: molti componenti pronti, ma con uno stile proprio da
   riadattare a Stitch e molto codice o dipendenze che non useremmo.
+
+## Decisione 6: limiti di frequenza con una mappa di timestamp, senza Bucket4j
+
+### Scelta
+
+`LimitiService` (pacchetto `common`) tiene in memoria, per ogni limite e ogni chiave, gli istanti
+degli eventi dentro la finestra (una `ConcurrentHashMap` di code). La finestra scorre: "10 in
+15 minuti" = negli ultimi 15 minuti, "al giorno" = nelle ultime 24 ore. I valori stanno in
+`application.yml` sotto `app.limiti`; se un limite manca o non e' valido l'app non parte.
+Una pulizia `@Scheduled` ogni 10 minuti toglie le chiavi senza eventi recenti.
+
+### Motivazione
+
+- La progettazione ammette entrambe le soluzioni (sezione 0); la mappa non richiede una nuova
+  dipendenza nel `pom.xml` condiviso.
+- Il login conta solo i tentativi falliti e li azzera dopo un login riuscito: con i timestamp
+  e' naturale (`controlla` / `registra` / `azzera`), con i gettoni di Bucket4j andrebbe forzato.
+- La finestra che scorre corrisponde alla lettera ai limiti della progettazione.
+
+### Alternative scartate
+
+- **Bucket4j**: libreria solida, ma un'altra dipendenza e un modello (token bucket) che
+  approssima "N in una finestra" invece di contarli.
+- **Limiti nel database**: sopravvivrebbero ai riavvii, ma aggiungono scritture a ogni
+  richiesta; la progettazione accetta l'azzeramento al riavvio con una sola istanza.
+
+## Decisione 7: nome del vincolo violato letto dal driver PostgreSQL
+
+### Scelta
+
+Per scegliere il codice di un 409 (es. `uq_utente_email` → `EMAIL_GIA_REGISTRATA`), il
+`GestoreErrori` legge il nome del vincolo da `PSQLException.getServerErrorMessage().getConstraint()`
+e solo se manca usa quello estratto da Hibernate. Per questo il driver `postgresql` nel `pom.xml`
+non e' piu' solo `runtime`.
+
+### Motivazione
+
+- Hibernate ricava il nome cercandolo nel testo del messaggio in inglese
+  ("violates unique constraint"). Con un PostgreSQL installato in italiano ("viola il vincolo
+  univoco") non lo trova, e in locale ogni 409 diventava `CONFLITTO`.
+- PostgreSQL manda il nome del vincolo anche in un campo a parte dell'errore, uguale in tutte
+  le lingue: funziona in locale e su Render senza configurare niente.
+
+### Alternative scartate
+
+- **`ALTER DATABASE ... SET lc_messages TO 'C'` su ogni PC**: nessuna modifica al codice, ma
+  ognuno deve ricordarsene e un database ricreato torna in italiano.
+- **Forzare `lc_messages` dalla configurazione dell'app**: cambiarlo e' permesso solo agli
+  amministratori del database; su Render l'utente non lo e' e le connessioni fallirebbero.
