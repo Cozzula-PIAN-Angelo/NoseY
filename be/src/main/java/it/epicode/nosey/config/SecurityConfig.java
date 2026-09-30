@@ -57,8 +57,10 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.GET,
 								"/api/events", "/api/events/{id}", "/api/events/{id}/photos", "/api/events/{id}/pois",
 								"/api/artists", "/api/artists/{artistaId}",
-								// Avatar: un tag img non puo' mandare il token (decisione 9).
+								// Avatar, foto e immagini artista: un tag img non puo' mandare il token (decisione 9).
 								"/api/users/{utenteId}/avatar",
+								"/api/events/{id}/photos/{fotoId}/image",
+								"/api/artists/{artistaId}/image",
 								"/api/stato").permitAll()
 						// /ws: l'autenticazione avviene sul CONNECT (sezione 11).
 						// /error: altrimenti l'inoltro interno a /error diventa un 401 e il frontend fa logout.
