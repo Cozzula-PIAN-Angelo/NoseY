@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import { cx } from '@/lib/cx'
+import { leggiErrore } from '@/lib/errori'
 import { chiudiAvviso, mostraAvviso, type Avviso, type TipoAvviso } from '@/store/avvisiSlice'
 import { Icon } from './Icon'
 
@@ -14,6 +15,8 @@ const stile: Record<TipoAvviso, { icona: string; colore: string }> = {
 // Mostra un avviso a comparsa da qualunque componente:
 //   const avviso = useAvviso()
 //   avviso.successo('Iscrizione completata', 'Trovi il ticket in I Miei Ticket')
+// Per l'errore di una chiamata API basta passarlo cosi' com'e':
+//   try { await iscriviti(id).unwrap() } catch (e) { avviso.erroreApi(e) }
 export function useAvviso() {
   const dispatch = useAppDispatch()
   return useMemo(() => {
@@ -24,6 +27,11 @@ export function useAvviso() {
       errore: crea('errore'),
       info: crea('info'),
       attenzione: crea('attenzione'),
+      erroreApi: (errore: unknown) => {
+        const e = leggiErrore(errore)
+        // 429 non e' un vero errore: basta aspettare
+        dispatch(mostraAvviso({ tipo: e.status === 429 ? 'attenzione' : 'errore', titolo: e.titolo, messaggio: e.messaggio }))
+      },
     }
   }, [dispatch])
 }

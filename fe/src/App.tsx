@@ -1,20 +1,10 @@
-import type { SerializedError } from '@reduxjs/toolkit'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { api } from '@/lib/api'
 import { useStatoQuery } from '@/store/apiSlice'
-import { Avvisi } from '@/components/ui'
+import { Avvisi, MessaggioErrore } from '@/components/ui'
 import Componenti from '@/pages/Componenti'
 
-function messaggioErrore(e: FetchBaseQueryError | SerializedError): string {
-  if ('status' in e) {
-    return 'error' in e ? e.error : `${e.status} ${typeof e.data === 'string' ? e.data : JSON.stringify(e.data)}`
-  }
-  return e.message ?? 'Errore sconosciuto'
-}
-
 export default function App() {
-  const { data: stato, error } = useStatoQuery()
-  const errore = error ? messaggioErrore(error) : null
+  const { data: stato, error, refetch } = useStatoQuery()
 
   return (
     <div className="min-h-screen">
@@ -37,9 +27,7 @@ export default function App() {
           </div>
         </section>
 
-        {errore && (
-          <p className="mt-6 rounded-lg bg-status-annullato/10 p-3 text-status-annullato">{errore}</p>
-        )}
+        {error && <MessaggioErrore errore={error} onRiprova={refetch} className="mt-6" />}
 
         {/* Provvisorio, finche' non c'e' il router: catalogo dei componenti comuni */}
         <div className="mt-10">

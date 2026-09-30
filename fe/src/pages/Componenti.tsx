@@ -1,9 +1,12 @@
 import { useState, type ReactNode } from 'react'
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { leggiErrore, type ErroreResponse } from '@/lib/errori'
 import {
   Button,
   Caricamento,
   ConfirmDialog,
   DateTimeField,
+  MessaggioErrore,
   Scheletro,
   Select,
   StatoVuoto,
@@ -22,6 +25,29 @@ const tipiPoi: Opzione<'INGRESSO' | 'USCITA' | 'EMERGENZA'>[] = [
   { valore: 'EMERGENZA', etichetta: 'Emergenza' },
 ]
 
+// Errori come li restituirebbe RTK Query, per provare i messaggi senza backend.
+function erroreFinto(status: number, messaggio = '', campi: Record<string, string> = {}): FetchBaseQueryError {
+  return {
+    status,
+    data: { status, errore: 'Errore', messaggio, campi, timestamp: new Date().toISOString() } satisfies ErroreResponse,
+  }
+}
+
+const erroriDiProva: { etichetta: string; errore: FetchBaseQueryError }[] = [
+  { etichetta: '401', errore: erroreFinto(401, 'Token scaduto') },
+  { etichetta: '403', errore: erroreFinto(403, "Solo il proprietario può modificare l'evento") },
+  { etichetta: '404', errore: erroreFinto(404) },
+  { etichetta: '409', errore: erroreFinto(409, "L'evento è concluso: non è più possibile iscriversi") },
+  { etichetta: '429', errore: erroreFinto(429, 'Hai già richiesto un codice meno di 60 secondi fa') },
+  { etichetta: '502', errore: erroreFinto(502) },
+  { etichetta: 'Rete', errore: { status: 'FETCH_ERROR', error: 'TypeError: Failed to fetch' } },
+]
+
+const registrazioneRifiutata = erroreFinto(400, 'Validazione fallita', {
+  email: 'Deve essere un indirizzo email valido',
+  password: 'La lunghezza deve essere compresa tra 8 e 72',
+})
+
 function Sezione({ titolo, children }: { titolo: string; children: ReactNode }) {
   return (
     <section className="rounded-xl bg-surface-card p-space-lg">
@@ -36,7 +62,10 @@ export default function Componenti() {
   const [inCorso, setInCorso] = useState(false)
   const [conferma, setConferma] = useState<'annulla-evento' | 'iscrizione' | null>(null)
   const [confermaInCorso, setConfermaInCorso] = useState(false)
+  const [erroreScelto, setErroreScelto] = useState<FetchBaseQueryError>(erroriDiProva[3].errore)
+  const [erroreModulo, setErroreModulo] = useState<FetchBaseQueryError | null>(null)
   const avviso = useAvviso()
+  const campiErrati = erroreModulo ? leggiErrore(erroreModulo).campi : {}
 
   function simulaChiamata() {
     setInCorso(true)
@@ -167,6 +196,47 @@ export default function Componenti() {
           <Button variant="secondary" onClick={() => avviso.attenzione('Troppe richieste', 'Attendi 60 secondi prima di richiedere un nuovo codice.')}>
             Attenzione
           </Button>
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Errori dal backend (ErroreResponse)">
+        <div className="flex flex-col gap-space-md">
+          <div className="flex flex-wrap gap-space-xs">
+            {erroriDiProva.map(({ etichetta, errore }) => (
+              <Button
+                key={etichetta}
+                size="sm"
+                variant={erroreScelto === errore ? 'primary' : 'secondary'}
+                onClick={() => setErroreScelto(errore)}
+              >
+                {etichetta}
+              </Button>
+            ))}
+          </div>
+          <MessaggioErrore errore={erroreScelto} onRiprova={() => avviso.info('Riprovo...')} />
+          <div>
+            <Button variant="secondary" icona="notifications" onClick={() => avviso.erroreApi(erroreScelto)}>
+              Mostra come avviso
+            </Button>
+          </div>
+
+          <form
+            className="mt-space-sm grid gap-space-md rounded-xl bg-surface-container-low p-space-md md:grid-cols-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              setErroreModulo(erroreModulo ? null : registrazioneRifiutata)
+            }}
+          >
+            <p className="font-body-sm text-body-sm text-on-surface-variant md:col-span-2">
+              Modulo di prova: "Invia" simula un 400 con errori sui campi (ErroreResponse.campi).
+            </p>
+            {erroreModulo && <MessaggioErrore errore={erroreModulo} className="md:col-span-2" />}
+            <TextField etichetta="Email" name="email" defaultValue="mario@" errore={campiErrati.email} />
+            <TextField etichetta="Password" name="password" type="password" defaultValue="1234" errore={campiErrati.password} />
+            <div className="md:col-span-2">
+              <Button type="submit">{erroreModulo ? 'Pulisci errori' : 'Invia'}</Button>
+            </div>
+          </form>
         </div>
       </Sezione>
 
