@@ -1,7 +1,5 @@
 package it.epicode.nosey.event;
 
-import it.epicode.nosey.common.VersioneContenuto;
-
 import java.util.UUID;
 
 public record ArtistaResponse(UUID id, String nome, String immagineUrl, boolean attivo) {
@@ -10,11 +8,14 @@ public record ArtistaResponse(UUID id, String nome, String immagineUrl, boolean 
 		return new ArtistaResponse(artista.getId(), artista.getNome(), url(artista), artista.isAttivo());
 	}
 
-	/** Percorso relativo del GET pubblico dell'immagine (decisione 9). null se non c'e'. */
+	/**
+	 * Percorso relativo del GET pubblico dell'immagine (decisione 9). null se non c'e'.
+	 * Usa la colonna della versione, non i byte: cosi' l'immagine non si legge dal database.
+	 */
 	public static String url(Artista artista) {
-		if (artista.getImmagine() == null) {
+		if (artista.getImmagineVersione() == null) {
 			return null;
 		}
-		return "/api/artists/" + artista.getId() + "/image?v=" + VersioneContenuto.calcola(artista.getImmagine());
+		return "/api/artists/" + artista.getId() + "/image?v=" + artista.getImmagineVersione();
 	}
 }

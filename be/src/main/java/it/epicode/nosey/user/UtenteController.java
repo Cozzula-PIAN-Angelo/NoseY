@@ -1,6 +1,7 @@
 package it.epicode.nosey.user;
 
 import it.epicode.nosey.auth.UtenteAutenticato;
+import it.epicode.nosey.common.ImmagineContenuto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -66,7 +67,7 @@ public class UtenteController {
 	 */
 	@GetMapping("/{utenteId}/avatar")
 	public ResponseEntity<byte[]> immagine(@PathVariable UUID utenteId) {
-		ImmagineProfilo immagine = utenteService.immagine(utenteId);
+		ImmagineContenuto immagine = utenteService.immagine(utenteId);
 		return ResponseEntity.ok()
 				.contentType(MediaType.parseMediaType(immagine.contentType()))
 				.cacheControl(CacheControl.noCache())

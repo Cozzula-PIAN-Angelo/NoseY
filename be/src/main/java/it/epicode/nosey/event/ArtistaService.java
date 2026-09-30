@@ -3,7 +3,6 @@ package it.epicode.nosey.event;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
 import it.epicode.nosey.common.ImmagineContenuto;
-import it.epicode.nosey.common.VersioneContenuto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +18,11 @@ public class ArtistaService {
 	// Pubblico (decisione 9): un tag img non puo' mandare il token.
 	@Transactional(readOnly = true)
 	public ImmagineContenuto immagine(UUID artistaId) {
+		// Il filtro usa la versione: i byte (campo LAZY) si leggono solo se l'immagine c'e'.
 		Artista artista = artistaRepository.findById(artistaId)
-				.filter(a -> a.getImmagine() != null)
+				.filter(a -> a.getImmagineVersione() != null)
 				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Immagine non trovata"));
 		return new ImmagineContenuto(artista.getImmagine(), artista.getImmagineContentType(),
-				VersioneContenuto.calcola(artista.getImmagine()));
+				artista.getImmagineVersione());
 	}
 }

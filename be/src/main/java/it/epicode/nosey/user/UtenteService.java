@@ -5,6 +5,7 @@ import it.epicode.nosey.auth.TokenService;
 import it.epicode.nosey.auth.UtenteAutenticato;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
+import it.epicode.nosey.common.ImmagineContenuto;
 import it.epicode.nosey.common.ImmagineValidata;
 import it.epicode.nosey.common.StorageService;
 import it.epicode.nosey.mail.PasswordCambiataEmailEvent;
@@ -99,7 +100,8 @@ public class UtenteService {
 	@Transactional
 	public void rimuoviImmagine(UtenteAutenticato autenticato) {
 		Utente utente = trova(autenticato.id());
-		if (utente.getImmagineProfilo() == null) {
+		// La versione, non i byte: il controllo non legge l'immagine dal database.
+		if (utente.getImmagineProfiloVersione() == null) {
 			throw new ApplicazioneException(CodiceErrore.NON_TROVATO, "Nessuna immagine del profilo");
 		}
 		utente.setImmagineProfilo(null);
@@ -108,11 +110,12 @@ public class UtenteService {
 
 	/** GET pubblico dell'avatar di qualunque utente (decisione 9). */
 	@Transactional(readOnly = true)
-	public ImmagineProfilo immagine(UUID utenteId) {
+	public ImmagineContenuto immagine(UUID utenteId) {
+		// getImmagineProfilo() e' l'unico punto che legge i byte (campo LAZY).
 		return utenteRepository.findById(utenteId)
-				.filter(u -> u.getImmagineProfilo() != null)
-				.map(u -> new ImmagineProfilo(u.getImmagineProfilo(), u.getImmagineProfiloContentType(),
-						UtenteResponse.versioneImmagine(u.getImmagineProfilo())))
+				.filter(u -> u.getImmagineProfiloVersione() != null)
+				.map(u -> new ImmagineContenuto(u.getImmagineProfilo(), u.getImmagineProfiloContentType(),
+						u.getImmagineProfiloVersione()))
 				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Immagine non trovata"));
 	}
 

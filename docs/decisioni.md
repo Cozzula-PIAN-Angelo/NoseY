@@ -248,8 +248,8 @@ che risponde con i byte e il loro `Content-Type` (404 `NON_TROVATO` se l'immagin
 Per l'avatar: `GET /api/users/{utenteId}/avatar`, aggiunto ai percorsi pubblici di `SecurityConfig`.
 
 Nei DTO il campo dell'immagine e' il **percorso relativo** di quel GET, con un parametro `v`
-che cambia con il contenuto (CRC32 dei byte), oppure `null` se l'immagine non c'e':
-`immagineProfilo = "/api/users/{id}/avatar?v=1a2b3c4d"`. Il frontend lo usa come ogni altra
+che cambia con il contenuto, oppure `null` se l'immagine non c'e':
+`immagineProfilo = "/api/users/{id}/avatar?v=0cb988d042a7f28d"`. Il frontend lo usa come ogni altra
 chiamata: `<img src={`${BASE}${immagineProfilo}`}>`. La costruzione sta in
 `UtenteResponse.urlImmagineProfilo`, da riusare in `UtentePubblicoResponse`.
 
@@ -258,6 +258,14 @@ volta e, se l'immagine non e' cambiata, riceve 304 senza corpo.
 
 Foto degli eventi (`FotoResponse.url`, `copertinaUrl`) e immagini degli artisti
 (`ArtistaResponse.immagineUrl`) seguono lo stesso schema, con un GET pubblico ciascuna.
+
+**Versione e byte pigri.** `v` sono i primi 16 caratteri esadecimali dell'MD5 dei byte
+(`VersioneContenuto`), salvati in una colonna accanto all'immagine (`immagine_profilo_versione`,
+`foto_evento.versione`, `artista.immagine_versione`, migrazione V3). La scrive il setter dei byte
+dell'entita', quindi byte e versione non possono restare disallineati. I byte sono
+`@Basic(fetch = LAZY)`, grazie a `hibernate-maven-plugin` nel `pom.xml`: si leggono dal database
+solo nel GET dell'immagine. Per sapere se un'immagine c'e' si controlla la versione, mai i byte,
+altrimenti si leggerebbero lo stesso.
 
 ### Motivazione
 
@@ -268,6 +276,10 @@ Foto degli eventi (`FotoResponse.url`, `copertinaUrl`) e immagini degli artisti
   indirizzo pubblico.
 - `v` cambia con l'immagine: dopo un nuovo upload il browser non mostra quella vecchia dalla
   cache, e il frontend non deve aggiungere nulla all'URL.
+- Senza byte pigri ogni lettura di un utente, di una foto o di un artista porterebbe con se'
+  l'immagine (fino a 2 o 5 MB): a ogni login, e per ogni elemento di liste e mappa. MD5 invece di
+  CRC32 perche' Postgres ha `md5()`: la migrazione calcola lo stesso valore di Java per le righe
+  gia' esistenti.
 - Gli id sono UUID: l'immagine di un utente si raggiunge solo conoscendone l'id, che compare
   gia' nelle risposte dove l'utente e' visibile.
 
@@ -277,3 +289,7 @@ Foto degli eventi (`FotoResponse.url`, `copertinaUrl`) e immagini degli artisti
   ~2,7 MB nella risposta, e una lista di partecipanti o amici diventerebbe enorme.
 - **GET protetto dal token + blob nel frontend**: nessuna immagine pubblica, ma il frontend
   dovrebbe scaricare ogni immagine con `fetch` e creare un URL blob per mostrarla.
+- **Byte in tabelle separate** (invece del campo pigro): niente plugin nel `pom.xml`, ma una
+  migrazione piu' grossa e nuove entita' e repository solo per i byte.
+- **Versione calcolata dai byte a ogni risposta**: niente colonna in piu', ma per costruire
+  l'URL bisognerebbe leggere l'immagine intera.
