@@ -22,7 +22,7 @@ Un verbale per riunione, dal piu' recente al meno recente.
 ### Decisioni
 
 - MapLibre GL con react-map-gl e tessere vettoriali di OpenFreeMap, stili `dark` e `fiord`:
-  dettagli e motivazioni nella Decisione 6 di `docs/decisioni.md`.
+  dettagli e motivazioni nella Decisione 8 di `docs/decisioni.md`.
 
 ### Prossimi passi
 

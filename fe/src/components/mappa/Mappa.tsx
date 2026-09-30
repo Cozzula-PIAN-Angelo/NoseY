@@ -13,7 +13,7 @@ function etichettaMarker(m: MarkerMappa): string {
   return m.etichetta ? `${m.etichetta} (${tipo.toLowerCase()})` : tipo
 }
 
-// Mappa comune (FE1-02) su MapLibre GL + OpenFreeMap (Decisione 6).
+// Mappa comune (FE1-02) su MapLibre GL + OpenFreeMap (Decisione 8).
 // Non importarla direttamente: usa <Mappa /> da '@/components/mappa', che la carica solo quando serve.
 export default function Mappa({
   centro,

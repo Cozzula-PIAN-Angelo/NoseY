@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
+			<!-- Non solo runtime: GestoreErrori legge il nome del vincolo da PSQLException (decisione 7). -->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

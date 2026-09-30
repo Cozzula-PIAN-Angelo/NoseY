@@ -8,7 +8,7 @@ export type Coordinate = {
   lng: number
 }
 
-/** Stili scuri di OpenFreeMap (Decisione 6) */
+/** Stili scuri di OpenFreeMap (Decisione 8) */
 export type StileMappa = 'dark' | 'fiord'
 
 type MarkerBase = Coordinate & {
@@ -51,7 +51,7 @@ export const URL_STILI: Record<StileMappa, string> = {
   fiord: 'https://tiles.openfreemap.org/styles/fiord',
 }
 
-// Attribuzione obbligatoria (Decisione 6): i dati sono di OpenStreetMap (licenza ODbL,
+// Attribuzione obbligatoria (Decisione 8): i dati sono di OpenStreetMap (licenza ODbL,
 // "© OpenStreetMap" con link alla pagina del copyright), le tessere di OpenMapTiles
 // servite da OpenFreeMap. Gli stili di OpenFreeMap non la includono: la aggiungiamo noi.
 const link = (url: string, testo: string) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${testo}</a>`
