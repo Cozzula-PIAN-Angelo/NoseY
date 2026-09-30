@@ -1,8 +1,61 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { BASE } from '@/lib/api'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
 import { DIMENSIONE_PAGINA, type PaginaResponse } from '@/lib/pagine'
+import {
+  IconaEvento,
+  IconaPoi,
+  Mappa,
+  STILE_POI,
+  STILE_STATO,
+  type Coordinate,
+  type MarkerMappa,
+  type StileMappa,
+} from '@/components/mappa'
+import type { EventoMappaResponse, StatoEvento, TipoPoi } from '@/types/api'
+
+// Marker della mappa di prova: gli eventi arrivano da GET /api/events (dati finti di FE1-03),
+// i tre POI sono quelli dell'evento al Colosseo.
+function markerDiProva(
+  eventiMappa: EventoMappaResponse[],
+  mostra: (titolo: string, messaggio?: string) => void,
+): MarkerMappa[] {
+  return [
+    ...eventiMappa.map(
+      (e): MarkerMappa => ({
+        id: e.id,
+        tipo: 'evento',
+        stato: e.stato,
+        lat: e.lat,
+        lng: e.lng,
+        etichetta: e.titolo,
+        onClick: () => mostra(e.titolo, `${STILE_STATO[e.stato].etichetta} · inizio ${new Date(e.dataEvento).toLocaleString('it-IT')}`),
+      }),
+    ),
+    { id: 'poi-1', tipo: 'INGRESSO', lat: 41.8912, lng: 12.4902, etichetta: 'Ingresso nord' },
+    { id: 'poi-2', tipo: 'USCITA', lat: 41.8893, lng: 12.4948, etichetta: 'Uscita est' },
+    { id: 'poi-3', tipo: 'EMERGENZA', lat: 41.8889, lng: 12.4906, etichetta: 'Presidio medico' },
+  ]
+}
+
+// PROVVISORIO (FE1-03): fetch diretta finche' non ci sono le funzioni API sopra il client
+// di FE2 (passo 5). Con i dati finti attivi risponde MSW.
+function useEventiDiProva() {
+  const [eventiMappa, setEventiMappa] = useState<EventoMappaResponse[]>([])
+  const [errore, setErrore] = useState<unknown>(null)
+  useEffect(() => {
+    fetch(`${BASE}/api/events`)
+      .then(async (r) => (r.ok ? r.json() : Promise.reject({ status: r.status, data: await r.json().catch(() => null) })))
+      .then(setEventiMappa)
+      .catch(setErrore)
+  }, [])
+  return { eventiMappa, errore }
+}
+
+const statiEvento = Object.keys(STILE_STATO) as StatoEvento[]
+const tipiPoiMappa = Object.keys(STILE_POI) as TipoPoi[]
 import {
   Button,
   Caricamento,
@@ -92,6 +145,9 @@ export default function Componenti() {
   const [erroreModulo, setErroreModulo] = useState<FetchBaseQueryError | null>(null)
   const [paginaEventi, setPaginaEventi] = useState(0)
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
+  const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
+  const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
+  const { eventiMappa, errore: erroreEventi } = useEventiDiProva()
   const avviso = useAvviso()
   const campiErrati = erroreModulo ? leggiErrore(erroreModulo).campi : {}
 
@@ -274,6 +330,68 @@ export default function Componenti() {
               <Button type="submit">{erroreModulo ? 'Pulisci errori' : 'Invia'}</Button>
             </div>
           </form>
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Mappa (FE1-02)">
+        <div className="flex flex-col gap-space-md">
+          <div className="flex flex-wrap items-center gap-space-xs">
+            {(['dark', 'fiord'] as const).map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant={stileMappa === s ? 'primary' : 'secondary'}
+                onClick={() => setStileMappa(s)}
+              >
+                Stile {s}
+              </Button>
+            ))}
+            {puntoScelto && (
+              <Button size="sm" variant="ghost" icona="close" onClick={() => setPuntoScelto(null)}>
+                Togli il punto scelto
+              </Button>
+            )}
+          </div>
+          {erroreEventi ? (
+            <MessaggioErrore errore={erroreEventi} />
+          ) : (
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {eventiMappa.length} eventi da GET /api/events (dati finti MSW): clicca un marker per i dettagli.
+            </p>
+          )}
+          <Mappa
+            key={stileMappa}
+            etichetta="Mappa di prova: eventi finti a Roma"
+            centro={{ lat: 41.8902, lng: 12.4922 }}
+            zoom={12}
+            stile={stileMappa}
+            marker={markerDiProva(eventiMappa, avviso.info)}
+            puntoScelto={puntoScelto}
+            onScegliPunto={setPuntoScelto}
+            className="h-[420px]"
+          />
+          <ul aria-label="Legenda" className="flex flex-wrap gap-x-space-lg gap-y-space-sm">
+            {statiEvento.map((s) => (
+              <li key={s} className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                <IconaEvento stato={s} /> Evento {STILE_STATO[s].etichetta.toLowerCase()}
+              </li>
+            ))}
+            {tipiPoiMappa.map((t) => (
+              <li key={t} className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                <IconaPoi tipo={t} /> {STILE_POI[t].etichetta}
+              </li>
+            ))}
+          </ul>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Clicca sulla mappa per scegliere un punto, poi trascina il segnaposto per spostarlo.{' '}
+            {puntoScelto ? (
+              <span className="font-mono text-on-surface">
+                Punto scelto: {puntoScelto.lat}, {puntoScelto.lng}
+              </span>
+            ) : (
+              'Nessun punto scelto.'
+            )}
+          </p>
         </div>
       </Sezione>
 

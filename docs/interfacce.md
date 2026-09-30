@@ -32,3 +32,128 @@ void azzera(Limite limite, String chiave);
 
 I limiti sui codici via email (1 ogni 60 secondi, 5 ogni 24 ore) NON passano da qui: stanno nel
 database (colonne di `utente`) e li gestisce `AuthService`.
+
+---
+
+# Frontend (TEAM-02, passi 5 e 6)
+
+**Stato: proposta di FE1, da approvare con FE2 e il team.** Dopo l'approvazione le rotte
+diventano la base di FE2-01 (router) e i componenti si importano sempre da qui: nessuno ne
+scrive una propria versione.
+
+## Rotte delle pagine
+
+Convenzioni:
+- percorsi in inglese e parametri con gli stessi nomi dell'API (`:id` = evento, `:chatId`,
+  `:artistaId`), come i percorsi del backend; nomi delle pagine e testi in italiano
+- **accesso**: *pubblica* = tutti · *ospite* = solo chi non ha fatto l'accesso (chi l'ha fatto
+  va alla home) · *login* = serve l'accesso · *ADMIN* / *SUPERADMIN* = ruolo minimo
+- rotta *login* senza accesso → `/login?redirect=<pagina richiesta>`; dopo il login si torna
+  lì (FE2-01, passo 4). Lo stesso con un 401 `NON_AUTENTICATO` da qualunque chiamata:
+  logout, poi `/login?redirect=...`
+- ruolo insufficiente → home con l'avviso "Accesso negato" (`ACCESSO_NEGATO`)
+- rotta sconosciuta → pagina 404; risorsa inesistente (API 404 `NON_TROVATO`) → stessa pagina 404
+
+| Rotta | Pagina | Accesso | API principali | Schermata Stitch |
+|---|---|---|---|---|
+| `/` | Home: hero, carosello, eventi in evidenza | pubblica | ListaEventiMappa | Esplora Eventi & Hero Live |
+| `/events` | Esplora eventi: lista, ricerca, "vicino a te" | pubblica | ListaEventiMappa | Esplora Eventi (Lista & Modale Mappa) |
+| `/map` | Mappa radar degli eventi | pubblica | ListaEventiMappa | Esplora Eventi & Mappa Radar POI |
+| `/events/:id` | Dettaglio evento: foto, line-up, POI, iscrizione | pubblica | VediEvento, IscrizioneEvento | (pannello della Mappa Radar) |
+| `/events/:id/participants` | Partecipanti, con il pulsante amicizia | login (ticket o proprietario) | ListaPartecipanti | Community (colonna Partecipanti) |
+| `/events/new` | Crea evento (poi foto, POI, artisti, AI) | login | CreaEvento, CreaFoto, CreaPOI, MiglioraDescrizioneAI | — |
+| `/events/:id/edit` | Modifica evento, foto, POI, artisti, notifica manuale, annulla | login (proprietario) | ModificaEvento e sotto-risorse | — |
+| `/my-events` | I miei eventi, anche conclusi e annullati | login | MieiEventi | — |
+| `/tickets` | I miei ticket e pass | login | MieiTicket | I Miei Ticket (Snella & Ordinata) |
+| `/artists` | Catalogo artisti | pubblica | ListaArtisti | Lineup & Catalogo Artisti |
+| `/artists/:artistaId` | Scheda artista | pubblica | VediArtista | — |
+| `/friends` | Amici e richieste (ricevute, inviate) | login | ListaAmici, ListaRichieste... | Community (colonna Social) |
+| `/chat` | Elenco delle chat | login | ListaChat | Community & Chat |
+| `/chat/:chatId` | Conversazione | login | ListaMessaggi, WebSocket | Community & Chat |
+| `/notifications` | Notifiche: eventi, amicizie, chat | login | ListaNotifiche..., ContaNonLette | — |
+| `/profile` | Profilo, avatar, password, elimina account | login | VediProfilo, ModificaProfilo, CambioPassword, Anonimizzazione | — |
+| `/login` | Accesso | ospite | Login | — |
+| `/register` | Registrazione | ospite | Registrazione | — |
+| `/verify` | Verifica email con il codice (`?email=`) | ospite | Verifica, ReinviaCodice | — |
+| `/forgot-password` | Password dimenticata, poi nuova password con il codice | ospite | PasswordDimenticata, ReimpostaPassword | — |
+| `/admin/users` | Utenti: stato; ruolo solo per il SUPERADMIN | ADMIN | ListaUtenti, CambiaStatoUtente, CambiaRuolo | — |
+| `/admin/artists` | Catalogo artisti: crea, modifica, disattiva | ADMIN | CreaArtista, ModificaArtista, EliminaArtista | — |
+| `*` | Pagina 404 | pubblica | — | — |
+
+Barra di navigazione (FE2-01): Esplora eventi, Mappa, Artisti, Community (amici e chat),
+I miei ticket · a destra campanella (`/notifications`, con ContaNonLette), "Crea evento",
+menu utente (profilo, i miei eventi, admin se il ruolo lo consente, esci).
+La moderazione (annulla evento, rimuovi foto) sta nel dettaglio e nella modifica
+dell'evento, visibile solo agli ADMIN: non ha pagine proprie.
+
+## Componenti condivisi
+
+### Gia' nel repository (FE1-01, FE1-02)
+
+Import: `@/components/ui` e `@/components/mappa`. Esempi dal vivo nel catalogo
+`fe/src/pages/Componenti.tsx`; props documentate nei commenti di ogni file.
+
+| Componente | Props principali |
+|---|---|
+| `Button` | `variant` primary · gradient · secondary · gold · ghost · danger, `size` sm · md · lg, `icona`, `iconaDopo`, `inCorso`, `pieno` |
+| `TextField` / `TextArea` / `Select` / `DateTimeField` | `etichetta`, `aiuto`, `errore`, `obbligatorio`; TextArea con `maxLength` mostra il contatore; Select con `opzioni`, `segnaposto`; DateTimeField con `soloData`, `min`, `max` |
+| `ConfirmDialog` | `aperta`, `titolo`, `variante` primary · danger, `inCorso`, `onConferma`, `onAnnulla` |
+| `useAvviso()` + `<Avvisi />` | `successo`, `errore`, `info`, `attenzione` (titolo, messaggio) e `erroreApi(errore)`; `<Avvisi />` una sola volta nel layout |
+| `Caricamento` / `Scheletro` | `testo`, `riquadro` / `className` per le dimensioni |
+| `StatoVuoto` | `icona`, `titolo`, `messaggio`, `azione` |
+| `MessaggioErrore` | `errore` (anche l'error di RTK Query), `onRiprova` |
+| `Paginazione` | la `PaginaResponse` cosi' com'e' (`{...data}`), `onCambia`, `nomeElementi` |
+| `Icon` | `nome` (Material Symbols), `size`, `piena` |
+| `Mappa` | `centro`, `zoom`, `marker` (eventi per stato o POI per tipo), `puntoScelto` + `onScegliPunto`, `stile` dark · fiord |
+| `IconaEvento` / `IconaPoi` | `stato` + `selezionato` / `tipo` |
+
+Funzioni e tipi: `leggiErrore()` (`@/lib/errori`), `PaginaResponse` e `DIMENSIONE_PAGINA`
+(`@/lib/pagine`), tipi dei DTO da `@/types/api`, dati finti MSW in `fe/src/mocks/`.
+
+### Da realizzare (nomi e props concordati qui)
+
+**`PulsanteAmicizia`** (`@/components/amicizia`): un utente e la relazione con lui, come
+arrivano in `PartecipanteResponse`. Lo usano la lista partecipanti e le pagine amici e chat.
+
+```ts
+type PulsanteAmiciziaProps = {
+  utente: UtentePubblicoResponse
+  statoAmicizia: StatoAmicizia
+  amiciziaId: Uuid | null
+  /** Evento in comune: serve a RichiediAmicizia { riceventeId, eventoId } */
+  eventoId: Uuid
+  /** Dopo ogni azione riuscita, con il nuovo stato: la pagina aggiorna la lista */
+  onCambio?: (stato: StatoAmicizia, amiciziaId: Uuid | null) => void
+}
+```
+
+| statoAmicizia | Mostra | Azione |
+|---|---|---|
+| `NESSUNA` | "Aggiungi" | RichiediAmicizia |
+| `INVIATA` | "In attesa" + "Ritira" | RitiraRichiesta |
+| `RICEVUTA` | "Accetta" / "Rifiuta" | AccettaAmicizia / RifiutaAmicizia |
+| `AMICI` | "Chat" | apre `/chat/:chatId` (vedi punto aperto) |
+| `NON_DISPONIBILE` | niente | — |
+
+Con `utente.attivo = false` nessun pulsante, tranne "Chat" per chi e' gia' amico (sola lettura).
+Errori `RICHIESTA_GIA_RICEVUTA`, `GIA_AMICI`, `CONFLITTO`: si ricarica lo stato con `onCambio`.
+
+**`CardEvento`** (`@/components/eventi`): la card delle liste (home, esplora, i miei eventi),
+come nelle schermate Stitch.
+
+```ts
+type CardEventoProps = {
+  evento: EventoMappaResponse
+  /** Pulsanti in basso, es. "Dettagli" e "Iscriviti"; senza, la card intera porta al dettaglio */
+  azioni?: ReactNode
+}
+```
+
+**`BadgeStato`** (`@/components/eventi`): `{ stato: StatoEvento }`, pillola con il colore dello
+stato (stessi colori di `STILE_STATO` della mappa). Usato da card, dettaglio e ticket.
+
+## Punti aperti
+
+- **`chatId` in `PartecipanteResponse`**: con `statoAmicizia = AMICI` il pulsante "Chat" deve
+  aprire `/chat/:chatId`, ma la risposta ha solo `amiciziaId`. Proposta al backend: aggiungere
+  `chatId` (come in `AmiciziaResponse`). Altrimenti il frontend lo cerca in ListaAmici.
