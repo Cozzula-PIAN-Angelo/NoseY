@@ -1,5 +1,6 @@
 // Tipi della mappa, separati da Mappa.tsx cosi' si possono importare
 // senza caricare MapLibre (che e' pesante e arriva solo quando serve).
+import type { StatoEvento, TipoPoi } from '@/types/api'
 
 /** Punto sulla mappa, con gli stessi nomi dei DTO del backend (lat, lng) */
 export type Coordinate = {
@@ -10,14 +11,19 @@ export type Coordinate = {
 /** Stili scuri di OpenFreeMap (Decisione 6) */
 export type StileMappa = 'dark' | 'fiord'
 
-export type MarkerMappa = Coordinate & {
+type MarkerBase = Coordinate & {
   id: string
   /** Testo per chi usa lo screen reader e al passaggio del mouse, es. il titolo dell'evento */
   etichetta?: string
-  /** Colore del marker (default: primary di Stitch) */
-  colore?: string
   onClick?: () => void
 }
+
+/** Marker di un evento (colore dallo stato) oppure di un POI (icona dal tipo) */
+export type MarkerMappa = MarkerBase &
+  (
+    | { tipo: 'evento'; stato: StatoEvento; /** Evento aperto nel dettaglio */ selezionato?: boolean }
+    | { tipo: TipoPoi }
+  )
 
 export type MappaProps = {
   /** Centro iniziale; se cambia, la mappa ci si sposta con un'animazione */

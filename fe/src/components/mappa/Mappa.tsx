@@ -4,7 +4,14 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import './mappa.css'
 import { Icon } from '@/components/ui'
 import { cx } from '@/lib/cx'
-import { arrotonda, ATTRIBUZIONE, URL_STILI, type MappaProps } from './tipi'
+import { IconaEvento, IconaPoi, STILE_POI, STILE_STATO } from './IconaMarker'
+import { arrotonda, ATTRIBUZIONE, URL_STILI, type MappaProps, type MarkerMappa } from './tipi'
+
+// Nome del marker per lo screen reader: "Chronos (in corso)", "Ingresso nord (ingresso)"
+function etichettaMarker(m: MarkerMappa): string {
+  const tipo = m.tipo === 'evento' ? STILE_STATO[m.stato].etichetta : STILE_POI[m.tipo].etichetta
+  return m.etichetta ? `${m.etichetta} (${tipo.toLowerCase()})` : tipo
+}
 
 // Mappa comune (FE1-02) su MapLibre GL + OpenFreeMap (Decisione 6).
 // Non importarla direttamente: usa <Mappa /> da '@/components/mappa', che la carica solo quando serve.
@@ -60,16 +67,24 @@ export default function Mappa({
             }}
           >
             <span
-              title={m.etichetta}
-              aria-label={m.etichetta}
+              title={etichettaMarker(m)}
+              aria-label={etichettaMarker(m)}
               role={m.onClick ? 'button' : 'img'}
-              className="block size-4 rounded-full ring-4 ring-surface-deep"
-              style={{
-                backgroundColor: m.colore ?? 'var(--color-primary)',
-                boxShadow: `0 0 12px ${m.colore ?? 'var(--color-primary)'}`,
-                cursor: m.onClick ? 'pointer' : 'default',
+              // Cliccabile anche da tastiera: Tab per arrivarci, Invio o spazio per aprirlo
+              tabIndex={m.onClick ? 0 : undefined}
+              onKeyDown={(e) => {
+                if (m.onClick && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault()
+                  m.onClick()
+                }
               }}
-            />
+              className={cx(
+                'block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                m.onClick ? 'cursor-pointer' : 'cursor-default',
+              )}
+            >
+              {m.tipo === 'evento' ? <IconaEvento stato={m.stato} selezionato={m.selezionato} /> : <IconaPoi tipo={m.tipo} />}
+            </span>
           </Marker>
         ))}
 

@@ -17,3 +17,5 @@ export function Mappa(props: MappaProps) {
 }
 
 export { arrotonda, type Coordinate, type MappaProps, type MarkerMappa, type StileMappa } from './tipi'
+// Le icone sono leggere (niente MapLibre): si possono usare anche in legende e card dei POI
+export { IconaEvento, IconaPoi, STILE_POI, STILE_STATO } from './IconaMarker'

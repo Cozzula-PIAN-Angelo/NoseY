@@ -3,7 +3,38 @@ import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
 import { DIMENSIONE_PAGINA, type PaginaResponse } from '@/lib/pagine'
-import { Mappa, type Coordinate, type StileMappa } from '@/components/mappa'
+import {
+  IconaEvento,
+  IconaPoi,
+  Mappa,
+  STILE_POI,
+  STILE_STATO,
+  type Coordinate,
+  type MarkerMappa,
+  type StileMappa,
+} from '@/components/mappa'
+import type { StatoEvento, TipoPoi } from '@/types/api'
+
+// Marker di prova (FE1-02): un evento al Colosseo con i suoi tre POI intorno.
+function markerDiProva(mostra: (titolo: string, messaggio?: string) => void): MarkerMappa[] {
+  return [
+    {
+      id: 'prova',
+      tipo: 'evento',
+      stato: 'IN_CORSO',
+      lat: 41.8902,
+      lng: 12.4922,
+      etichetta: 'Marker di prova: Colosseo',
+      onClick: () => mostra('Marker di prova', 'Colosseo, Roma'),
+    },
+    { id: 'poi-1', tipo: 'INGRESSO', lat: 41.8912, lng: 12.4902, etichetta: 'Ingresso nord' },
+    { id: 'poi-2', tipo: 'USCITA', lat: 41.8893, lng: 12.4948, etichetta: 'Uscita est' },
+    { id: 'poi-3', tipo: 'EMERGENZA', lat: 41.8889, lng: 12.4906, etichetta: 'Presidio medico' },
+  ]
+}
+
+const statiEvento = Object.keys(STILE_STATO) as StatoEvento[]
+const tipiPoiMappa = Object.keys(STILE_POI) as TipoPoi[]
 import {
   Button,
   Caricamento,
@@ -305,19 +336,23 @@ export default function Componenti() {
             centro={{ lat: 41.8902, lng: 12.4922 }}
             zoom={14}
             stile={stileMappa}
-            marker={[
-              {
-                id: 'prova',
-                lat: 41.8902,
-                lng: 12.4922,
-                etichetta: 'Marker di prova: Colosseo',
-                onClick: () => avviso.info('Marker di prova', 'Colosseo, Roma'),
-              },
-            ]}
+            marker={markerDiProva(avviso.info)}
             puntoScelto={puntoScelto}
             onScegliPunto={setPuntoScelto}
             className="h-[420px]"
           />
+          <ul aria-label="Legenda" className="flex flex-wrap gap-x-space-lg gap-y-space-sm">
+            {statiEvento.map((s) => (
+              <li key={s} className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                <IconaEvento stato={s} /> Evento {STILE_STATO[s].etichetta.toLowerCase()}
+              </li>
+            ))}
+            {tipiPoiMappa.map((t) => (
+              <li key={t} className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                <IconaPoi tipo={t} /> {STILE_POI[t].etichetta}
+              </li>
+            ))}
+          </ul>
           <p className="font-body-sm text-body-sm text-on-surface-variant">
             Clicca sulla mappa per scegliere un punto, poi trascina il segnaposto per spostarlo.{' '}
             {puntoScelto ? (
