@@ -1,4 +1,4 @@
-package it.epicode.nosey.auth;
+package it.epicode.nosey.chat;
 
 import it.epicode.nosey.user.Utente;
 import jakarta.persistence.Column;
@@ -17,28 +17,29 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "token_jwt")
+@Table(name = "messaggio")
 @Getter
 @Setter
-public class TokenJwt {
+public class Messaggio {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "utente_id", nullable = false)
-	private Utente utente;
+	@JoinColumn(name = "chat_id", nullable = false)
+	private Chat chat;
 
-	@Column(nullable = false, unique = true)
-	private UUID jti;
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "mittente_id", nullable = false)
+	private Utente mittente;
+
+	@Column(nullable = false, length = 2000)
+	private String testo;
 
 	@Column(nullable = false)
-	private Instant scadenza;
+	private boolean letto = false;
 
-	@Column(nullable = false)
-	private boolean revocato = false;
-
-	@Column(name = "creato_il", nullable = false)
-	private Instant creatoIl;
+	@Column(name = "inviato_il", nullable = false)
+	private Instant inviatoIl;
 }
