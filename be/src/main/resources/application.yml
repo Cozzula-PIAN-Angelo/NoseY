@@ -22,6 +22,13 @@ spring:
         jdbc:
           time_zone: UTC
 
+  # Limiti sull'upload (progettazione v4, sezione 0): oltre max-file-size/max-request-size
+  # -> MaxUploadSizeExceededException -> 400 FILE_NON_VALIDO (GestoreErrori).
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
   # Usata solo da SmtpEmailService (profilo "smtp"): con LogEmailService (default)
   # queste proprieta' restano inutilizzate.
   mail:
@@ -40,6 +47,10 @@ server:
   # Render assegna la porta in PORT.
   port: ${PORT:8080}
   shutdown: graceful
+  tomcat:
+    # Oltre questo limite Tomcat puo' chiudere la connessione prima del 400
+    # (sezione 0): il frontend controlla comunque tipo e dimensione prima di inviare.
+    max-swallow-size: 10MB
 
 management:
   endpoints:
