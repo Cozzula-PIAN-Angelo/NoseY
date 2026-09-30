@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import './mappa.css'
 import { Icon } from '@/components/ui'
 import { cx } from '@/lib/cx'
-import { arrotonda, URL_STILI, type MappaProps } from './tipi'
+import { arrotonda, ATTRIBUZIONE, URL_STILI, type MappaProps } from './tipi'
 
 // Mappa comune (FE1-02) su MapLibre GL + OpenFreeMap (Decisione 6).
 // Non importarla direttamente: usa <Mappa /> da '@/components/mappa', che la carica solo quando serve.
@@ -41,6 +41,9 @@ export default function Mappa({
         cursor={sceltaAttiva ? 'crosshair' : undefined}
         onClick={sceltaAttiva ? (e) => onScegliPunto(arrotonda(e.lngLat)) : undefined}
         onError={() => setErrore(true)}
+        // Sempre aperta (compact: false): la licenza chiede che l'attribuzione si veda
+        // senza dover cliccare sulla "i"
+        attributionControl={{ compact: false, customAttribution: ATTRIBUZIONE }}
       >
         <NavigationControl position="top-right" showCompass={false} />
 
@@ -86,7 +89,7 @@ export default function Mappa({
       {errore && (
         <div
           role="alert"
-          className="absolute inset-x-space-sm bottom-space-sm flex items-center gap-space-xs rounded-lg bg-surface-card/95 px-space-sm py-space-xs font-body-sm text-body-sm text-on-surface-variant"
+          className="absolute left-space-sm right-14 top-space-sm flex items-center gap-space-xs rounded-lg bg-surface-card/95 px-space-sm py-space-xs font-body-sm text-body-sm text-on-surface-variant"
         >
           <Icon nome="cloud_off" size={18} className="text-status-annullato" />
           Parte della mappa non si è caricata. Controlla la connessione.

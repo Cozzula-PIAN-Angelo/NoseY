@@ -45,6 +45,17 @@ export const URL_STILI: Record<StileMappa, string> = {
   fiord: 'https://tiles.openfreemap.org/styles/fiord',
 }
 
+// Attribuzione obbligatoria (Decisione 6): i dati sono di OpenStreetMap (licenza ODbL,
+// "© OpenStreetMap" con link alla pagina del copyright), le tessere di OpenMapTiles
+// servite da OpenFreeMap. Gli stili di OpenFreeMap non la includono: la aggiungiamo noi.
+const link = (url: string, testo: string) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${testo}</a>`
+
+export const ATTRIBUZIONE = [
+  link('https://openfreemap.org', 'OpenFreeMap'),
+  link('https://www.openmaptiles.org/', '© OpenMapTiles'),
+  `Dati ${link('https://www.openstreetmap.org/copyright', '© OpenStreetMap')}`,
+]
+
 /** Arrotonda a 6 decimali (~10 cm): piu' precisione non serve e sporca i dati */
 export function arrotonda(punto: Coordinate): Coordinate {
   const r = (n: number) => Math.round(n * 1e6) / 1e6
