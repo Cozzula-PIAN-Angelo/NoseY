@@ -96,9 +96,10 @@ export const TESTI_ERRORE: Record<CodiceErrore, TestoErrore> = {
   },
   TROPPE_RICHIESTE: { titolo: 'Troppe richieste', messaggio: 'Hai fatto troppi tentativi. Attendi un po’ e riprova.' },
   ERRORE_INTERNO: { titolo: 'Errore del server', messaggio: 'Si è verificato un problema imprevisto. Riprova tra poco.' },
+  // Le immagini stanno nel database (Decisione 4): l'unico servizio esterno e' il provider AI
   SERVIZIO_ESTERNO: {
-    titolo: 'Servizio non disponibile',
-    messaggio: 'Il servizio per le immagini o per l’AI non risponde. Riprova tra poco.',
+    titolo: 'Servizio AI non disponibile',
+    messaggio: 'Il servizio di intelligenza artificiale non risponde. Riprova tra poco.',
   },
 
   // Auth
