@@ -14,10 +14,6 @@ Un verbale per riunione, dal piu' recente al meno recente.
 
 ## 2026-09-30 - Componenti comuni del frontend (FE1-01)
 
-### Presenti
-
-<!-- DA COMPLETARE -->
-
 ### Punti discussi
 
 - Libreria di componenti (Headless UI, shadcn/ui, Mantine) oppure componenti scritti da noi
