@@ -32,3 +32,45 @@ void azzera(Limite limite, String chiave);
 
 I limiti sui codici via email (1 ogni 60 secondi, 5 ogni 24 ore) NON passano da qui: stanno nel
 database (colonne di `utente`) e li gestisce `AuthService`.
+
+## EmailService (pacchetto `mail`) — implementa BE1-04
+
+Invio delle 4 email del progetto (progettazione v4, sezione 0). Decisione 3.
+
+```java
+void inviaCodiceVerifica(String destinatario, String nome, String codice);
+void inviaTicket(String destinatario, String nome, String titoloEvento, Instant dataEvento, String codiceTicket);
+void inviaCodiceReset(String destinatario, String nome, String codice);
+void inviaPasswordCambiata(String destinatario, String nome);
+```
+
+- Due implementazioni, scelte dal profilo Spring: `LogEmailService` (default, scrive un riepilogo
+  nel log) · `SmtpEmailService` (profilo `smtp`, Gmail SMTP + template Thymeleaf in `templates/mail/`).
+- Chi deve inviare un'email NON chiama direttamente `EmailService`: pubblica uno dei 4 eventi
+  (`CodiceVerificaEmailEvent`, `TicketEmailEvent`, `CodiceResetEmailEvent`, `PasswordCambiataEmailEvent`,
+  pacchetto `mail`) con `ApplicationEventPublisher`, DENTRO la transazione. `EmailEventListener` li
+  raccoglie `@Async`, DOPO il commit (`@TransactionalEventListener(AFTER_COMMIT)`): se l'invio
+  fallisce si scrive nel log, la richiesta resta valida.
+- Parametri primitivi, mai entita': l'evento/listener non deve conoscere JPA.
+
+## AnonimizzazioneEventiService (pacchetto `event`) — implementa BE1-04
+
+Il lato eventi dell'anonimizzazione (progettazione v4, sezione 2 "Anonimizzazione"), da chiamare
+da `Anonimizzazione` (lato utenti, BE2) dentro la stessa transazione.
+
+```java
+void annullaEventiProprietario(UUID utenteId); // eventi PROGRAMMATO di cui e' proprietario -> ANNULLATO
+void cancellaIscrizioniFuture(UUID utenteId);  // le sue iscrizioni a eventi PROGRAMMATO -> cancellate
+```
+
+- Implementazione reale (non finta): usa `EventoRepository`/`PartecipanteRepository` gia' pronti.
+- La notifica `NOTIFICA_EVENTO ANNULLAMENTO` ai partecipanti resta un TODO nel codice: serve
+  `NotificheService`, non ancora fatto.
+
+## Ancora da fare (TEAM-02)
+
+- `StorageService`: NON serve piu' Cloudinary, le immagini si salvano come `bytea` nel database
+  (decisione 4) — va comunque decisa la forma dell'interfaccia (es. salva/leggi byte[] + content type).
+- `NotificheService`: non ancora fatto.
+- Backend: controllo «ha il ticket o e' il proprietario» e calcolo di `statoAmicizia` (lato social).
+- Frontend: elenco delle rotte e props dei componenti condivisi.
