@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
+import { DIMENSIONE_PAGINA, type PaginaResponse } from '@/lib/pagine'
 import {
   Button,
   Caricamento,
@@ -53,7 +54,20 @@ const erroriDiProva: { etichetta: string; errore: FetchBaseQueryError }[] = [
   { etichetta: 'Rete', errore: { status: 'FETCH_ERROR', error: 'TypeError: Failed to fetch' } },
 ]
 
-const opzioniCodici: Opzione<CodiceErrore>[] = CODICI_ERRORE.map((c) => ({ valore: c, etichetta: c }))
+// PaginaResponse come la manderebbe GET /api/notifications/events?page=&size=20
+function notificheFinte(pagina: number): PaginaResponse<string> {
+  const totaleElementi = 387
+  const inizio = pagina * DIMENSIONE_PAGINA
+  return {
+    contenuto: Array.from({ length: Math.min(DIMENSIONE_PAGINA, totaleElementi - inizio) }, (_, i) => `Notifica ${inizio + i + 1}`),
+    pagina,
+    dimensione: DIMENSIONE_PAGINA,
+    totaleElementi,
+    totalePagine: Math.ceil(totaleElementi / DIMENSIONE_PAGINA),
+  }
+}
+
+const opzioniCodici:Opzione<CodiceErrore>[] = CODICI_ERRORE.map((c) => ({ valore: c, etichetta: c }))
 
 const registrazioneRifiutata = erroreFinto('VALIDAZIONE', 400, {
   email: 'Deve essere un indirizzo email valido',
@@ -273,14 +287,8 @@ export default function Componenti() {
             nomeElementi="eventi"
             onCambia={setPaginaEventi}
           />
-          <Paginazione
-            pagina={paginaNotifiche}
-            totalePagine={20}
-            totaleElementi={387}
-            dimensione={20}
-            nomeElementi="notifiche"
-            onCambia={setPaginaNotifiche}
-          />
+          {/* Come con RTK Query: la PaginaResponse passata cosi' com'e' */}
+          <Paginazione {...notificheFinte(paginaNotifiche)} nomeElementi="notifiche" onCambia={setPaginaNotifiche} />
         </div>
       </Sezione>
 

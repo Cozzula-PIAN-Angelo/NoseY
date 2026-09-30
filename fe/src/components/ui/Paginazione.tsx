@@ -1,17 +1,13 @@
 import { cx } from '@/lib/cx'
-import { pagineVisibili } from '@/lib/pagine'
+import { pagineVisibili, type PaginaResponse } from '@/lib/pagine'
 import { Icon } from './Icon'
 
-type PaginazioneProps = {
-  /** Pagina corrente, da 0 come nell'API (Page.number) */
-  pagina: number
-  totalePagine: number
+// I quattro numeri arrivano cosi' come sono da PaginaResponse: pagina (da 0),
+// dimensione, totaleElementi, totalePagine. "contenuto" e' ammesso ma non serve.
+type PaginazioneProps = Omit<PaginaResponse<unknown>, 'contenuto'> & {
+  contenuto?: unknown[]
   /** Chiamata con la nuova pagina (da 0), da passare come ?page= alla query */
   onCambia: (pagina: number) => void
-  /** Per il riepilogo "Visualizzati 1 - 20 di 45 eventi": Page.totalElements */
-  totaleElementi?: number
-  /** Page.size */
-  dimensione?: number
   /** Nome degli elementi al plurale, es. "eventi", "notifiche" (default "risultati") */
   nomeElementi?: string
   className?: string
@@ -21,11 +17,10 @@ const classiPulsante =
   'rounded-xl font-label-btn text-label-btn transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container'
 
 // Barra di paginazione come nella schermata Esplora Eventi di Stitch.
-// Uso con RTK Query:
+// Uso con RTK Query, passando direttamente la PaginaResponse:
 //   const [pagina, setPagina] = useState(0)
-//   const { data } = useNotificheQuery({ page: pagina, size: 20 })
-//   const d = data && datiPagina(data)
-//   {d && <Paginazione {...d} onCambia={setPagina} nomeElementi="notifiche" />}
+//   const { data } = useNotificheQuery({ page: pagina, size: DIMENSIONE_PAGINA })
+//   {data && <Paginazione {...data} onCambia={setPagina} nomeElementi="notifiche" />}
 export function Paginazione({
   pagina,
   totalePagine,
@@ -35,13 +30,11 @@ export function Paginazione({
   nomeElementi = 'risultati',
   className,
 }: PaginazioneProps) {
-  if (totalePagine <= 1 && totaleElementi === undefined) return null
+  // Lista vuota: al posto della paginazione la pagina mostra <StatoVuoto />
+  if (totaleElementi === 0) return null
 
-  const primo = dimensione !== undefined ? pagina * dimensione + 1 : undefined
-  const ultimo =
-    dimensione !== undefined && totaleElementi !== undefined
-      ? Math.min((pagina + 1) * dimensione, totaleElementi)
-      : undefined
+  const primo = pagina * dimensione + 1
+  const ultimo = Math.min((pagina + 1) * dimensione, totaleElementi)
 
   return (
     <nav
@@ -52,9 +45,7 @@ export function Paginazione({
       )}
     >
       <p className="font-label-sm text-label-sm text-on-surface-variant">
-        {totaleElementi === 0 ? (
-          <>Nessun elemento</>
-        ) : totaleElementi !== undefined && primo !== undefined && ultimo !== undefined ? (
+        {primo <= ultimo ? (
           <>
             Visualizzati <strong className="text-on-surface">{primo} - {ultimo}</strong> di{' '}
             <strong className="text-on-surface">
@@ -62,6 +53,7 @@ export function Paginazione({
             </strong>
           </>
         ) : (
+          // Pagina oltre la fine (es. dopo aver cancellato gli ultimi elementi)
           <>
             Pagina <strong className="text-on-surface">{pagina + 1}</strong> di{' '}
             <strong className="text-on-surface">{totalePagine}</strong>
