@@ -113,6 +113,12 @@ public class TokenService {
 		tokenJwtRepository.revocaTuttiPerUtente(utenteId);
 	}
 
+	/** Cambio password: logout dalle altre sessioni, il token corrente resta valido. */
+	@Transactional
+	public void revocaTuttiTranne(UUID utenteId, UUID jtiCorrente) {
+		tokenJwtRepository.revocaAltriPerUtente(utenteId, jtiCorrente);
+	}
+
 	/**
 	 * Su Render il servizio si sospende quando non riceve traffico: un orario fisso (cron)
 	 * potrebbe non capitare mai. fixedDelay gira subito all'avvio e poi ogni 24 ore.

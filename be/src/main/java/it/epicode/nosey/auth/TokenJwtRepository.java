@@ -20,6 +20,10 @@ public interface TokenJwtRepository extends JpaRepository<TokenJwt, UUID> {
 	int revocaTuttiPerUtente(UUID utenteId);
 
 	@Modifying(flushAutomatically = true)
+	@Query("update TokenJwt t set t.revocato = true where t.utente.id = :utenteId and t.jti <> :jti and t.revocato = false")
+	int revocaAltriPerUtente(UUID utenteId, UUID jti);
+
+	@Modifying(flushAutomatically = true)
 	@Query("delete from TokenJwt t where t.scadenza < :adesso")
 	int cancellaScaduti(Instant adesso);
 }
