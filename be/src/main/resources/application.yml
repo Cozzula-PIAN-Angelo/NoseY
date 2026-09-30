@@ -60,3 +60,25 @@ app:
     # In locale va impostato nella configurazione di avvio (variabile d'ambiente JWT_SECRET).
     secret: ${JWT_SECRET}
     durata: ${JWT_DURATA:24h}
+  # Limiti di frequenza in memoria (progettazione v4, sezione 0): si azzerano a ogni riavvio.
+  # Finestra che scorre: "al giorno" = nelle ultime 24 ore. I limiti sui codici via email
+  # non sono qui, stanno nel database (UTENTE).
+  limiti:
+    login-falliti:
+      massimo: 10
+      finestra: 15m
+    ai:
+      massimo: 10
+      finestra: 1h
+    iscrizioni:
+      massimo: 20
+      finestra: 24h
+    richieste-amicizia:
+      massimo: 30
+      finestra: 24h
+    notifiche-manuali:
+      massimo: 5
+      finestra: 24h
+    messaggi-chat:
+      massimo: 30
+      finestra: 1m

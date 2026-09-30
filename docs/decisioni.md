@@ -148,3 +148,28 @@ una propria versione nella sua pagina.
   (es. un Combobox con ricerca).
 - **shadcn/ui, Mantine e simili**: molti componenti pronti, ma con uno stile proprio da
   riadattare a Stitch e molto codice o dipendenze che non useremmo.
+
+## Decisione 6: limiti di frequenza con una mappa di timestamp, senza Bucket4j
+
+### Scelta
+
+`LimitiService` (pacchetto `common`) tiene in memoria, per ogni limite e ogni chiave, gli istanti
+degli eventi dentro la finestra (una `ConcurrentHashMap` di code). La finestra scorre: "10 in
+15 minuti" = negli ultimi 15 minuti, "al giorno" = nelle ultime 24 ore. I valori stanno in
+`application.yml` sotto `app.limiti`; se un limite manca o non e' valido l'app non parte.
+Una pulizia `@Scheduled` ogni 10 minuti toglie le chiavi senza eventi recenti.
+
+### Motivazione
+
+- La progettazione ammette entrambe le soluzioni (sezione 0); la mappa non richiede una nuova
+  dipendenza nel `pom.xml` condiviso.
+- Il login conta solo i tentativi falliti e li azzera dopo un login riuscito: con i timestamp
+  e' naturale (`controlla` / `registra` / `azzera`), con i gettoni di Bucket4j andrebbe forzato.
+- La finestra che scorre corrisponde alla lettera ai limiti della progettazione.
+
+### Alternative scartate
+
+- **Bucket4j**: libreria solida, ma un'altra dipendenza e un modello (token bucket) che
+  approssima "N in una finestra" invece di contarli.
+- **Limiti nel database**: sopravvivrebbero ai riavvii, ma aggiungono scritture a ogni
+  richiesta; la progettazione accetta l'azzeramento al riavvio con una sola istanza.

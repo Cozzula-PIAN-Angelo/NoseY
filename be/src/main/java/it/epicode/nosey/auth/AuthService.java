@@ -2,6 +2,8 @@ package it.epicode.nosey.auth;
 
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
+import it.epicode.nosey.common.Limite;
+import it.epicode.nosey.common.LimitiService;
 import it.epicode.nosey.mail.CodiceVerificaEmailEvent;
 import it.epicode.nosey.user.RuoloRepository;
 import it.epicode.nosey.user.ScopoCodice;
@@ -41,6 +43,7 @@ public class AuthService {
 	private final RuoloRepository ruoloRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final TokenService tokenService;
+	private final LimitiService limitiService;
 	private final ApplicationEventPublisher eventi;
 	private final Clock clock;
 	private final SecureRandom random = new SecureRandom();
@@ -126,20 +129,28 @@ public class AuthService {
 
 	@Transactional
 	public LoginResponse login(LoginRequest richiesta) {
-		// 1. limite dei tentativi falliti per email (429): arriva con BE2-04 (LimitiService).
+		// 1. troppi tentativi falliti per questa email: 429 anche con la password giusta
+		limitiService.controlla(Limite.LOGIN_FALLITI, richiesta.email());
 
-		// 2. inesistente, anonimizzato o password errata: stessa risposta, non si rivela quale
+		// 2. inesistente, anonimizzato o password errata: stessa risposta, non si rivela quale.
+		// Conta come tentativo fallito (il limite e' in memoria: il rollback non lo annulla).
 		Utente utente = utenteRepository.findByEmail(richiesta.email())
 				.filter(u -> u.getStato() != StatoUtente.ANONIMIZZATO)
 				.filter(u -> passwordCorretta(richiesta.password(), u.getPasswordHash()))
-				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.CREDENZIALI_ERRATE, "Email o password errate"));
-		// 3. e 4.: solo dopo una password corretta, cosi' non rivelano quali email esistono
+				.orElse(null);
+		if (utente == null) {
+			limitiService.registra(Limite.LOGIN_FALLITI, richiesta.email());
+			throw new ApplicazioneException(CodiceErrore.CREDENZIALI_ERRATE, "Email o password errate");
+		}
+		// 3. e 4.: solo dopo una password corretta, cosi' non rivelano quali email esistono.
+		// Non contano come tentativi falliti e non li azzerano.
 		if (!utente.isVerificato()) {
 			throw new ApplicazioneException(CodiceErrore.EMAIL_NON_VERIFICATA, "Email non ancora verificata");
 		}
 		if (utente.getStato() == StatoUtente.SOSPESO) {
 			throw new ApplicazioneException(CodiceErrore.ACCOUNT_SOSPESO, "Account sospeso");
 		}
+		limitiService.azzera(Limite.LOGIN_FALLITI, richiesta.email());
 		return rispostaLogin(utente);
 	}
 
