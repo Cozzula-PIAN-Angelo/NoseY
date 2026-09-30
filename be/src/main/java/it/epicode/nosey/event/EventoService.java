@@ -2,6 +2,8 @@ package it.epicode.nosey.event;
 
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
+import it.epicode.nosey.common.ImmagineContenuto;
+import it.epicode.nosey.common.VersioneContenuto;
 import it.epicode.nosey.ticket.PartecipanteRepository;
 import it.epicode.nosey.user.Utente;
 import it.epicode.nosey.user.UtentePubblicoResponse;
@@ -60,6 +62,15 @@ public class EventoService {
 
 	private FotoEvento copertina(UUID eventoId) {
 		return fotoEventoRepository.findByEventoIdAndCopertinaTrue(eventoId).orElse(null);
+	}
+
+	// Pubblico (decisione 9): un tag img non puo' mandare il token.
+	@Transactional(readOnly = true)
+	public ImmagineContenuto immagineFoto(UUID eventoId, UUID fotoId) {
+		FotoEvento foto = fotoEventoRepository.findByIdAndEventoId(fotoId, eventoId)
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Foto non trovata"));
+		return new ImmagineContenuto(foto.getContenuto(), foto.getContentType(),
+				VersioneContenuto.calcola(foto.getContenuto()));
 	}
 
 	private double distanzaKm(double lat1, double lng1, double lat2, double lng2) {

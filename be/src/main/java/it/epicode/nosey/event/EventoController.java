@@ -1,11 +1,15 @@
 package it.epicode.nosey.event;
 
 import it.epicode.nosey.auth.UtenteAutenticato;
+import it.epicode.nosey.common.ImmagineContenuto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,5 +54,19 @@ public class EventoController {
 	public EventoDettaglioResponse vedi(@PathVariable UUID id,
 			@AuthenticationPrincipal UtenteAutenticato utente) {
 		return eventoService.vedi(id, utente == null ? null : utente.id());
+	}
+
+	/**
+	 * Pubblico (decisione 9): un tag img non puo' mandare il token. no-cache + ETag: il browser
+	 * ricontrolla ogni volta, e se l'immagine non e' cambiata Spring risponde 304 senza corpo.
+	 */
+	@GetMapping("/{id}/photos/{fotoId}/image")
+	public ResponseEntity<byte[]> immagineFoto(@PathVariable UUID id, @PathVariable UUID fotoId) {
+		ImmagineContenuto immagine = eventoService.immagineFoto(id, fotoId);
+		return ResponseEntity.ok()
+				.contentType(MediaType.parseMediaType(immagine.contentType()))
+				.cacheControl(CacheControl.noCache())
+				.eTag(immagine.versione())
+				.body(immagine.contenuto());
 	}
 }
