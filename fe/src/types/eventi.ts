@@ -1,6 +1,6 @@
 // Tipi del lato eventi (FE1-03), dalla progettazione v4, sezioni 3-7 e 12.
 // I nomi dei campi sono quelli dei DTO Java: non tradurli ne' rinominarli.
-import type { IstanteIso, UtentePubblicoResponse, Uuid } from './comuni'
+import type { IstanteIso, StatoAmicizia, UtentePubblicoResponse, Uuid } from './comuni'
 
 /** Stato dell'evento nei DTO: IN_CORSO e CONCLUSO il backend li calcola dalle date */
 export type StatoEvento = 'PROGRAMMATO' | 'IN_CORSO' | 'CONCLUSO' | 'ANNULLATO'
@@ -79,4 +79,43 @@ export type EventoDettaglioResponse = {
   sonoProprietario: boolean
   /** false se chi guarda non ha fatto l'accesso */
   sonoIscritto: boolean
+}
+
+/**
+ * Ticket di iscrizione a un evento (IscrizioneEvento, VediMiaPartecipazione, MieiTicket).
+ * Il ticket vale finche' l'iscrizione esiste: se viene cancellata, non vale piu'.
+ */
+export type TicketResponse = {
+  id: Uuid
+  /** Codice univoco (UUID) da mostrare all'ingresso */
+  codice: Uuid
+  emessoIl: IstanteIso
+  /** Riassunto dell'evento, per mostrare il ticket senza chiedere il dettaglio */
+  evento: {
+    id: Uuid
+    titolo: string
+    dataEvento: IstanteIso
+    dataFine: IstanteIso
+    stato: StatoEvento
+    lat: number
+    lng: number
+  }
+  partecipante: {
+    nome: string
+    cognome: string
+  }
+}
+
+/**
+ * Una riga di ListaPartecipanti (GET /api/events/{id}/participants): la vede solo chi ha un
+ * ticket per l'evento, oppure il proprietario. Chi fa la richiesta non compare nella lista.
+ * Ordine: prima il proprietario (anche se non e' iscritto), poi i partecipanti per emessoIl.
+ */
+export type PartecipanteResponse = {
+  utente: UtentePubblicoResponse
+  /** true per il proprietario dell'evento, che compare in cima */
+  proprietario: boolean
+  statoAmicizia: StatoAmicizia
+  /** Valorizzato con INVIATA, RICEVUTA e AMICI; null con NESSUNA e NON_DISPONIBILE */
+  amiciziaId: Uuid | null
 }

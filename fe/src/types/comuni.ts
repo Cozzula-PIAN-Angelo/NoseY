@@ -24,3 +24,12 @@ export type UtentePubblicoResponse = {
   immagineProfilo: string | null
   attivo: boolean
 }
+
+/**
+ * Amicizia come la vede chi fa la richiesta nei confronti di un altro utente (sezione 8).
+ * Dice quale pulsante mostrare:
+ *   NESSUNA "aggiungi" · INVIATA "in attesa" + "ritira" · RICEVUTA "accetta" / "rifiuta"
+ *   AMICI "chat" · NON_DISPONIBILE nessun pulsante
+ * Non e' lo stato salvato nel database (PENDENTE, ACCETTATA...): quello il frontend non lo vede.
+ */
+export type StatoAmicizia = 'NESSUNA' | 'INVIATA' | 'RICEVUTA' | 'AMICI' | 'NON_DISPONIBILE'
