@@ -69,11 +69,8 @@ void cancellaIscrizioniFuture(UUID utenteId);  // le sue iscrizioni a eventi PRO
 
 ## Ancora da fare (TEAM-02)
 
-- `StorageService`: NON serve piu' Cloudinary, le immagini si salvano come `bytea` nel database
-  (decisione 4) — va comunque decisa la forma dell'interfaccia (es. salva/leggi byte[] + content type).
 - `NotificheService`: non ancora fatto.
 - Backend: controllo «ha il ticket o e' il proprietario» e calcolo di `statoAmicizia` (lato social).
-- Frontend: elenco delle rotte e props dei componenti condivisi.
 
 ---
 
