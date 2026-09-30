@@ -84,6 +84,16 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- SmtpEmailService: Gmail SMTP in locale, profilo "smtp" (progettazione v4, sezione 0). -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<!-- Corpi HTML delle 4 email, renderizzati da SmtpEmailService. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

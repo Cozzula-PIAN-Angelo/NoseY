@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="it">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Il tuo ticket</title>
+</head>
+<body style="font-family: sans-serif; color: #222;">
+	<h1 style="color: #6a2fb0;">Ciao <span th:text="${nome}">nome</span>,</h1>
+	<p>Ecco il tuo ticket per <strong th:text="${titoloEvento}">Evento</strong>.</p>
+	<p>Data: <span th:text="${dataEvento}">01/01/2026 00:00</span></p>
+	<p>Codice del ticket:</p>
+	<p style="font-size: 22px; font-weight: bold; letter-spacing: 2px;" th:text="${codiceTicket}">codice</p>
+	<p>Mostra questo codice all'ingresso dell'evento.</p>
+</body>
+</html>

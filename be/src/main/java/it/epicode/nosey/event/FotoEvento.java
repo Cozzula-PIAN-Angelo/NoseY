@@ -11,6 +11,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -29,11 +31,12 @@ public class FotoEvento {
 	@JoinColumn(name = "evento_id", nullable = false)
 	private Evento evento;
 
-	@Column(nullable = false, columnDefinition = "text")
-	private String url;
+	@JdbcTypeCode(SqlTypes.VARBINARY)
+	@Column(nullable = false)
+	private byte[] contenuto;
 
-	@Column(name = "public_id", nullable = false, length = 255)
-	private String publicId;
+	@Column(name = "content_type", nullable = false, length = 100)
+	private String contentType;
 
 	@Column(length = 150)
 	private String didascalia;
