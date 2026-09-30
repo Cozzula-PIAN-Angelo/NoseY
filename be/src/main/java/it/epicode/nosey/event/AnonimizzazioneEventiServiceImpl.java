@@ -1,5 +1,6 @@
 package it.epicode.nosey.event;
 
+import it.epicode.nosey.notification.NotificheService;
 import it.epicode.nosey.ticket.PartecipanteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ public class AnonimizzazioneEventiServiceImpl implements AnonimizzazioneEventiSe
 
 	private final EventoRepository eventoRepository;
 	private final PartecipanteRepository partecipanteRepository;
+	private final NotificheService notificheService;
 
 	@Override
 	@Transactional
@@ -21,8 +23,7 @@ public class AnonimizzazioneEventiServiceImpl implements AnonimizzazioneEventiSe
 		List<Evento> eventi = eventoRepository.findByProprietarioIdAndStato(utenteId, StatoEventoDb.PROGRAMMATO);
 		eventi.forEach(evento -> evento.setStato(StatoEventoDb.ANNULLATO));
 		eventoRepository.saveAll(eventi);
-		// TODO NotificheService non esiste ancora (TEAM-02): quando c'e', notificare
-		// NOTIFICA_EVENTO ANNULLAMENTO ai partecipanti di ciascun evento qui sopra.
+		eventi.forEach(notificheService::notificaAnnullamento);
 	}
 
 	@Override

@@ -293,3 +293,27 @@ altrimenti si leggerebbero lo stesso.
   migrazione piu' grossa e nuove entita' e repository solo per i byte.
 - **Versione calcolata dai byte a ogni risposta**: niente colonna in piu', ma per costruire
   l'URL bisognerebbe leggere l'immagine intera.
+
+## Decisione 10: test di integrazione sul database PostgreSQL locale
+
+### Scelta
+
+- `spring-boot-starter-test` nel `pom.xml`, solo con scope `test`.
+- I test del backend sono `@SpringBootTest` sul database locale di `application.yml` (serve
+  anche `JWT_SECRET`), con `@Transactional`: ogni test viene annullato alla fine e non lascia dati.
+- Il primo e' `NotificheServiceImplTest` (BE2-08): accorpamento, testi e push live.
+
+### Motivazione
+
+- Le regole da verificare (accorpamento, enum di Postgres, vincoli) dipendono dal database vero:
+  un mock dei repository non le proverebbe.
+- Lo schema lo crea Flyway con `ddl-auto: validate`: il test usa le stesse migrazioni
+  dell'applicazione.
+- Nessuna dipendenza oltre allo starter e nessun Docker richiesto.
+
+### Alternative scartate
+
+- **H2 in memoria**: non ha gli enum di Postgres ne' la sintassi di alcune migrazioni.
+- **Testcontainers**: database pulito a ogni esecuzione, ma richiede Docker su ogni PC del team
+  e altre dipendenze.
+- **Solo unit test con Mockito**: piu' veloci, ma l'accorpamento verificato solo su mock.
