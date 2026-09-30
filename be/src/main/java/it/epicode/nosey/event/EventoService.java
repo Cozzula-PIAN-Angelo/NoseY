@@ -45,14 +45,21 @@ public class EventoService {
 
 		if (lat == null) {
 			// Senza posizione: l'ordine per dataEvento crescente arriva gia' dalla query.
-			return eventi.stream().map(evento -> EventoMappaResponse.da(evento, null, adesso)).toList();
+			return eventi.stream()
+					.map(evento -> EventoMappaResponse.da(evento, copertina(evento.getId()), null, adesso))
+					.toList();
 		}
 		// Con la posizione: per distanza crescente (Haversine). La posizione cambia solo
 		// l'ordine, mai il numero di eventi restituiti (requisito della traccia).
 		return eventi.stream()
-				.map(evento -> EventoMappaResponse.da(evento, distanzaKm(lat, lng, evento.getLat(), evento.getLng()), adesso))
+				.map(evento -> EventoMappaResponse.da(evento, copertina(evento.getId()),
+						distanzaKm(lat, lng, evento.getLat(), evento.getLng()), adesso))
 				.sorted(Comparator.comparingDouble(EventoMappaResponse::distanzaKm))
 				.toList();
+	}
+
+	private FotoEvento copertina(UUID eventoId) {
+		return fotoEventoRepository.findByEventoIdAndCopertinaTrue(eventoId).orElse(null);
 	}
 
 	private double distanzaKm(double lat1, double lng1, double lat2, double lng2) {
@@ -102,7 +109,7 @@ public class EventoService {
 	// stessa query darebbe MultipleBagFetchException (progettazione v4, sezione 18).
 	private EventoDettaglioResponse dettaglio(Evento evento, UUID richiedenteId, boolean sonoIscritto) {
 		List<FotoResponse> foto = fotoEventoRepository.findByEventoIdOrderByCopertinaDescCaricataIlAsc(evento.getId())
-				.stream().map(FotoResponse::da).toList();
+				.stream().map(f -> FotoResponse.da(evento.getId(), f)).toList();
 		List<ArtistaResponse> artisti = artistaEventoRepository.findArtistiOrdinatiByEventoId(evento.getId())
 				.stream().map(ArtistaResponse::da).toList();
 		List<PoiResponse> poi = poiRepository.findByEventoId(evento.getId())

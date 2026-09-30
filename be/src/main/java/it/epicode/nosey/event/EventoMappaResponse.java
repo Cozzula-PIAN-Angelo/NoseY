@@ -15,7 +15,7 @@ public record EventoMappaResponse(
 		Double distanzaKm
 ) {
 
-	public static EventoMappaResponse da(Evento evento, Double distanzaKm, Instant adesso) {
+	public static EventoMappaResponse da(Evento evento, FotoEvento copertina, Double distanzaKm, Instant adesso) {
 		return new EventoMappaResponse(
 				evento.getId(),
 				evento.getTitolo(),
@@ -24,8 +24,7 @@ public record EventoMappaResponse(
 				StatoEvento.calcola(evento, adesso),
 				evento.getLat(),
 				evento.getLng(),
-				// Vedi nota in UtentePubblicoResponse: formato ancora da decidere, per ora sempre null.
-				null,
+				copertina == null ? null : FotoResponse.url(evento.getId(), copertina),
 				distanzaKm);
 	}
 }
