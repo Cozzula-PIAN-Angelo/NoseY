@@ -28,7 +28,7 @@ Un verbale per riunione, dal piu' recente al meno recente.
 ### Decisioni
 
 - Solo Tailwind, niente librerie di componenti: dettagli e motivazioni nella
-  Decisione 2 di `docs/decisioni.md`.
+  Decisione 3 di `docs/decisioni.md`.
 - I componenti comuni stanno in `fe/src/components/ui/` e li usano tutti e due i frontend.
 
 ### Prossimi passi

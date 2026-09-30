@@ -27,7 +27,33 @@ con RTK Query per le chiamate al backend. Lo store sta in `fe/src/store/`, gli h
 - **Solo Context + `useState`**: sufficiente per poco stato, ma diventa difficile da mantenere
   con molte funzionalita' e piu' persone che ci lavorano.
 
-## Decisione 2: solo Tailwind, senza librerie di componenti
+## Decisione 2: JWT con jjwt, segreto senza valore di default
+
+### Scelta
+
+I token si firmano con la libreria jjwt (`jjwt-api`, `jjwt-impl`, `jjwt-jackson`), algoritmo
+HS256 fissato nel codice. Il segreto arriva solo da `JWT_SECRET` (almeno 32 caratteri):
+`application.yml` non ha un valore di default. Su Render lo genera il blueprint
+(`generateValue: true`); in locale va impostato nella configurazione di avvio.
+L'utente in memoria che Spring Boot creerebbe da solo e' disattivato
+(`UserDetailsServiceAutoConfiguration` esclusa): l'autenticazione passa solo dal JWT.
+
+### Motivazione
+
+- jjwt e' la libreria vista nel corso ed e' la piu' diffusa per firmare e leggere JWT.
+- Con l'algoritmo non fissato jjwt lo sceglierebbe in base alla lunghezza del segreto
+  (HS256, HS384 o HS512): meglio un comportamento prevedibile.
+- Un segreto scritto nel repository sarebbe pubblico: chiunque potrebbe firmare token validi.
+  Senza default, se la variabile manca l'app non parte invece di girare con un segreto noto.
+
+### Alternative scartate
+
+- **Nimbus JOSE (spring-security-oauth2-jose)**: integrato in Spring Security, ma pensato per
+  resource server OAuth2 e piu' verboso per un token firmato con un segreto condiviso.
+- **Segreto di default in `application.yml` solo per lo sviluppo**: comodo, ma finirebbe in
+  produzione appena qualcuno dimentica di impostare la variabile.
+
+## Decisione 3: solo Tailwind, senza librerie di componenti
 
 ### Scelta
 

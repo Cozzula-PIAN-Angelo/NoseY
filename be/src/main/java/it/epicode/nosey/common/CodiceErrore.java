@@ -1,0 +1,99 @@
+package it.epicode.nosey.common;
+
+import org.springframework.http.HttpStatus;
+
+/**
+ * Catalogo completo dei codici (progettazione v4, sezione 0).
+ * httpStatus è null per i due codici che esistono solo sul WebSocket
+ * (CHAT_SOLA_LETTURA, TOKEN_NON_VALIDO): non arrivano mai come risposta HTTP.
+ */
+public enum CodiceErrore {
+
+	// Generali
+	VALIDAZIONE(HttpStatus.BAD_REQUEST),
+	RICHIESTA_VUOTA(HttpStatus.BAD_REQUEST),
+	FILE_NON_VALIDO(HttpStatus.BAD_REQUEST),
+	CATEGORIA_NON_VALIDA(HttpStatus.BAD_REQUEST),
+	NON_AUTENTICATO(HttpStatus.UNAUTHORIZED),
+	ACCESSO_NEGATO(HttpStatus.FORBIDDEN),
+	NON_TROVATO(HttpStatus.NOT_FOUND),
+	CONFLITTO(HttpStatus.CONFLICT),
+	TROPPE_RICHIESTE(HttpStatus.TOO_MANY_REQUESTS),
+	ERRORE_INTERNO(HttpStatus.INTERNAL_SERVER_ERROR),
+	SERVIZIO_ESTERNO(HttpStatus.BAD_GATEWAY),
+
+	// Auth
+	EMAIL_GIA_REGISTRATA(HttpStatus.CONFLICT),
+	GIA_VERIFICATO(HttpStatus.CONFLICT),
+	CODICE_NON_VALIDO(HttpStatus.BAD_REQUEST),
+	CODICE_SCADUTO(HttpStatus.BAD_REQUEST),
+	PASSWORD_ERRATA(HttpStatus.BAD_REQUEST),
+	CREDENZIALI_ERRATE(HttpStatus.UNAUTHORIZED),
+	EMAIL_NON_VERIFICATA(HttpStatus.FORBIDDEN),
+	ACCOUNT_SOSPESO(HttpStatus.FORBIDDEN),
+
+	// Utente
+	PASSWORD_UGUALE(HttpStatus.BAD_REQUEST),
+	ULTIMO_SUPERADMIN(HttpStatus.CONFLICT),
+
+	// Eventi
+	NON_PROPRIETARIO(HttpStatus.FORBIDDEN),
+	EVENTO_CONCLUSO(HttpStatus.CONFLICT),
+	EVENTO_ANNULLATO(HttpStatus.CONFLICT),
+	EVENTO_GIA_INIZIATO(HttpStatus.CONFLICT),
+	DATA_NON_FUTURA(HttpStatus.BAD_REQUEST),
+	DATE_NON_VALIDE(HttpStatus.BAD_REQUEST),
+	POI_FUORI_RAGGIO(HttpStatus.CONFLICT),
+	DESCRIZIONE_MANCANTE(HttpStatus.BAD_REQUEST),
+
+	// Foto e POI
+	LIMITE_FOTO(HttpStatus.CONFLICT),
+	COPERTINA_NON_VALIDA(HttpStatus.BAD_REQUEST),
+	LIMITE_POI(HttpStatus.CONFLICT),
+	POI_TROPPO_LONTANO(HttpStatus.BAD_REQUEST),
+
+	// Artisti
+	ARTISTA_GIA_ASSOCIATO(HttpStatus.CONFLICT),
+	ARTISTA_NON_ATTIVO(HttpStatus.CONFLICT),
+	ARTISTA_NOME_GIA_USATO(HttpStatus.CONFLICT),
+	ARTISTA_IN_USO(HttpStatus.CONFLICT),
+
+	// Partecipanti
+	PROPRIETARIO_NON_ISCRIVIBILE(HttpStatus.CONFLICT),
+	GIA_ISCRITTO(HttpStatus.CONFLICT),
+	NESSUN_TICKET(HttpStatus.FORBIDDEN),
+
+	// Amicizie
+	RICHIESTA_A_SE_STESSO(HttpStatus.BAD_REQUEST),
+	UTENTE_NON_ATTIVO(HttpStatus.CONFLICT),
+	RICHIESTA_GIA_INVIATA(HttpStatus.CONFLICT),
+	RICHIESTA_GIA_RICEVUTA(HttpStatus.CONFLICT),
+	GIA_AMICI(HttpStatus.CONFLICT),
+	AMICIZIA_NON_DISPONIBILE(HttpStatus.CONFLICT),
+	NON_RICEVENTE(HttpStatus.FORBIDDEN),
+	NON_RICHIEDENTE(HttpStatus.FORBIDDEN),
+	NON_IN_ATTESA(HttpStatus.CONFLICT),
+	NON_AMICI(HttpStatus.CONFLICT),
+
+	// Chat
+	NON_MEMBRO(HttpStatus.FORBIDDEN),
+	CHAT_SOLA_LETTURA(null),
+	TOKEN_NON_VALIDO(null),
+
+	// Admin
+	RUOLO_INSUFFICIENTE(HttpStatus.FORBIDDEN),
+	STATO_NON_AMMESSO(HttpStatus.BAD_REQUEST),
+	UTENTE_ANONIMIZZATO(HttpStatus.CONFLICT),
+	RUOLO_NON_AMMESSO(HttpStatus.BAD_REQUEST),
+	UTENTE_NON_VERIFICATO(HttpStatus.CONFLICT);
+
+	private final HttpStatus httpStatus;
+
+	CodiceErrore(HttpStatus httpStatus) {
+		this.httpStatus = httpStatus;
+	}
+
+	public HttpStatus getHttpStatus() {
+		return httpStatus;
+	}
+}
