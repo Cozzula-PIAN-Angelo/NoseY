@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { BASE } from '@/lib/api'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
@@ -13,24 +14,44 @@ import {
   type MarkerMappa,
   type StileMappa,
 } from '@/components/mappa'
-import type { StatoEvento, TipoPoi } from '@/types/api'
+import type { EventoMappaResponse, StatoEvento, TipoPoi } from '@/types/api'
 
-// Marker di prova (FE1-02): un evento al Colosseo con i suoi tre POI intorno.
-function markerDiProva(mostra: (titolo: string, messaggio?: string) => void): MarkerMappa[] {
+// Marker della mappa di prova: gli eventi arrivano da GET /api/events (dati finti di FE1-03),
+// i tre POI sono quelli dell'evento al Colosseo.
+function markerDiProva(
+  eventiMappa: EventoMappaResponse[],
+  mostra: (titolo: string, messaggio?: string) => void,
+): MarkerMappa[] {
   return [
-    {
-      id: 'prova',
-      tipo: 'evento',
-      stato: 'IN_CORSO',
-      lat: 41.8902,
-      lng: 12.4922,
-      etichetta: 'Marker di prova: Colosseo',
-      onClick: () => mostra('Marker di prova', 'Colosseo, Roma'),
-    },
+    ...eventiMappa.map(
+      (e): MarkerMappa => ({
+        id: e.id,
+        tipo: 'evento',
+        stato: e.stato,
+        lat: e.lat,
+        lng: e.lng,
+        etichetta: e.titolo,
+        onClick: () => mostra(e.titolo, `${STILE_STATO[e.stato].etichetta} · inizio ${new Date(e.dataEvento).toLocaleString('it-IT')}`),
+      }),
+    ),
     { id: 'poi-1', tipo: 'INGRESSO', lat: 41.8912, lng: 12.4902, etichetta: 'Ingresso nord' },
     { id: 'poi-2', tipo: 'USCITA', lat: 41.8893, lng: 12.4948, etichetta: 'Uscita est' },
     { id: 'poi-3', tipo: 'EMERGENZA', lat: 41.8889, lng: 12.4906, etichetta: 'Presidio medico' },
   ]
+}
+
+// PROVVISORIO (FE1-03): fetch diretta finche' non ci sono le funzioni API sopra il client
+// di FE2 (passo 5). Con i dati finti attivi risponde MSW.
+function useEventiDiProva() {
+  const [eventiMappa, setEventiMappa] = useState<EventoMappaResponse[]>([])
+  const [errore, setErrore] = useState<unknown>(null)
+  useEffect(() => {
+    fetch(`${BASE}/api/events`)
+      .then(async (r) => (r.ok ? r.json() : Promise.reject({ status: r.status, data: await r.json().catch(() => null) })))
+      .then(setEventiMappa)
+      .catch(setErrore)
+  }, [])
+  return { eventiMappa, errore }
 }
 
 const statiEvento = Object.keys(STILE_STATO) as StatoEvento[]
@@ -126,6 +147,7 @@ export default function Componenti() {
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
   const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
   const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
+  const { eventiMappa, errore: erroreEventi } = useEventiDiProva()
   const avviso = useAvviso()
   const campiErrati = erroreModulo ? leggiErrore(erroreModulo).campi : {}
 
@@ -330,13 +352,20 @@ export default function Componenti() {
               </Button>
             )}
           </div>
+          {erroreEventi ? (
+            <MessaggioErrore errore={erroreEventi} />
+          ) : (
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {eventiMappa.length} eventi da GET /api/events (dati finti MSW): clicca un marker per i dettagli.
+            </p>
+          )}
           <Mappa
             key={stileMappa}
-            etichetta="Mappa di prova: Colosseo, Roma"
+            etichetta="Mappa di prova: eventi finti a Roma"
             centro={{ lat: 41.8902, lng: 12.4922 }}
-            zoom={14}
+            zoom={12}
             stile={stileMappa}
-            marker={markerDiProva(avviso.info)}
+            marker={markerDiProva(eventiMappa, avviso.info)}
             puntoScelto={puntoScelto}
             onScegliPunto={setPuntoScelto}
             className="h-[420px]"
