@@ -72,33 +72,6 @@ I corpi delle 4 email sono template Thymeleaf (HTML), renderizzati da `SmtpEmail
 template: logga solo destinatario, tipo email e dati chiave, non l'HTML renderizzato — la resa
 grafica precisa dei template si rifinisce in una fase successiva.
 
-## Decisione 4: immagini salvate nel database, non su Cloudinary
-
-### Scelta
-
-Le immagini (avatar utente, foto evento, immagine artista) si salvano come `bytea` nelle
-tabelle stesse (`utente.immagine_profilo`, `foto_evento.contenuto`, `artista.immagine`), con
-una colonna `*_content_type` accanto per il MIME type. Niente `url`/`public_id` esterni, niente
-account Cloudinary. Migrazione `V2__immagini_nel_database.sql`.
-
-### Motivazione
-
-- Il team non ha mai configurato Cloudinary e non vuole gestire credenziali/account esterni
-  per la portata di questo progetto didattico.
-- Il database Postgres gestito (es. su Render) e' persistente: a differenza del filesystem
-  del servizio applicativo (effimero, sezione 18 della progettazione), non serve uno storage
-  esterno solo per sopravvivere ai riavvii/deploy.
-- Meno pezzi mobili: un solo sistema (il DB) da cui leggere e su cui scrivere, niente chiamata
-  di rete separata fuori transazione da gestire per l'upload.
-
-### Alternative scartate
-
-- **Cloudinary (previsto dalla progettazione v4)**: resta la soluzione "giusta" per un progetto
-  in produzione con molto traffico, ma il team ha scelto di non configurarla per restare
-  focalizzati sulle funzionalita' core nel tempo a disposizione.
-- **Base64 in una colonna `text`**: piu' semplice da vedere a occhio, ma spreca circa il 33% di
-  spazio in piu' rispetto a `bytea` e non ha vantaggi concreti qui.
-
 ### Motivazione
 
 - Un'interfaccia sola disaccoppia chi invia l'email (i servizi applicativi) da come viene
@@ -119,6 +92,42 @@ account Cloudinary. Migrazione `V2__immagini_nel_database.sql`.
   progetto usa gia' i profili Spring per la stessa distinzione locale/produzione (vedi
   `EmailService` in sezione 0 della progettazione, gia' pensato per due implementazioni
   "scelte dal profilo").
+
+## Decisione 4: immagini salvate nel database, non su Cloudinary
+
+### Scelta
+
+Le immagini (avatar utente, foto evento, immagine artista) si salvano come `bytea` nelle
+tabelle stesse (`utente.immagine_profilo`, `foto_evento.contenuto`, `artista.immagine`), con
+una colonna `*_content_type` accanto per il MIME type. Niente `url`/`public_id` esterni, niente
+account Cloudinary. Migrazione `V2__immagini_nel_database.sql`.
+
+`StorageService` (pacchetto `common`, BE1-05) e' stato adattato di conseguenza: non carica/cancella
+niente su un sistema esterno, valida solo presenza, dimensione e tipo (sui primi byte: JPEG, PNG,
+WEBP) e restituisce i byte pronti da salvare nella colonna della entita' (`ImmagineValidata`).
+Gli item "upload fuori dalla transazione, con cancellazione del file se il salvataggio fallisce"
+e "cancellazione dallo storage dopo il commit" della card originale non si applicano piu' alla
+lettera: non c'e' una chiamata di rete lenta da tenere fuori transazione ne' un file su un altro
+sistema da cancellare a parte — salvare o cancellare il `byte[]` e' la stessa scrittura sul
+database di qualunque altro campo dell'entita', dentro la stessa transazione.
+
+### Motivazione
+
+- Il team non ha mai configurato Cloudinary e non vuole gestire credenziali/account esterni
+  per la portata di questo progetto didattico.
+- Il database Postgres gestito (es. su Render) e' persistente: a differenza del filesystem
+  del servizio applicativo (effimero, sezione 18 della progettazione), non serve uno storage
+  esterno solo per sopravvivere ai riavvii/deploy.
+- Meno pezzi mobili: un solo sistema (il DB) da cui leggere e su cui scrivere, niente chiamata
+  di rete separata fuori transazione da gestire per l'upload.
+
+### Alternative scartate
+
+- **Cloudinary (previsto dalla progettazione v4)**: resta la soluzione "giusta" per un progetto
+  in produzione con molto traffico, ma il team ha scelto di non configurarla per restare
+  focalizzati sulle funzionalita' core nel tempo a disposizione.
+- **Base64 in una colonna `text`**: piu' semplice da vedere a occhio, ma spreca circa il 33% di
+  spazio in piu' rispetto a `bytea` e non ha vantaggi concreti qui.
 
 ## Decisione 5: solo Tailwind, senza librerie di componenti
 
