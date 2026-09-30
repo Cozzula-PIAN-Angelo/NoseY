@@ -1,8 +1,12 @@
 // Componenti comuni dell'interfaccia (FE1-01), usati da tutti e due i frontend.
 // Import: import { Button, TextField } from '@/components/ui'
+export { Avvisi, useAvviso } from './Avvisi'
 export { Button, type ButtonSize, type ButtonVariant } from './Button'
+export { Caricamento, Scheletro } from './Caricamento'
+export { ConfirmDialog } from './ConfirmDialog'
 export { DateTimeField, valoreDataOra } from './DateTimeField'
 export { Icon } from './Icon'
 export { Select, type Opzione } from './Select'
+export { StatoVuoto } from './StatoVuoto'
 export { TextArea } from './TextArea'
 export { TextField } from './TextField'

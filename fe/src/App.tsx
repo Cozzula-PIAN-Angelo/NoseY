@@ -2,6 +2,7 @@ import type { SerializedError } from '@reduxjs/toolkit'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { api } from '@/lib/api'
 import { useStatoQuery } from '@/store/apiSlice'
+import { Avvisi } from '@/components/ui'
 import Componenti from '@/pages/Componenti'
 
 function messaggioErrore(e: FetchBaseQueryError | SerializedError): string {
@@ -45,6 +46,9 @@ export default function App() {
           <Componenti />
         </div>
       </div>
+
+      {/* Avvisi a comparsa: uno solo per tutta l'app */}
+      <Avvisi />
     </div>
   )
 }

@@ -1,5 +1,17 @@
 import { useState, type ReactNode } from 'react'
-import { Button, DateTimeField, Select, TextArea, TextField, type Opzione } from '@/components/ui'
+import {
+  Button,
+  Caricamento,
+  ConfirmDialog,
+  DateTimeField,
+  Scheletro,
+  Select,
+  StatoVuoto,
+  TextArea,
+  TextField,
+  useAvviso,
+  type Opzione,
+} from '@/components/ui'
 
 // Catalogo dei componenti comuni (FE1-01): serve per vederli tutti insieme mentre
 // li sviluppiamo e come riferimento per chi li usa nelle pagine.
@@ -22,10 +34,23 @@ function Sezione({ titolo, children }: { titolo: string; children: ReactNode }) 
 export default function Componenti() {
   const [messaggio, setMessaggio] = useState('')
   const [inCorso, setInCorso] = useState(false)
+  const [conferma, setConferma] = useState<'annulla-evento' | 'iscrizione' | null>(null)
+  const [confermaInCorso, setConfermaInCorso] = useState(false)
+  const avviso = useAvviso()
 
   function simulaChiamata() {
     setInCorso(true)
     setTimeout(() => setInCorso(false), 1500)
+  }
+
+  function confermaAzione() {
+    setConfermaInCorso(true)
+    setTimeout(() => {
+      setConfermaInCorso(false)
+      setConferma(null)
+      if (conferma === 'annulla-evento') avviso.info('Evento annullato', 'I partecipanti riceveranno una notifica.')
+      else avviso.successo('Iscrizione completata', 'Trovi il ticket in I Miei Ticket.')
+    }, 1200)
   }
 
   return (
@@ -71,7 +96,7 @@ export default function Componenti() {
             etichetta="Titolo"
             obbligatorio
             defaultValue=""
-            errore="Il titolo e' obbligatorio"
+            errore="Il titolo è obbligatorio"
           />
           <TextArea
             className="md:col-span-2"
@@ -89,6 +114,91 @@ export default function Componenti() {
           <Select etichetta="Tipo di POI" obbligatorio segnaposto="Scegli un tipo..." opzioni={tipiPoi} defaultValue="" />
           <DateTimeField etichetta="Inizio evento" obbligatorio min={new Date()} />
           <DateTimeField etichetta="Data di nascita" soloData max={new Date()} />
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Finestra di conferma">
+        <div className="flex flex-wrap gap-space-sm">
+          <Button icona="confirmation_number" onClick={() => setConferma('iscrizione')}>
+            Iscriviti all'evento
+          </Button>
+          <Button variant="danger" icona="event_busy" onClick={() => setConferma('annulla-evento')}>
+            Annulla evento
+          </Button>
+        </div>
+        <ConfirmDialog
+          aperta={conferma === 'iscrizione'}
+          titolo="Confermi l'iscrizione?"
+          icona="confirmation_number"
+          testoConferma="Iscriviti"
+          inCorso={confermaInCorso}
+          onConferma={confermaAzione}
+          onAnnulla={() => setConferma(null)}
+        >
+          Riceverai il ticket via email e lo troverai in I Miei Ticket.
+        </ConfirmDialog>
+        <ConfirmDialog
+          aperta={conferma === 'annulla-evento'}
+          titolo="Annullare l'evento?"
+          icona="warning"
+          variante="danger"
+          testoConferma="Annulla evento"
+          testoAnnulla="Indietro"
+          inCorso={confermaInCorso}
+          onConferma={confermaAzione}
+          onAnnulla={() => setConferma(null)}
+        >
+          L'operazione è irreversibile: l'evento sparisce dalla mappa e tutti i partecipanti
+          ricevono una notifica.
+        </ConfirmDialog>
+      </Sezione>
+
+      <Sezione titolo="Avvisi a comparsa">
+        <div className="flex flex-wrap gap-space-sm">
+          <Button variant="secondary" onClick={() => avviso.successo('Richiesta inviata', 'Riceverai una notifica quando verrà accettata.')}>
+            Successo
+          </Button>
+          <Button variant="secondary" onClick={() => avviso.errore('Evento concluso', "Non è più possibile iscriversi.")}>
+            Errore
+          </Button>
+          <Button variant="secondary" onClick={() => avviso.info('Nuovo messaggio', 'Sofia ti ha scritto.')}>
+            Info
+          </Button>
+          <Button variant="secondary" onClick={() => avviso.attenzione('Troppe richieste', 'Attendi 60 secondi prima di richiedere un nuovo codice.')}>
+            Attenzione
+          </Button>
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Caricamento">
+        <div className="flex flex-col gap-space-md">
+          <Caricamento />
+          <Caricamento riquadro testo="Carico gli eventi vicini..." />
+          <div className="grid gap-space-md sm:grid-cols-3">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="flex flex-col gap-space-sm">
+                <Scheletro className="h-40 w-full" />
+                <Scheletro className="h-5 w-3/4" />
+                <Scheletro className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Stato vuoto">
+        <div className="grid gap-space-md md:grid-cols-2">
+          <StatoVuoto
+            titolo="Nessun artista trovato"
+            messaggio="Non ci sono artisti corrispondenti alla ricerca. Controlla l'ortografia o prova un altro nome."
+            azione={<Button variant="secondary">Reimposta ricerca</Button>}
+          />
+          <StatoVuoto
+            icona="confirmation_number"
+            titolo="Nessun ticket"
+            messaggio="Quando ti iscrivi a un evento, il ticket compare qui."
+            azione={<Button icona="explore">Esplora eventi</Button>}
+          />
         </div>
       </Sezione>
     </div>
