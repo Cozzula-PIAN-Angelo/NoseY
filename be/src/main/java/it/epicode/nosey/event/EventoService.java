@@ -12,15 +12,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
 /**
- * CreaEvento e VediEvento (progettazione v4, sezione 3).
+ * ListaEventiMappa, CreaEvento e VediEvento (progettazione v4, sezione 3).
  */
 @Service
 @RequiredArgsConstructor
 public class EventoService {
+
+	// Raggio medio della Terra: precisione sufficiente per ordinare gli eventi (non per navigare).
+	private static final double RAGGIO_TERRA_KM = 6371.0;
 
 	private final EventoRepository eventoRepository;
 	private final UtenteRepository utenteRepository;
@@ -29,6 +33,37 @@ public class EventoService {
 	private final PoiRepository poiRepository;
 	private final PartecipanteRepository partecipanteRepository;
 	private final Clock clock;
+
+	@Transactional(readOnly = true)
+	public List<EventoMappaResponse> listaMappa(Double lat, Double lng) {
+		if ((lat == null) != (lng == null)) {
+			throw new ApplicazioneException(CodiceErrore.VALIDAZIONE, "lat e lng vanno passati insieme o nessuno dei due");
+		}
+		Instant adesso = clock.instant();
+		List<Evento> eventi = eventoRepository
+				.findByStatoAndDataFineGreaterThanEqualOrderByDataEventoAsc(StatoEventoDb.PROGRAMMATO, adesso);
+
+		if (lat == null) {
+			// Senza posizione: l'ordine per dataEvento crescente arriva gia' dalla query.
+			return eventi.stream().map(evento -> EventoMappaResponse.da(evento, null, adesso)).toList();
+		}
+		// Con la posizione: per distanza crescente (Haversine). La posizione cambia solo
+		// l'ordine, mai il numero di eventi restituiti (requisito della traccia).
+		return eventi.stream()
+				.map(evento -> EventoMappaResponse.da(evento, distanzaKm(lat, lng, evento.getLat(), evento.getLng()), adesso))
+				.sorted(Comparator.comparingDouble(EventoMappaResponse::distanzaKm))
+				.toList();
+	}
+
+	private double distanzaKm(double lat1, double lng1, double lat2, double lng2) {
+		double dLat = Math.toRadians(lat2 - lat1);
+		double dLng = Math.toRadians(lng2 - lng1);
+		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+				+ Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+				* Math.sin(dLng / 2) * Math.sin(dLng / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		return RAGGIO_TERRA_KM * c;
+	}
 
 	@Transactional
 	public EventoDettaglioResponse crea(EventoRequest richiesta, UUID proprietarioId) {
