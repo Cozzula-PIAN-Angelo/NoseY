@@ -22,6 +22,11 @@ spring:
         jdbc:
           time_zone: UTC
 
+  mvc:
+    # I devtools lo accendono in locale: Spring scriverebbe nel log ogni eccezione gestita,
+    # e per la validazione anche il valore rifiutato (es. una password troppo corta, in chiaro).
+    log-resolved-exception: false
+
   # Usata solo da SmtpEmailService (profilo "smtp"): con LogEmailService (default)
   # queste proprieta' restano inutilizzate.
   mail:
