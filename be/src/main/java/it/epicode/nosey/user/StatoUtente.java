@@ -1,5 +1,7 @@
 package it.epicode.nosey.user;
 
 public enum StatoUtente {
-	ATTIVO, SOSPESO, ANONIMIZZATO
+	ATTIVO,
+	SOSPESO,
+	ANONIMIZZATO
 }

@@ -1,4 +1,4 @@
-package it.epicode.nosey.user;
+package it.epicode.nosey.event;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,18 +12,21 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ruolo")
+@Table(name = "artista")
 @Getter
 @Setter
-public class Ruolo {
+public class Artista {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
 	private UUID id;
 
-	@Column(nullable = false, unique = true, length = 20)
+	@Column(nullable = false, length = 100)
 	private String nome;
 
-	@Column(nullable = false, unique = true)
-	private int livello;
+	@Column(name = "immagine_url", length = 500)
+	private String immagineUrl;
+
+	@Column(nullable = false)
+	private boolean attivo = true;
 }

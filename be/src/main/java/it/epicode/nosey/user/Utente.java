@@ -1,12 +1,5 @@
 package it.epicode.nosey.user;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.UUID;
-
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,32 +11,33 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Table(name = "utente")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Utente {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.UUID)
-	@Setter(AccessLevel.NONE)
 	private UUID id;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "ruolo_id")
+	@JoinColumn(name = "ruolo_id", nullable = false)
 	private Ruolo ruolo;
 
-	// Sempre minuscola: la normalizzazione avviene nel DTO.
-	@Column(nullable = false)
+	@Column(nullable = false, unique = true, length = 255)
 	private String email;
 
-	@Column(nullable = false, length = 100)
+	@Column(name = "password_hash", nullable = false, length = 100)
 	private String passwordHash;
 
 	@Column(nullable = false, length = 100)
@@ -52,14 +46,16 @@ public class Utente {
 	@Column(nullable = false, length = 100)
 	private String cognome;
 
+	@Column(length = 255)
 	private String indirizzo;
 
-	// NULL solo dopo l'anonimizzazione.
+	@Column(name = "data_nascita")
 	private LocalDate dataNascita;
 
-	// URL e public id di Cloudinary: presenti o assenti insieme (ck_utente_immagine).
+	@Column(name = "immagine_profilo_url", columnDefinition = "text")
 	private String immagineProfiloUrl;
 
+	@Column(name = "immagine_profilo_public_id", length = 255)
 	private String immagineProfiloPublicId;
 
 	@Column(nullable = false)
@@ -70,37 +66,26 @@ public class Utente {
 	@Column(nullable = false)
 	private StatoUtente stato = StatoUtente.ATTIVO;
 
-	// Codice a 6 cifre e scopo: presenti o assenti insieme (ck_utente_codice).
 	@Column(length = 6)
 	private String codice;
 
 	@Enumerated(EnumType.STRING)
 	@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+	@Column(name = "codice_scopo")
 	private ScopoCodice codiceScopo;
 
+	@Column(name = "codice_inviato_il")
 	private Instant codiceInviatoIl;
 
-	@Column(nullable = false)
+	@Column(name = "codice_tentativi", nullable = false)
 	private int codiceTentativi = 0;
 
-	@Column(nullable = false)
+	@Column(name = "invii_codice", nullable = false)
 	private int inviiCodice = 0;
 
+	@Column(name = "invii_codice_dal")
 	private Instant inviiCodiceDal;
 
-	@Column(nullable = false, updatable = false)
-	@Setter(AccessLevel.NONE)
+	@Column(name = "creato_il", nullable = false)
 	private Instant creatoIl;
-
-	public Utente(Ruolo ruolo, String email, String passwordHash, String nome, String cognome,
-			String indirizzo, LocalDate dataNascita, Instant creatoIl) {
-		this.ruolo = ruolo;
-		this.email = email;
-		this.passwordHash = passwordHash;
-		this.nome = nome;
-		this.cognome = cognome;
-		this.indirizzo = indirizzo;
-		this.dataNascita = dataNascita;
-		this.creatoIl = creatoIl;
-	}
 }
