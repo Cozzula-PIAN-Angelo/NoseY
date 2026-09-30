@@ -26,3 +26,32 @@ con RTK Query per le chiamate al backend. Lo store sta in `fe/src/store/`, gli h
   andrebbe gestito a parte con piu' Context.
 - **Solo Context + `useState`**: sufficiente per poco stato, ma diventa difficile da mantenere
   con molte funzionalita' e piu' persone che ci lavorano.
+
+## Decisione 2: solo Tailwind, senza librerie di componenti
+
+### Scelta
+
+Nessuna libreria di componenti: i componenti comuni (pulsante, campi, select, data e ora,
+finestra di conferma, avviso a comparsa, caricamento, stato vuoto, errore, paginazione) li
+scriviamo noi in `fe/src/components/ui/`, con Tailwind e i token del design system Stitch
+definiti in `fe/src/index.css`. Dove esiste, si usa l'elemento nativo del browser:
+`<dialog>` per la finestra di conferma, `<select>`, `<input type="datetime-local">`.
+
+Tutti e due i frontend importano i componenti da `@/components/ui`: nessuno ne riscrive
+una propria versione nella sua pagina.
+
+### Motivazione
+
+- La grafica e' gia' definita su Stitch, con colori, font e spaziature propri: una libreria
+  andrebbe comunque ristilizzata da capo per assomigliarle.
+- Gli elementi nativi danno gratis tastiera, focus e accessibilita' (`<dialog>` chiude con
+  Esc e blocca il resto della pagina), senza dipendenze in piu'.
+- Pochi file brevi, scritti da noi: chiunque del team li legge e li modifica.
+
+### Alternative scartate
+
+- **Headless UI**: comportamento accessibile gia' pronto, ma per i componenti che servono
+  a NoseY bastano gli elementi nativi; si puo' aggiungere in seguito se servisse
+  (es. un Combobox con ricerca).
+- **shadcn/ui, Mantine e simili**: molti componenti pronti, ma con uno stile proprio da
+  riadattare a Stitch e molto codice o dipendenze che non useremmo.
