@@ -2,6 +2,10 @@ spring:
   application:
     name: nosey
 
+  # Autenticazione solo con JWT (TokenService): niente utente in memoria con password generata.
+  autoconfigure:
+    exclude: org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
+
   datasource:
     # In locale valgono i valori dopo i due punti. Su Render DatabaseUrl legge
     # DATABASE_URL e sovrascrive queste tre proprieta'.
@@ -37,3 +41,8 @@ app:
   cors:
     # In produzione: ALLOWED_ORIGIN=https://<fe>.onrender.com (piu' valori separati da virgola).
     allowed-origins: ${ALLOWED_ORIGIN:http://localhost:5173,http://localhost:4173}
+  jwt:
+    # Nessun default: un segreto scritto qui sarebbe pubblico. Almeno 32 caratteri (HS256).
+    # In locale va impostato nella configurazione di avvio (variabile d'ambiente JWT_SECRET).
+    secret: ${JWT_SECRET}
+    durata: ${JWT_DURATA:24h}
