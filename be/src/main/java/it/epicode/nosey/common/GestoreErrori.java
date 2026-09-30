@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Clock;
@@ -72,6 +73,13 @@ public class GestoreErrori {
 	@ExceptionHandler(MaxUploadSizeExceededException.class)
 	public ResponseEntity<ErroreResponse> gestisci(MaxUploadSizeExceededException ex) {
 		return risposta(CodiceErrore.FILE_NON_VALIDO, "Il file supera la dimensione massima consentita", Map.of());
+	}
+
+	// Richiesta multipart malformata su un endpoint di upload: senza questo diventerebbe un 500.
+	// MaxUploadSizeExceededException e' una sottoclasse, ma resta al suo handler (piu' specifico).
+	@ExceptionHandler(MultipartException.class)
+	public ResponseEntity<ErroreResponse> gestisci(MultipartException ex) {
+		return risposta(CodiceErrore.FILE_NON_VALIDO, "File non leggibile", Map.of());
 	}
 
 	@ExceptionHandler(NoResourceFoundException.class)

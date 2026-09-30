@@ -238,3 +238,42 @@ come richiede la licenza ODbL di OpenStreetMap.
 - **CARTO, MapTiler, Stadia**: stili scuri pronti, ma servizi commerciali con registrazione,
   chiave API o limiti del piano gratuito.
 - **Google Maps**: richiede chiave API e carta di credito anche per il piano gratuito.
+
+## Decisione 9: immagini servite da un GET pubblico, con URL relativo e versione
+
+### Scelta
+
+Con le immagini nel database (decisione 4) il backend le restituisce da un **GET pubblico**
+che risponde con i byte e il loro `Content-Type` (404 `NON_TROVATO` se l'immagine non c'e').
+Per l'avatar: `GET /api/users/{utenteId}/avatar`, aggiunto ai percorsi pubblici di `SecurityConfig`.
+
+Nei DTO il campo dell'immagine e' il **percorso relativo** di quel GET, con un parametro `v`
+che cambia con il contenuto (CRC32 dei byte), oppure `null` se l'immagine non c'e':
+`immagineProfilo = "/api/users/{id}/avatar?v=1a2b3c4d"`. Il frontend lo usa come ogni altra
+chiamata: `<img src={`${BASE}${immagineProfilo}`}>`. La costruzione sta in
+`UtenteResponse.urlImmagineProfilo`, da riusare in `UtentePubblicoResponse`.
+
+La risposta ha `Cache-Control: no-cache` e `ETag` uguale a `v`: il browser ricontrolla ogni
+volta e, se l'immagine non e' cambiata, riceve 304 senza corpo.
+
+Foto degli eventi (`FotoResponse.url`, `copertinaUrl`) e immagini degli artisti
+(`ArtistaResponse.immagineUrl`) seguono lo stesso schema, con un GET pubblico ciascuna.
+
+### Motivazione
+
+- Un tag `<img>` non puo' mandare l'header `Authorization`: con un GET protetto le immagini
+  non si vedrebbero senza lavoro extra nel frontend.
+- Il percorso relativo segue la stessa regola delle altre chiamate (`BASE` vuota in sviluppo
+  con il proxy di Vite, `VITE_API_URL` in produzione): il backend non deve conoscere il proprio
+  indirizzo pubblico.
+- `v` cambia con l'immagine: dopo un nuovo upload il browser non mostra quella vecchia dalla
+  cache, e il frontend non deve aggiungere nulla all'URL.
+- Gli id sono UUID: l'immagine di un utente si raggiunge solo conoscendone l'id, che compare
+  gia' nelle risposte dove l'utente e' visibile.
+
+### Alternative scartate
+
+- **Data URI (base64) nel JSON**: nessun endpoint in piu', ma ogni utente peserebbe fino a
+  ~2,7 MB nella risposta, e una lista di partecipanti o amici diventerebbe enorme.
+- **GET protetto dal token + blob nel frontend**: nessuna immagine pubblica, ma il frontend
+  dovrebbe scaricare ogni immagine con `fetch` e creare un URL blob per mostrarla.

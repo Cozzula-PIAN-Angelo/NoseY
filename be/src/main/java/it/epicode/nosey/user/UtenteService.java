@@ -5,26 +5,32 @@ import it.epicode.nosey.auth.TokenService;
 import it.epicode.nosey.auth.UtenteAutenticato;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
+import it.epicode.nosey.common.ImmagineValidata;
+import it.epicode.nosey.common.StorageService;
 import it.epicode.nosey.mail.PasswordCambiataEmailEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
 /**
- * Profilo e cambio password dell'utente autenticato (progettazione v4, sezione 2).
+ * Profilo, cambio password e immagine del profilo (progettazione v4, sezione 2).
  * Chi fa la richiesta arriva sempre dal token, mai dal body.
  */
 @Service
 @RequiredArgsConstructor
 public class UtenteService {
 
+	private static final long DIMENSIONE_MASSIMA_IMMAGINE = 2 * 1024 * 1024;
+
 	private final UtenteRepository utenteRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final TokenService tokenService;
+	private final StorageService storageService;
 	private final ApplicationEventPublisher eventi;
 
 	@Transactional(readOnly = true)
@@ -74,6 +80,40 @@ public class UtenteService {
 		// Logout dalle altre sessioni: chi ha cambiato la password resta collegato.
 		tokenService.revocaTuttiTranne(utente.getId(), autenticato.jti());
 		eventi.publishEvent(new PasswordCambiataEmailEvent(utente.getEmail(), utente.getNome()));
+	}
+
+	/**
+	 * La nuova immagine sovrascrive la precedente nella stessa transazione (decisione 4):
+	 * non resta nessun file da cancellare dopo il commit.
+	 */
+	@Transactional
+	public UtenteResponse caricaImmagine(UtenteAutenticato autenticato, MultipartFile file) {
+		// Prima il file: presenza, dimensione e tipo fanno parte della validazione.
+		ImmagineValidata immagine = storageService.valida(file, DIMENSIONE_MASSIMA_IMMAGINE);
+		Utente utente = trova(autenticato.id());
+		utente.setImmagineProfilo(immagine.contenuto());
+		utente.setImmagineProfiloContentType(immagine.contentType());
+		return UtenteResponse.da(utente);
+	}
+
+	@Transactional
+	public void rimuoviImmagine(UtenteAutenticato autenticato) {
+		Utente utente = trova(autenticato.id());
+		if (utente.getImmagineProfilo() == null) {
+			throw new ApplicazioneException(CodiceErrore.NON_TROVATO, "Nessuna immagine del profilo");
+		}
+		utente.setImmagineProfilo(null);
+		utente.setImmagineProfiloContentType(null);
+	}
+
+	/** GET pubblico dell'avatar di qualunque utente (decisione 9). */
+	@Transactional(readOnly = true)
+	public ImmagineProfilo immagine(UUID utenteId) {
+		return utenteRepository.findById(utenteId)
+				.filter(u -> u.getImmagineProfilo() != null)
+				.map(u -> new ImmagineProfilo(u.getImmagineProfilo(), u.getImmagineProfiloContentType(),
+						UtenteResponse.versioneImmagine(u.getImmagineProfilo())))
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Immagine non trovata"));
 	}
 
 	private Utente trova(UUID id) {
