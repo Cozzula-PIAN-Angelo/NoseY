@@ -3,6 +3,7 @@ import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
 import { DIMENSIONE_PAGINA, type PaginaResponse } from '@/lib/pagine'
+import { Mappa, type Coordinate, type StileMappa } from '@/components/mappa'
 import {
   Button,
   Caricamento,
@@ -92,6 +93,8 @@ export default function Componenti() {
   const [erroreModulo, setErroreModulo] = useState<FetchBaseQueryError | null>(null)
   const [paginaEventi, setPaginaEventi] = useState(0)
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
+  const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
+  const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
   const avviso = useAvviso()
   const campiErrati = erroreModulo ? leggiErrore(erroreModulo).campi : {}
 
@@ -274,6 +277,57 @@ export default function Componenti() {
               <Button type="submit">{erroreModulo ? 'Pulisci errori' : 'Invia'}</Button>
             </div>
           </form>
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Mappa (FE1-02)">
+        <div className="flex flex-col gap-space-md">
+          <div className="flex flex-wrap items-center gap-space-xs">
+            {(['dark', 'fiord'] as const).map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant={stileMappa === s ? 'primary' : 'secondary'}
+                onClick={() => setStileMappa(s)}
+              >
+                Stile {s}
+              </Button>
+            ))}
+            {puntoScelto && (
+              <Button size="sm" variant="ghost" icona="close" onClick={() => setPuntoScelto(null)}>
+                Togli il punto scelto
+              </Button>
+            )}
+          </div>
+          <Mappa
+            key={stileMappa}
+            etichetta="Mappa di prova: Colosseo, Roma"
+            centro={{ lat: 41.8902, lng: 12.4922 }}
+            zoom={14}
+            stile={stileMappa}
+            marker={[
+              {
+                id: 'prova',
+                lat: 41.8902,
+                lng: 12.4922,
+                etichetta: 'Marker di prova: Colosseo',
+                onClick: () => avviso.info('Marker di prova', 'Colosseo, Roma'),
+              },
+            ]}
+            puntoScelto={puntoScelto}
+            onScegliPunto={setPuntoScelto}
+            className="h-[420px]"
+          />
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Clicca sulla mappa per scegliere un punto, poi trascina il segnaposto per spostarlo.{' '}
+            {puntoScelto ? (
+              <span className="font-mono text-on-surface">
+                Punto scelto: {puntoScelto.lat}, {puntoScelto.lng}
+              </span>
+            ) : (
+              'Nessun punto scelto.'
+            )}
+          </p>
         </div>
       </Sezione>
 

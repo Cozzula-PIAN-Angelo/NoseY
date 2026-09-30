@@ -1,0 +1,24 @@
+/* Controlli di MapLibre (zoom +/-) nei colori di Stitch: di default sono bianchi. */
+.mappa-nosey .maplibregl-ctrl-group {
+  background: var(--color-surface-card);
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 0.6);
+  overflow: hidden;
+}
+
+.mappa-nosey .maplibregl-ctrl-group button + button {
+  border-top-color: var(--color-surface-container-high);
+}
+
+.mappa-nosey .maplibregl-ctrl-group button:hover {
+  background-color: var(--color-surface-container-high);
+}
+
+/* Le icone dei pulsanti sono immagini scure: le schiariamo */
+.mappa-nosey .maplibregl-ctrl-group .maplibregl-ctrl-icon {
+  filter: invert(0.9);
+}
+
+.mappa-nosey .maplibregl-ctrl-group button:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--color-primary-container);
+}
