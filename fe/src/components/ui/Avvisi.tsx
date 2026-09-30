@@ -29,8 +29,9 @@ export function useAvviso() {
       attenzione: crea('attenzione'),
       erroreApi: (errore: unknown) => {
         const e = leggiErrore(errore)
-        // 429 non e' un vero errore: basta aspettare
-        dispatch(mostraAvviso({ tipo: e.status === 429 ? 'attenzione' : 'errore', titolo: e.titolo, messaggio: e.messaggio }))
+        // Troppe richieste non e' un vero errore: basta aspettare
+        const tipo = e.codice === 'TROPPE_RICHIESTE' || e.status === 429 ? 'attenzione' : 'errore'
+        dispatch(mostraAvviso({ tipo, titolo: e.titolo, messaggio: e.messaggio }))
       },
     }
   }, [dispatch])

@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
 import {
   Button,
@@ -27,24 +28,34 @@ const tipiPoi: Opzione<'INGRESSO' | 'USCITA' | 'EMERGENZA'>[] = [
 ]
 
 // Errori come li restituirebbe RTK Query, per provare i messaggi senza backend.
-function erroreFinto(status: number, messaggio = '', campi: Record<string, string> = {}): FetchBaseQueryError {
+function erroreFinto(codice: string, status: number, campi: Record<string, string> = {}): FetchBaseQueryError {
   return {
     status,
-    data: { status, errore: 'Errore', messaggio, campi, timestamp: new Date().toISOString() } satisfies ErroreResponse,
+    data: {
+      status,
+      codice,
+      errore: 'Errore',
+      messaggio: 'Testo tecnico del backend, non mostrato',
+      campi,
+      timestamp: new Date().toISOString(),
+    } satisfies ErroreResponse,
   }
 }
 
 const erroriDiProva: { etichetta: string; errore: FetchBaseQueryError }[] = [
-  { etichetta: '401', errore: erroreFinto(401, 'Token scaduto') },
-  { etichetta: '403', errore: erroreFinto(403, "Solo il proprietario può modificare l'evento") },
-  { etichetta: '404', errore: erroreFinto(404) },
-  { etichetta: '409', errore: erroreFinto(409, "L'evento è concluso: non è più possibile iscriversi") },
-  { etichetta: '429', errore: erroreFinto(429, 'Hai già richiesto un codice meno di 60 secondi fa') },
-  { etichetta: '502', errore: erroreFinto(502) },
+  { etichetta: 'EVENTO_CONCLUSO', errore: erroreFinto('EVENTO_CONCLUSO', 409) },
+  { etichetta: 'GIA_ISCRITTO', errore: erroreFinto('GIA_ISCRITTO', 409) },
+  { etichetta: 'CREDENZIALI_ERRATE', errore: erroreFinto('CREDENZIALI_ERRATE', 401) },
+  { etichetta: 'NESSUN_TICKET', errore: erroreFinto('NESSUN_TICKET', 403) },
+  { etichetta: 'TROPPE_RICHIESTE', errore: erroreFinto('TROPPE_RICHIESTE', 429) },
+  { etichetta: 'SERVIZIO_ESTERNO', errore: erroreFinto('SERVIZIO_ESTERNO', 502) },
+  { etichetta: 'Codice sconosciuto (409)', errore: erroreFinto('CODICE_NUOVO_NON_IN_CATALOGO', 409) },
   { etichetta: 'Rete', errore: { status: 'FETCH_ERROR', error: 'TypeError: Failed to fetch' } },
 ]
 
-const registrazioneRifiutata = erroreFinto(400, 'Validazione fallita', {
+const opzioniCodici: Opzione<CodiceErrore>[] = CODICI_ERRORE.map((c) => ({ valore: c, etichetta: c }))
+
+const registrazioneRifiutata = erroreFinto('VALIDAZIONE', 400, {
   email: 'Deve essere un indirizzo email valido',
   password: 'La lunghezza deve essere compresa tra 8 e 72',
 })
@@ -216,6 +227,15 @@ export default function Componenti() {
               </Button>
             ))}
           </div>
+          <Select
+            etichetta="Oppure scegli uno dei codici del backend"
+            aiuto="Tutti i codici di CodiceErrore.java, con il testo che vedrà l'utente"
+            segnaposto="Scegli un codice..."
+            opzioni={opzioniCodici}
+            defaultValue=""
+            onChange={(e) => e.target.value && setErroreScelto(erroreFinto(e.target.value, 400))}
+            className="max-w-md"
+          />
           <MessaggioErrore errore={erroreScelto} onRiprova={() => avviso.info('Riprovo...')} />
           <div>
             <Button variant="secondary" icona="notifications" onClick={() => avviso.erroreApi(erroreScelto)}>
@@ -231,7 +251,7 @@ export default function Componenti() {
             }}
           >
             <p className="font-body-sm text-body-sm text-on-surface-variant md:col-span-2">
-              Modulo di prova: "Invia" simula un 400 con errori sui campi (ErroreResponse.campi).
+              Modulo di prova: "Invia" simula un errore VALIDAZIONE con errori sui campi (ErroreResponse.campi).
             </p>
             {erroreModulo && <MessaggioErrore errore={erroreModulo} className="md:col-span-2" />}
             <TextField etichetta="Email" name="email" defaultValue="mario@" errore={campiErrati.email} />
