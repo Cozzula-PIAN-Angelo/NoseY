@@ -2,6 +2,7 @@ package it.epicode.nosey.common;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
+import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -91,6 +92,16 @@ public class GestoreErrori {
 	}
 
 	private String nomeVincolo(DataIntegrityViolationException ex) {
+		// Prima il nome che PostgreSQL manda in un campo a parte dell'errore: non dipende dalla
+		// lingua del server. Hibernate invece lo cerca nel testo del messaggio in inglese, e con
+		// un PostgreSQL in italiano non lo trova (decisione 7).
+		for (Throwable causa = ex; causa != null; causa = causa.getCause()) {
+			if (causa instanceof PSQLException psqlEx
+					&& psqlEx.getServerErrorMessage() != null
+					&& psqlEx.getServerErrorMessage().getConstraint() != null) {
+				return psqlEx.getServerErrorMessage().getConstraint();
+			}
+		}
 		if (ex.getCause() instanceof org.hibernate.exception.ConstraintViolationException hibernateEx) {
 			return hibernateEx.getConstraintName();
 		}

@@ -173,3 +173,27 @@ Una pulizia `@Scheduled` ogni 10 minuti toglie le chiavi senza eventi recenti.
   approssima "N in una finestra" invece di contarli.
 - **Limiti nel database**: sopravvivrebbero ai riavvii, ma aggiungono scritture a ogni
   richiesta; la progettazione accetta l'azzeramento al riavvio con una sola istanza.
+
+## Decisione 7: nome del vincolo violato letto dal driver PostgreSQL
+
+### Scelta
+
+Per scegliere il codice di un 409 (es. `uq_utente_email` → `EMAIL_GIA_REGISTRATA`), il
+`GestoreErrori` legge il nome del vincolo da `PSQLException.getServerErrorMessage().getConstraint()`
+e solo se manca usa quello estratto da Hibernate. Per questo il driver `postgresql` nel `pom.xml`
+non e' piu' solo `runtime`.
+
+### Motivazione
+
+- Hibernate ricava il nome cercandolo nel testo del messaggio in inglese
+  ("violates unique constraint"). Con un PostgreSQL installato in italiano ("viola il vincolo
+  univoco") non lo trova, e in locale ogni 409 diventava `CONFLITTO`.
+- PostgreSQL manda il nome del vincolo anche in un campo a parte dell'errore, uguale in tutte
+  le lingue: funziona in locale e su Render senza configurare niente.
+
+### Alternative scartate
+
+- **`ALTER DATABASE ... SET lc_messages TO 'C'` su ogni PC**: nessuna modifica al codice, ma
+  ognuno deve ricordarsene e un database ricreato torna in italiano.
+- **Forzare `lc_messages` dalla configurazione dell'app**: cambiarlo e' permesso solo agli
+  amministratori del database; su Render l'utente non lo e' e le connessioni fallirebbero.
