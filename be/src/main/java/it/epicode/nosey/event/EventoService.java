@@ -81,7 +81,7 @@ public class EventoService {
 				evento.getDescrizione(),
 				evento.getDataEvento(),
 				evento.getDataFine(),
-				calcolaStato(evento),
+				StatoEvento.calcola(evento, clock.instant()),
 				evento.getMotivoAnnullamento(),
 				evento.getLat(),
 				evento.getLng(),
@@ -92,21 +92,5 @@ public class EventoService {
 				numeroPartecipanti,
 				sonoProprietario,
 				sonoIscritto);
-	}
-
-	// PROGRAMMATO/ANNULLATO stanno nel DB; IN_CORSO e CONCLUSO si calcolano dalle date
-	// (progettazione v4, sezione 0 "Stato dell'evento"): niente job che li tenga aggiornati.
-	private StatoEvento calcolaStato(Evento evento) {
-		if (evento.getStato() == StatoEventoDb.ANNULLATO) {
-			return StatoEvento.ANNULLATO;
-		}
-		Instant adesso = clock.instant();
-		if (adesso.isBefore(evento.getDataEvento())) {
-			return StatoEvento.PROGRAMMATO;
-		}
-		if (!adesso.isAfter(evento.getDataFine())) {
-			return StatoEvento.IN_CORSO;
-		}
-		return StatoEvento.CONCLUSO;
 	}
 }
