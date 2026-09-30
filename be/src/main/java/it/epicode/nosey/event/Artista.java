@@ -6,11 +6,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "artista")
+@Getter
+@Setter
 public class Artista {
 
 	@Id
@@ -25,32 +29,4 @@ public class Artista {
 
 	@Column(nullable = false)
 	private boolean attivo = true;
-
-	public UUID getId() {
-		return id;
-	}
-
-	public String getNome() {
-		return nome;
-	}
-
-	public void setNome(String nome) {
-		this.nome = nome;
-	}
-
-	public String getImmagineUrl() {
-		return immagineUrl;
-	}
-
-	public void setImmagineUrl(String immagineUrl) {
-		this.immagineUrl = immagineUrl;
-	}
-
-	public boolean isAttivo() {
-		return attivo;
-	}
-
-	public void setAttivo(boolean attivo) {
-		this.attivo = attivo;
-	}
 }

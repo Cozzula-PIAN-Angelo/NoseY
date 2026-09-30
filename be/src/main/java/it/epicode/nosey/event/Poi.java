@@ -11,6 +11,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -19,6 +21,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "poi")
+@Getter
+@Setter
 public class Poi {
 
 	@Id
@@ -45,56 +49,4 @@ public class Poi {
 
 	@Column(name = "creato_il", nullable = false)
 	private Instant creatoIl;
-
-	public UUID getId() {
-		return id;
-	}
-
-	public Evento getEvento() {
-		return evento;
-	}
-
-	public void setEvento(Evento evento) {
-		this.evento = evento;
-	}
-
-	public TipoPoi getTipo() {
-		return tipo;
-	}
-
-	public void setTipo(TipoPoi tipo) {
-		this.tipo = tipo;
-	}
-
-	public double getLat() {
-		return lat;
-	}
-
-	public void setLat(double lat) {
-		this.lat = lat;
-	}
-
-	public double getLng() {
-		return lng;
-	}
-
-	public void setLng(double lng) {
-		this.lng = lng;
-	}
-
-	public String getEtichetta() {
-		return etichetta;
-	}
-
-	public void setEtichetta(String etichetta) {
-		this.etichetta = etichetta;
-	}
-
-	public Instant getCreatoIl() {
-		return creatoIl;
-	}
-
-	public void setCreatoIl(Instant creatoIl) {
-		this.creatoIl = creatoIl;
-	}
 }

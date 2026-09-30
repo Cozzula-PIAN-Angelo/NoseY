@@ -9,12 +9,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "foto_evento")
+@Getter
+@Setter
 public class FotoEvento {
 
 	@Id
@@ -39,56 +43,4 @@ public class FotoEvento {
 
 	@Column(name = "caricata_il", nullable = false)
 	private Instant caricataIl;
-
-	public UUID getId() {
-		return id;
-	}
-
-	public Evento getEvento() {
-		return evento;
-	}
-
-	public void setEvento(Evento evento) {
-		this.evento = evento;
-	}
-
-	public String getUrl() {
-		return url;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	public String getPublicId() {
-		return publicId;
-	}
-
-	public void setPublicId(String publicId) {
-		this.publicId = publicId;
-	}
-
-	public String getDidascalia() {
-		return didascalia;
-	}
-
-	public void setDidascalia(String didascalia) {
-		this.didascalia = didascalia;
-	}
-
-	public boolean isCopertina() {
-		return copertina;
-	}
-
-	public void setCopertina(boolean copertina) {
-		this.copertina = copertina;
-	}
-
-	public Instant getCaricataIl() {
-		return caricataIl;
-	}
-
-	public void setCaricataIl(Instant caricataIl) {
-		this.caricataIl = caricataIl;
-	}
 }

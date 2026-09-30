@@ -11,12 +11,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "partecipante")
+@Getter
+@Setter
 public class Partecipante {
 
 	@Id
@@ -36,40 +40,4 @@ public class Partecipante {
 
 	@Column(name = "emesso_il", nullable = false)
 	private Instant emessoIl;
-
-	public UUID getId() {
-		return id;
-	}
-
-	public Utente getUtente() {
-		return utente;
-	}
-
-	public void setUtente(Utente utente) {
-		this.utente = utente;
-	}
-
-	public Evento getEvento() {
-		return evento;
-	}
-
-	public void setEvento(Evento evento) {
-		this.evento = evento;
-	}
-
-	public UUID getCodice() {
-		return codice;
-	}
-
-	public void setCodice(UUID codice) {
-		this.codice = codice;
-	}
-
-	public Instant getEmessoIl() {
-		return emessoIl;
-	}
-
-	public void setEmessoIl(Instant emessoIl) {
-		this.emessoIl = emessoIl;
-	}
 }

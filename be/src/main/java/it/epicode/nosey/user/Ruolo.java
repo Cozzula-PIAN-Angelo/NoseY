@@ -6,11 +6,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "ruolo")
+@Getter
+@Setter
 public class Ruolo {
 
 	@Id
@@ -22,24 +26,4 @@ public class Ruolo {
 
 	@Column(nullable = false, unique = true)
 	private int livello;
-
-	public UUID getId() {
-		return id;
-	}
-
-	public String getNome() {
-		return nome;
-	}
-
-	public void setNome(String nome) {
-		this.nome = nome;
-	}
-
-	public int getLivello() {
-		return livello;
-	}
-
-	public void setLivello(int livello) {
-		this.livello = livello;
-	}
 }

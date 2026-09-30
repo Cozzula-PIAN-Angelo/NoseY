@@ -7,9 +7,13 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "artista_evento")
+@Getter
+@Setter
 public class ArtistaEvento {
 
 	@EmbeddedId
@@ -24,24 +28,4 @@ public class ArtistaEvento {
 	@MapsId("artistaId")
 	@JoinColumn(name = "artista_id", nullable = false)
 	private Artista artista;
-
-	public ArtistaEventoId getId() {
-		return id;
-	}
-
-	public Evento getEvento() {
-		return evento;
-	}
-
-	public void setEvento(Evento evento) {
-		this.evento = evento;
-	}
-
-	public Artista getArtista() {
-		return artista;
-	}
-
-	public void setArtista(Artista artista) {
-		this.artista = artista;
-	}
 }
