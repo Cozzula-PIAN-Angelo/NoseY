@@ -7,6 +7,7 @@ import {
   ConfirmDialog,
   DateTimeField,
   MessaggioErrore,
+  Paginazione,
   Scheletro,
   Select,
   StatoVuoto,
@@ -64,6 +65,8 @@ export default function Componenti() {
   const [confermaInCorso, setConfermaInCorso] = useState(false)
   const [erroreScelto, setErroreScelto] = useState<FetchBaseQueryError>(erroriDiProva[3].errore)
   const [erroreModulo, setErroreModulo] = useState<FetchBaseQueryError | null>(null)
+  const [paginaEventi, setPaginaEventi] = useState(0)
+  const [paginaNotifiche, setPaginaNotifiche] = useState(4)
   const avviso = useAvviso()
   const campiErrati = erroreModulo ? leggiErrore(erroreModulo).campi : {}
 
@@ -237,6 +240,27 @@ export default function Componenti() {
               <Button type="submit">{erroreModulo ? 'Pulisci errori' : 'Invia'}</Button>
             </div>
           </form>
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Paginazione">
+        <div className="flex flex-col gap-space-md">
+          <Paginazione
+            pagina={paginaEventi}
+            totalePagine={3}
+            totaleElementi={14}
+            dimensione={6}
+            nomeElementi="eventi"
+            onCambia={setPaginaEventi}
+          />
+          <Paginazione
+            pagina={paginaNotifiche}
+            totalePagine={20}
+            totaleElementi={387}
+            dimensione={20}
+            nomeElementi="notifiche"
+            onCambia={setPaginaNotifiche}
+          />
         </div>
       </Sezione>
 
