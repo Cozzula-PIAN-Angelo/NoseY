@@ -197,3 +197,35 @@ non e' piu' solo `runtime`.
   ognuno deve ricordarsene e un database ricreato torna in italiano.
 - **Forzare `lc_messages` dalla configurazione dell'app**: cambiarlo e' permesso solo agli
   amministratori del database; su Render l'utente non lo e' e le connessioni fallirebbero.
+
+## Decisione 8: mappe con MapLibre GL e OpenFreeMap
+
+### Scelta
+
+Le mappe (eventi vicini, posizione dell'evento, POI interni) usano **MapLibre GL**
+(`maplibre-gl`) con il binding React **react-map-gl** (`import ... from 'react-map-gl/maplibre'`).
+Le tessere sono vettoriali e arrivano da **OpenFreeMap** (dati OpenStreetMap), con gli stili
+scuri `dark` (predefinito) e `fiord`, in tinta con la grafica Stitch:
+`https://tiles.openfreemap.org/styles/dark` e `https://tiles.openfreemap.org/styles/fiord`.
+Il componente comune sta in `fe/src/components/mappa/`.
+
+L'attribuzione ("OpenFreeMap © OpenMapTiles Data from OpenStreetMap") e' sempre visibile,
+come richiede la licenza ODbL di OpenStreetMap.
+
+### Motivazione
+
+- Tutto gratuito e senza chiavi API ne' registrazione: niente segreti da gestire nel frontend,
+  che e' pubblico.
+- Mappe vettoriali: lo stile scuro e' nativo (colori definiti nello stile), non un filtro CSS
+  applicato a immagini chiare; zoom fluido e testi nitidi.
+- react-map-gl permette di scrivere mappa, marker e popup come componenti React, compatibile
+  con React 19.
+
+### Alternative scartate
+
+- **Leaflet + react-leaflet con tessere raster OpenStreetMap**: piu' leggero, ma le tessere
+  OSM sono chiare (servirebbe un filtro CSS per scurirle) e l'uso dei server OSM ha limiti
+  stretti per le applicazioni.
+- **CARTO, MapTiler, Stadia**: stili scuri pronti, ma servizi commerciali con registrazione,
+  chiave API o limiti del piano gratuito.
+- **Google Maps**: richiede chiave API e carta di credito anche per il piano gratuito.

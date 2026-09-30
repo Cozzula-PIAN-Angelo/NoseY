@@ -4,6 +4,38 @@ import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
 import { DIMENSIONE_PAGINA, type PaginaResponse } from '@/lib/pagine'
 import {
+  IconaEvento,
+  IconaPoi,
+  Mappa,
+  STILE_POI,
+  STILE_STATO,
+  type Coordinate,
+  type MarkerMappa,
+  type StileMappa,
+} from '@/components/mappa'
+import type { StatoEvento, TipoPoi } from '@/types/api'
+
+// Marker di prova (FE1-02): un evento al Colosseo con i suoi tre POI intorno.
+function markerDiProva(mostra: (titolo: string, messaggio?: string) => void): MarkerMappa[] {
+  return [
+    {
+      id: 'prova',
+      tipo: 'evento',
+      stato: 'IN_CORSO',
+      lat: 41.8902,
+      lng: 12.4922,
+      etichetta: 'Marker di prova: Colosseo',
+      onClick: () => mostra('Marker di prova', 'Colosseo, Roma'),
+    },
+    { id: 'poi-1', tipo: 'INGRESSO', lat: 41.8912, lng: 12.4902, etichetta: 'Ingresso nord' },
+    { id: 'poi-2', tipo: 'USCITA', lat: 41.8893, lng: 12.4948, etichetta: 'Uscita est' },
+    { id: 'poi-3', tipo: 'EMERGENZA', lat: 41.8889, lng: 12.4906, etichetta: 'Presidio medico' },
+  ]
+}
+
+const statiEvento = Object.keys(STILE_STATO) as StatoEvento[]
+const tipiPoiMappa = Object.keys(STILE_POI) as TipoPoi[]
+import {
   Button,
   Caricamento,
   ConfirmDialog,
@@ -92,6 +124,8 @@ export default function Componenti() {
   const [erroreModulo, setErroreModulo] = useState<FetchBaseQueryError | null>(null)
   const [paginaEventi, setPaginaEventi] = useState(0)
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
+  const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
+  const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
   const avviso = useAvviso()
   const campiErrati = erroreModulo ? leggiErrore(erroreModulo).campi : {}
 
@@ -274,6 +308,61 @@ export default function Componenti() {
               <Button type="submit">{erroreModulo ? 'Pulisci errori' : 'Invia'}</Button>
             </div>
           </form>
+        </div>
+      </Sezione>
+
+      <Sezione titolo="Mappa (FE1-02)">
+        <div className="flex flex-col gap-space-md">
+          <div className="flex flex-wrap items-center gap-space-xs">
+            {(['dark', 'fiord'] as const).map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant={stileMappa === s ? 'primary' : 'secondary'}
+                onClick={() => setStileMappa(s)}
+              >
+                Stile {s}
+              </Button>
+            ))}
+            {puntoScelto && (
+              <Button size="sm" variant="ghost" icona="close" onClick={() => setPuntoScelto(null)}>
+                Togli il punto scelto
+              </Button>
+            )}
+          </div>
+          <Mappa
+            key={stileMappa}
+            etichetta="Mappa di prova: Colosseo, Roma"
+            centro={{ lat: 41.8902, lng: 12.4922 }}
+            zoom={14}
+            stile={stileMappa}
+            marker={markerDiProva(avviso.info)}
+            puntoScelto={puntoScelto}
+            onScegliPunto={setPuntoScelto}
+            className="h-[420px]"
+          />
+          <ul aria-label="Legenda" className="flex flex-wrap gap-x-space-lg gap-y-space-sm">
+            {statiEvento.map((s) => (
+              <li key={s} className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                <IconaEvento stato={s} /> Evento {STILE_STATO[s].etichetta.toLowerCase()}
+              </li>
+            ))}
+            {tipiPoiMappa.map((t) => (
+              <li key={t} className="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+                <IconaPoi tipo={t} /> {STILE_POI[t].etichetta}
+              </li>
+            ))}
+          </ul>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Clicca sulla mappa per scegliere un punto, poi trascina il segnaposto per spostarlo.{' '}
+            {puntoScelto ? (
+              <span className="font-mono text-on-surface">
+                Punto scelto: {puntoScelto.lat}, {puntoScelto.lng}
+              </span>
+            ) : (
+              'Nessun punto scelto.'
+            )}
+          </p>
         </div>
       </Sezione>
 
