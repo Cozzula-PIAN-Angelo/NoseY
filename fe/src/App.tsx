@@ -1,46 +1,42 @@
-import type { SerializedError } from '@reduxjs/toolkit'
-import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { api } from '@/lib/api'
 import { useStatoQuery } from '@/store/apiSlice'
-
-function messaggioErrore(e: FetchBaseQueryError | SerializedError): string {
-  if ('status' in e) {
-    return 'error' in e ? e.error : `${e.status} ${typeof e.data === 'string' ? e.data : JSON.stringify(e.data)}`
-  }
-  return e.message ?? 'Errore sconosciuto'
-}
+import { Avvisi, MessaggioErrore } from '@/components/ui'
+import Componenti from '@/pages/Componenti'
 
 export default function App() {
-  const { data: stato, error } = useStatoQuery()
-  const errore = error ? messaggioErrore(error) : null
+  const { data: stato, error, refetch } = useStatoQuery()
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-2xl px-4 py-10">
-        <h1 className="text-3xl font-semibold tracking-tight">NoseY</h1>
-        <p className="mt-1 text-sm text-slate-600">Piattaforma di gestione eventi</p>
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-5xl px-margin-mobile py-10 md:px-margin">
+        <h1 className="font-headline-lg text-headline-lg">NoseY</h1>
+        <p className="mt-1 text-on-surface-variant">Piattaforma di gestione eventi</p>
 
-        <section className="mt-8 rounded-lg border border-slate-200 bg-white p-4 text-sm">
+        <section className="mt-8 rounded-xl bg-surface-card p-space-md">
           <div className="flex justify-between gap-4">
-            <span className="text-slate-500">API</span>
+            <span className="text-on-surface-variant">API</span>
             <code className="truncate font-mono text-xs">{api.indirizzo}</code>
           </div>
           <div className="mt-2 flex justify-between gap-4">
-            <span className="text-slate-500">Database</span>
+            <span className="text-on-surface-variant">Database</span>
             <span className="font-mono text-xs">{stato ? stato.database : '...'}</span>
           </div>
           <div className="mt-2 flex justify-between gap-4">
-            <span className="text-slate-500">Ora del server</span>
+            <span className="text-on-surface-variant">Ora del server</span>
             <span className="font-mono text-xs">{stato ? stato.ora : '...'}</span>
           </div>
         </section>
 
-        {errore && (
-          <p className="mt-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {errore}
-          </p>
-        )}
+        {error && <MessaggioErrore errore={error} onRiprova={refetch} className="mt-6" />}
+
+        {/* Provvisorio, finche' non c'e' il router: catalogo dei componenti comuni */}
+        <div className="mt-10">
+          <Componenti />
+        </div>
       </div>
+
+      {/* Avvisi a comparsa: uno solo per tutta l'app */}
+      <Avvisi />
     </div>
   )
 }

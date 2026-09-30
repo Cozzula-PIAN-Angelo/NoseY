@@ -1,10 +1,199 @@
 @import "tailwindcss";
 
-:root {
-  color-scheme: light dark;
+/*
+ * Design system NoseY, estratto dal progetto Stitch "NoseY Event Management Platform".
+ * I nomi coincidono con quelli dell'HTML di Stitch: bg-surface-canvas, px-margin,
+ * text-label-btn... si copiano le classi cosi' come sono.
+ */
+@theme {
+  /* Superfici */
+  --color-background: #0f131d;
+  --color-surface: #0f131d;
+  --color-surface-dim: #0f131d;
+  --color-surface-deep: #070a11;
+  --color-surface-canvas: #0b0f19;
+  --color-surface-card: #111827;
+  --color-surface-glass: rgba(17, 24, 39, 0.72);
+  --color-surface-bright: #353944;
+  --color-surface-variant: #313540;
+  --color-surface-container-lowest: #0a0e18;
+  --color-surface-container-low: #171b26;
+  --color-surface-container: #1c1f2a;
+  --color-surface-container-high: #262a35;
+  --color-surface-container-highest: #313540;
+  --color-surface-tint: #c0c1ff;
+  --color-inverse-surface: #dfe2f1;
+  --color-inverse-on-surface: #2c303b;
+  --color-on-background: #dfe2f1;
+  --color-on-surface: #dfe2f1;
+  --color-on-surface-variant: #c7c4d7;
+  --color-outline: #908fa0;
+  --color-outline-variant: #464554;
+  --color-border-glass: rgba(255, 255, 255, 0.08);
+  --color-border-glass-hover: rgba(99, 102, 241, 0.35);
+
+  /* Primario (indaco) */
+  --color-primary: #c0c1ff;
+  --color-on-primary: #1000a9;
+  --color-primary-container: #8083ff;
+  --color-on-primary-container: #0d0096;
+  --color-primary-fixed: #e1e0ff;
+  --color-primary-fixed-dim: #c0c1ff;
+  --color-on-primary-fixed: #07006c;
+  --color-on-primary-fixed-variant: #2f2ebe;
+  --color-inverse-primary: #494bd6;
+
+  /* Secondario (azzurro) */
+  --color-secondary: #7bd0ff;
+  --color-on-secondary: #00354a;
+  --color-secondary-container: #00a6e0;
+  --color-on-secondary-container: #00374d;
+  --color-secondary-fixed: #c4e7ff;
+  --color-secondary-fixed-dim: #7bd0ff;
+  --color-on-secondary-fixed: #001e2c;
+  --color-on-secondary-fixed-variant: #004c69;
+
+  /* Terziario (oro) */
+  --color-tertiary: #ffb95f;
+  --color-on-tertiary: #472a00;
+  --color-tertiary-container: #ca8100;
+  --color-on-tertiary-container: #3e2400;
+  --color-tertiary-fixed: #ffddb8;
+  --color-tertiary-fixed-dim: #ffb95f;
+  --color-on-tertiary-fixed: #2a1700;
+  --color-on-tertiary-fixed-variant: #653e00;
+  --color-accent-gold-piercing: #f59e0b;
+  --color-accent-gold-glow: rgba(245, 158, 11, 0.18);
+
+  /* Errore */
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  /* Stato dell'evento (enum StatoEvento) */
+  --color-status-programmato: #818cf8;
+  --color-status-in-corso: #10b981;
+  --color-status-concluso: #6b7280;
+  --color-status-annullato: #ef4444;
+
+  /* Tipi di POI */
+  --color-poi-ingresso: #10b981;
+  --color-poi-uscita: #38bdf8;
+  --color-poi-emergenza: #f43f5e;
+
+  /* Spaziature */
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2.5rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-gutter-mobile: 0.75rem;
+  --spacing-margin: 2rem;
+  --spacing-margin-mobile: 1rem;
+
+  /* Font */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display-hero: var(--font-sans);
+  --font-display-hero-mobile: var(--font-sans);
+  --font-headline-lg: var(--font-sans);
+  --font-headline-lg-mobile: var(--font-sans);
+  --font-headline-md: var(--font-sans);
+  --font-headline-sm: var(--font-sans);
+  --font-body-lg: var(--font-sans);
+  --font-body-md: var(--font-sans);
+  --font-body-sm: var(--font-sans);
+  --font-label-btn: 'Inter', system-ui, sans-serif;
+  --font-label-sm: 'Inter', system-ui, sans-serif;
+  --font-label-code-status: 'Inter', system-ui, sans-serif;
+
+  /* Scala tipografica */
+  --text-display-hero: 48px;
+  --text-display-hero--line-height: 56px;
+  --text-display-hero--letter-spacing: -0.03em;
+  --text-display-hero--font-weight: 800;
+  --text-display-hero-mobile: 32px;
+  --text-display-hero-mobile--line-height: 40px;
+  --text-display-hero-mobile--letter-spacing: -0.02em;
+  --text-display-hero-mobile--font-weight: 800;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 32px;
+  --text-headline-lg-mobile--letter-spacing: -0.01em;
+  --text-headline-lg-mobile--font-weight: 700;
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--letter-spacing: -0.015em;
+  --text-headline-md--font-weight: 600;
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 26px;
+  --text-headline-sm--font-weight: 600;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 26px;
+  --text-body-lg--letter-spacing: -0.005em;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 22px;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 18px;
+  --text-body-sm--letter-spacing: 0.01em;
+  --text-label-btn: 14px;
+  --text-label-btn--line-height: 20px;
+  --text-label-btn--letter-spacing: 0.01em;
+  --text-label-btn--font-weight: 600;
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--letter-spacing: 0.02em;
+  --text-label-sm--font-weight: 500;
+  --text-label-code-status: 11px;
+  --text-label-code-status--line-height: 14px;
+  --text-label-code-status--letter-spacing: 0.08em;
+  --text-label-code-status--font-weight: 700;
 }
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+/* Le classi dark: dell'HTML di Stitch seguono la classe "dark" su <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    overscroll-behavior: none;
+    @apply bg-surface-canvas font-body-md text-body-md text-on-surface antialiased;
+  }
+
+  ::selection {
+    @apply bg-primary-container text-on-primary-container;
+  }
+}
+
+/* Entrata degli avvisi a comparsa (components/ui/Avvisi.tsx) */
+@keyframes entrata-avviso {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem) scale(0.98);
+  }
+}
+
+/* Icone Material Symbols: <span className="material-symbols-outlined">notifications</span> */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
