@@ -13,9 +13,8 @@ public record UtentePubblicoResponse(UUID id, String nome, String cognome, Strin
 				utente.getId(),
 				utente.getNome(),
 				utente.getCognome(),
-				// Immagini nel database (decisione 4): formato di questo campo ancora
-				// da decidere (serve un endpoint che serva i byte), per ora sempre null.
-				null,
+				// Percorso del GET pubblico dell'avatar, null se non c'e' un'immagine (decisione 9).
+				UtenteResponse.urlImmagineProfilo(utente),
 				utente.getStato() == StatoUtente.ATTIVO);
 	}
 }
