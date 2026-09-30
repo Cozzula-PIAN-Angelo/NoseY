@@ -1,5 +1,7 @@
 package it.epicode.nosey.user;
 
+import it.epicode.nosey.common.VersioneContenuto;
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -52,12 +55,20 @@ public class Utente {
 	@Column(name = "data_nascita")
 	private LocalDate dataNascita;
 
+	// LAZY: fino a 2 MB, si leggono solo nel GET dell'avatar (serve il plugin di Hibernate nel pom).
+	// Per sapere se c'e' un'immagine si usa immagineProfiloVersione, che non legge i byte.
+	@Basic(fetch = FetchType.LAZY)
 	@JdbcTypeCode(SqlTypes.VARBINARY)
 	@Column(name = "immagine_profilo")
 	private byte[] immagineProfilo;
 
 	@Column(name = "immagine_profilo_content_type", length = 100)
 	private String immagineProfiloContentType;
+
+	// Scritta solo da setImmagineProfilo: parametro v dell'URL ed ETag (decisione 9).
+	@Setter(AccessLevel.NONE)
+	@Column(name = "immagine_profilo_versione", length = 16)
+	private String immagineProfiloVersione;
 
 	@Column(nullable = false)
 	private boolean verificato = false;
@@ -89,4 +100,10 @@ public class Utente {
 
 	@Column(name = "creato_il", nullable = false)
 	private Instant creatoIl;
+
+	/** Byte e versione cambiano sempre insieme: la versione non puo' restare quella vecchia. */
+	public void setImmagineProfilo(byte[] immagineProfilo) {
+		this.immagineProfilo = immagineProfilo;
+		this.immagineProfiloVersione = immagineProfilo == null ? null : VersioneContenuto.calcola(immagineProfilo);
+	}
 }

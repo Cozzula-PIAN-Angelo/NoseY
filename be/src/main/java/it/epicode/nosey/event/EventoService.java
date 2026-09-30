@@ -3,7 +3,6 @@ package it.epicode.nosey.event;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
 import it.epicode.nosey.common.ImmagineContenuto;
-import it.epicode.nosey.common.VersioneContenuto;
 import it.epicode.nosey.ticket.PartecipanteRepository;
 import it.epicode.nosey.user.Utente;
 import it.epicode.nosey.user.UtentePubblicoResponse;
@@ -16,7 +15,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * ListaEventiMappa, CreaEvento e VediEvento (progettazione v4, sezione 3).
@@ -44,24 +46,35 @@ public class EventoService {
 		Instant adesso = clock.instant();
 		List<Evento> eventi = eventoRepository
 				.findByStatoAndDataFineGreaterThanEqualOrderByDataEventoAsc(StatoEventoDb.PROGRAMMATO, adesso);
+		Map<UUID, FotoEvento> copertine = copertine(eventi);
 
 		if (lat == null) {
 			// Senza posizione: l'ordine per dataEvento crescente arriva gia' dalla query.
 			return eventi.stream()
-					.map(evento -> EventoMappaResponse.da(evento, copertina(evento.getId()), null, adesso))
+					.map(evento -> EventoMappaResponse.da(evento, copertine.get(evento.getId()), null, adesso))
 					.toList();
 		}
 		// Con la posizione: per distanza crescente (Haversine). La posizione cambia solo
 		// l'ordine, mai il numero di eventi restituiti (requisito della traccia).
 		return eventi.stream()
-				.map(evento -> EventoMappaResponse.da(evento, copertina(evento.getId()),
+				.map(evento -> EventoMappaResponse.da(evento, copertine.get(evento.getId()),
 						distanzaKm(lat, lng, evento.getLat(), evento.getLng()), adesso))
 				.sorted(Comparator.comparingDouble(EventoMappaResponse::distanzaKm))
 				.toList();
 	}
 
-	private FotoEvento copertina(UUID eventoId) {
-		return fotoEventoRepository.findByEventoIdAndCopertinaTrue(eventoId).orElse(null);
+	/**
+	 * Le copertine di tutti gli eventi con una sola query, non una per evento. I byte delle
+	 * foto non si leggono (campo LAZY): per l'URL basta la versione.
+	 */
+	private Map<UUID, FotoEvento> copertine(List<Evento> eventi) {
+		if (eventi.isEmpty()) {
+			return Map.of();
+		}
+		List<UUID> ids = eventi.stream().map(Evento::getId).toList();
+		// getEvento().getId() non carica l'evento: l'id del proxy e' gia' noto.
+		return fotoEventoRepository.findByEventoIdInAndCopertinaTrue(ids).stream()
+				.collect(Collectors.toMap(foto -> foto.getEvento().getId(), Function.identity()));
 	}
 
 	// Pubblico (decisione 9): un tag img non puo' mandare il token.
@@ -69,8 +82,7 @@ public class EventoService {
 	public ImmagineContenuto immagineFoto(UUID eventoId, UUID fotoId) {
 		FotoEvento foto = fotoEventoRepository.findByIdAndEventoId(fotoId, eventoId)
 				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Foto non trovata"));
-		return new ImmagineContenuto(foto.getContenuto(), foto.getContentType(),
-				VersioneContenuto.calcola(foto.getContenuto()));
+		return new ImmagineContenuto(foto.getContenuto(), foto.getContentType(), foto.getVersione());
 	}
 
 	private double distanzaKm(double lat1, double lng1, double lat2, double lng2) {

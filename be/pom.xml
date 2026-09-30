@@ -115,6 +115,21 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+			<!-- Modifica le entita' compilate: i byte delle immagini (@Basic(fetch = LAZY)) si leggono
+			     dal database solo quando servono, non a ogni caricamento dell'entita'. -->
+			<plugin>
+				<groupId>org.hibernate.orm</groupId>
+				<artifactId>hibernate-maven-plugin</artifactId>
+				<version>${hibernate.version}</version>
+				<executions>
+					<execution>
+						<phase>process-classes</phase>
+						<goals>
+							<goal>enhance</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
