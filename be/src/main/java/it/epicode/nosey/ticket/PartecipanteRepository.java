@@ -12,4 +12,8 @@ public interface PartecipanteRepository extends JpaRepository<Partecipante, UUID
 	@Modifying(flushAutomatically = true)
 	@Query("delete from Partecipante p where p.utente.id = :utenteId and p.evento.stato = :statoEvento")
 	void cancellaPerUtenteEStatoEvento(UUID utenteId, StatoEventoDb statoEvento);
+
+	long countByEventoId(UUID eventoId);
+
+	boolean existsByEventoIdAndUtenteId(UUID eventoId, UUID utenteId);
 }
