@@ -8,6 +8,7 @@ import { AnnullaEvento } from '@/features/eventi/AnnullaEvento'
 import { AzioniEvento } from '@/features/eventi/AzioniEvento'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { MappaInterna } from '@/features/eventi/MappaInterna'
+import { NotificaPartecipanti } from '@/features/eventi/NotificaPartecipanti'
 import { TicketEvento } from '@/features/eventi/TicketEvento'
 import { useIscrizione } from '@/features/eventi/useIscrizione'
 import { urlImmagine } from '@/lib/api'
@@ -150,6 +151,9 @@ function SchedaEvento({ id }: { id: Uuid }) {
               inCorso={iscrizione.iscrizioneInCorso ? 'iscrizione' : undefined}
             />
           </div>
+          {evento.sonoProprietario && (evento.stato === 'PROGRAMMATO' || evento.stato === 'IN_CORSO') && (
+            <NotificaPartecipanti key={evento.id} evento={evento} />
+          )}
           {evento.sonoIscritto && ticket && (
             <div id="ticket" className="scroll-mt-space-lg">
               <TicketEvento ticket={ticket} />
