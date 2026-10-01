@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Button, Icon } from '@/components/ui'
-import { Mappa, type MarkerMappa } from '@/components/mappa'
+import { Mappa, type Coordinate, type MarkerMappa } from '@/components/mappa'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { AnteprimaEvento } from '@/features/eventi/AnteprimaEvento'
+import { ListaEventiMappa } from '@/features/eventi/ListaEventiMappa'
 import { usePosizioneUtente } from '@/features/eventi/usePosizioneUtente'
 import type { Uuid } from '@/types/api'
 
@@ -27,6 +28,19 @@ export default function MappaEventi() {
   const [selezionatoId, setSelezionatoId] = useState<Uuid | null>(null)
   // Cercato ogni volta nella lista: se l'evento sparisce (es. dopo un aggiornamento) l'anteprima si chiude
   const selezionato = eventi.find((e) => e.id === selezionatoId) ?? null
+
+  // La mappa si sposta solo quando arriva la posizione o si sceglie un evento dalla lista:
+  // non quando si chiude l'anteprima o si clicca un marker (e' gia' sullo schermo).
+  const [vista, setVista] = useState({ centro: CENTRO_PREDEFINITO as Coordinate, zoom: 12 })
+  useEffect(() => {
+    setVista(posizione ? { centro: posizione, zoom: 13 } : { centro: CENTRO_PREDEFINITO, zoom: 12 })
+  }, [posizione])
+
+  function scegliDallaLista(id: Uuid) {
+    const evento = eventi.find((e) => e.id === id)
+    setSelezionatoId(id)
+    if (evento) setVista({ centro: { lat: evento.lat, lng: evento.lng }, zoom: 14 })
+  }
 
   // Esc chiude l'anteprima
   useEffect(() => {
@@ -78,20 +92,36 @@ export default function MappaEventi() {
         )}
       </section>
 
-      <div className="relative">
-        <Mappa
-          etichetta="Mappa degli eventi"
-          centro={posizione ?? CENTRO_PREDEFINITO}
-          zoom={posizione ? 13 : 12}
-          marker={marker}
-          className="h-[480px]"
-        />
-        {selezionato && (
-          // In basso a sinistra, sopra l'attribuzione di OpenStreetMap (che deve restare visibile)
-          <div className="absolute inset-x-space-sm bottom-9 z-10 sm:right-auto sm:w-[26rem]">
-            <AnteprimaEvento evento={selezionato} onChiudi={() => setSelezionatoId(null)} />
+      {/* Su schermo largo lista a sinistra e mappa a destra (Stitch); su telefono mappa sopra */}
+      <div className="grid gap-space-lg lg:grid-cols-[22rem_1fr]">
+        <section aria-labelledby="titolo-lista" className="order-2 flex flex-col gap-space-sm lg:order-1">
+          <h2
+            id="titolo-lista"
+            className="flex items-center justify-between px-space-xs font-label-code-status text-label-code-status uppercase text-outline"
+          >
+            <span>{posizione ? 'Dal più vicino' : 'In ordine di data'}</span>
+            <span className="text-secondary">{eventi.length} eventi</span>
+          </h2>
+          <div className="lg:max-h-[480px] lg:overflow-y-auto lg:pr-space-xs">
+            <ListaEventiMappa eventi={eventi} selezionatoId={selezionatoId} onSeleziona={scegliDallaLista} />
           </div>
-        )}
+        </section>
+
+        <div className="relative order-1 lg:order-2">
+          <Mappa
+            etichetta="Mappa degli eventi"
+            centro={vista.centro}
+            zoom={vista.zoom}
+            marker={marker}
+            className="h-[360px] sm:h-[480px]"
+          />
+          {selezionato && (
+            // In basso a sinistra, sopra l'attribuzione di OpenStreetMap (che deve restare visibile)
+            <div className="absolute inset-x-space-sm bottom-9 z-10 sm:right-auto sm:w-[26rem]">
+              <AnteprimaEvento evento={selezionato} onChiudi={() => setSelezionatoId(null)} />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
