@@ -120,6 +120,8 @@ export type PartecipanteResponse = {
   statoAmicizia: StatoAmicizia
   /** Valorizzato con INVIATA, RICEVUTA e AMICI; null con NESSUNA e NON_DISPONIBILE */
   amiciziaId: Uuid | null
+  /** Chat della coppia (decisione 20): con AMICI c'e' sempre, con INVIATA e RICEVUTA se esiste gia' */
+  chatId: Uuid | null
 }
 
 // ---------------------------------------------------------------- Richieste
