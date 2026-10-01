@@ -2,6 +2,7 @@ import { BadgeStato } from '@/components/eventi'
 import { Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
+import { AzioniEvento } from '@/features/eventi/AzioniEvento'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { MappaInterna } from '@/features/eventi/MappaInterna'
 import { urlImmagine } from '@/lib/api'
@@ -121,6 +122,9 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
               {intervallo(evento.dataEvento, evento.dataFine)}
             </p>
             <Proprietario utente={evento.proprietario} />
+          </div>
+          <div className="rounded-2xl bg-surface-card p-space-lg">
+            <AzioniEvento evento={evento} />
           </div>
         </aside>
       </div>

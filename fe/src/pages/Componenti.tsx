@@ -45,11 +45,13 @@ function markerDiProva(
 
 // Eventi dei dati finti per l'anteprima del dettaglio: i tre stati del "Fatto quando" di FE1-05
 const eventiDiProva = [
-  { id: 'e-02', etichetta: 'Programmato' },
+  { id: 'e-04', etichetta: 'Programmato' },
+  { id: 'e-02', etichetta: 'Programmato (sei iscritta)' },
+  { id: 'e-05', etichetta: 'Programmato (sei proprietaria, senza foto)' },
   { id: 'e-01', etichetta: 'In corso (sei iscritta)' },
   { id: 'e-03', etichetta: 'In corso (sei proprietaria)' },
+  { id: 'e-07', etichetta: 'Concluso' },
   { id: 'e-08', etichetta: 'Annullato' },
-  { id: 'e-05', etichetta: 'Senza foto né descrizione' },
   { id: 'inesistente', etichetta: 'Inesistente (404)' },
 ]
 
@@ -145,7 +147,7 @@ export default function Componenti() {
   const [paginaEventi, setPaginaEventi] = useState(0)
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
   const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
-  const [eventoAnteprima, setEventoAnteprima] = useState('e-02')
+  const [eventoAnteprima, setEventoAnteprima] = useState('e-04')
   const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
   // Eventi da GET /api/events (FE1-03): in sviluppo rispondono i dati finti MSW
   const { data: eventiMappa = [], error: erroreEventi } = useListaEventiQuery()
