@@ -3,6 +3,7 @@ import { Button, Icon, Scheletro, TextField, useAvviso } from '@/components/ui'
 import { useValoreRitardato } from '@/hooks/useValoreRitardato'
 import { urlImmagine } from '@/lib/api'
 import { cx } from '@/lib/cx'
+import { leggiErrore } from '@/lib/errori'
 import type { ArtistaResponse, EventoDettaglioResponse } from '@/types/api'
 import { useAggiungiArtistaEventoMutation, useListaArtistiQuery, useRimuoviArtistaEventoMutation } from './apiEventi'
 
@@ -40,7 +41,23 @@ export function GestioneArtisti({ evento }: { evento: EventoDettaglioResponse })
       await aggiungi({ id: evento.id, artistaId: a.id }).unwrap()
       avviso.successo('Line-up aggiornata', `${a.nome} ora è nella line-up. I partecipanti riceveranno una notifica.`)
     } catch (err) {
-      avviso.erroreApi(err)
+      // La pagina era "vecchia": dettaglio e catalogo si ricaricano da soli (apiEventi)
+      switch (leggiErrore(err).codice) {
+        case 'ARTISTA_GIA_ASSOCIATO':
+          avviso.info('Già nella line-up', `${a.nome} risultava già nella line-up: la modifica è arrivata da un'altra scheda.`)
+          break
+        case 'ARTISTA_NON_ATTIVO':
+          avviso.attenzione(
+            'Artista non più disponibile',
+            `Un admin ha tolto ${a.nome} dal catalogo: non si può più aggiungere agli eventi.`,
+          )
+          break
+        case 'NON_TROVATO':
+          avviso.attenzione('Artista non trovato', `${a.nome} non è più nel catalogo.`)
+          break
+        default:
+          avviso.erroreApi(err)
+      }
     }
   }
 
@@ -49,7 +66,9 @@ export function GestioneArtisti({ evento }: { evento: EventoDettaglioResponse })
       await rimuovi({ id: evento.id, artistaId: a.id }).unwrap()
       avviso.info('Line-up aggiornata', `${a.nome} non è più nella line-up.`)
     } catch (err) {
-      avviso.erroreApi(err)
+      // NON_TROVATO: era gia' stato tolto (es. da un'altra scheda); la line-up si ricarica da sola
+      if (leggiErrore(err).codice === 'NON_TROVATO') avviso.info('Line-up aggiornata', `${a.nome} risultava già fuori dalla line-up.`)
+      else avviso.erroreApi(err)
     }
   }
 
