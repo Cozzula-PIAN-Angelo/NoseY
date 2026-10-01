@@ -4,11 +4,13 @@ import { CardEvento } from '@/components/eventi'
 import { Button, Icon, MessaggioErrore, Paginazione, Scheletro, StatoVuoto, TextField, stilePulsante } from '@/components/ui'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { filtraEventi, TESTI_POSIZIONE, type Periodo } from '@/features/eventi/filtriEventi'
+import { FinestraMappaEventi } from '@/features/eventi/FinestraMappaEventi'
 import { usePosizioneUtente } from '@/features/eventi/usePosizioneUtente'
 import { cx } from '@/lib/cx'
 
-// Esplora eventi (FE1-19, passo 1), rotta /events (pubblica), come la schermata Stitch
-// "Lista & Modale Mappa Radar": ricerca per titolo, filtri per periodo, "vicino a te" e griglia di card.
+// Esplora eventi (FE1-19), rotta /events (pubblica), come la schermata Stitch "Lista & Modale Mappa
+// Radar": ricerca per titolo, filtri per periodo, "vicino a te", griglia di card (passo 1) e la mappa
+// degli eventi trovati in una finestra (passo 2).
 // Solo dati veri di ListaEventiMappa: niente prezzo, capienza, genere o indirizzo (l'API non li ha).
 // La posizione la usa il backend e cambia l'ORDINE, mai il numero degli eventi (requisito della traccia).
 
@@ -27,6 +29,7 @@ export default function EsploraEventi() {
   const { data: eventi = [], isLoading, isFetching, error, refetch } = useListaEventiQuery(posizione ?? undefined)
   const [cerca, setCerca] = useState('')
   const [periodo, setPeriodo] = useState<Periodo>('tutti')
+  const [mappaAperta, setMappaAperta] = useState(false)
   // La pagina vale solo per questi filtri: cambiandoli si riparte dalla prima
   const filtri = `${cerca.trim()}|${periodo}`
   const [paginaScelta, setPaginaScelta] = useState({ filtri, numero: 0 })
@@ -181,17 +184,22 @@ export default function EsploraEventi() {
             <p className="font-body-sm text-body-sm text-on-surface-variant">{TESTI_POSIZIONE[stato]}</p>
           </div>
         </div>
-        {stato === 'concessa' ? (
-          <Button variant="secondary" size="sm" icona="calendar_month" onClick={dimentica}>
-            Ordina per data
-          </Button>
-        ) : (
-          stato !== 'negata' && (
-            <Button size="sm" icona="near_me" inCorso={stato === 'in-attesa'} onClick={chiedi}>
-              Usa la mia posizione
+        <div className="flex flex-wrap gap-space-xs">
+          {stato === 'concessa' ? (
+            <Button variant="secondary" size="sm" icona="calendar_month" onClick={dimentica}>
+              Ordina per data
             </Button>
-          )
-        )}
+          ) : (
+            stato !== 'negata' && (
+              <Button variant="secondary" size="sm" icona="near_me" inCorso={stato === 'in-attesa'} onClick={chiedi}>
+                Usa la mia posizione
+              </Button>
+            )
+          )}
+          <Button size="sm" icona="map" onClick={() => setMappaAperta(true)} disabled={isLoading || !!error}>
+            Apri la mappa
+          </Button>
+        </div>
       </section>
 
       {!isLoading && !error && trovati.length > 0 && (
@@ -201,6 +209,8 @@ export default function EsploraEventi() {
       )}
 
       {contenuto}
+
+      <FinestraMappaEventi aperta={mappaAperta} onChiudi={() => setMappaAperta(false)} eventi={trovati} posizione={posizione} />
     </div>
   )
 }
