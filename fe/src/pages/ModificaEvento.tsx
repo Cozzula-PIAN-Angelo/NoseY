@@ -2,9 +2,10 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { Caricamento, MessaggioErrore, StatoVuoto, stilePulsante, useAvviso } from '@/components/ui'
 import { useModificaEventoMutation, useVediEventoQuery } from '@/features/eventi/apiEventi'
+import { CaricaFoto } from '@/features/eventi/CaricaFoto'
 import { erroriSuiCampi } from '@/features/eventi/erroriEvento'
 import { FormEvento, type ErroriEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
-import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
+import { GestioneFoto } from '@/features/eventi/GestioneFoto'
 import { modificheEvento, valoriDaEvento } from '@/features/eventi/modificheEvento'
 import { leggiErrore } from '@/lib/errori'
 
@@ -119,16 +120,11 @@ export default function ModificaEvento() {
         <h2 id="titolo-foto" className="font-headline-sm text-headline-sm">
           Foto
         </h2>
-        {/* Caricamento, copertina e cancellazione arrivano con FE1-09 (Gestione delle foto) */}
-        {evento.foto.length > 0 ? (
-          <GalleriaFoto key={evento.id} foto={evento.foto} titoloEvento={evento.titolo} />
-        ) : (
-          <StatoVuoto
-            icona="add_photo_alternate"
-            titolo="Nessuna foto"
-            messaggio="Il caricamento delle foto arriva con la card FE1-09. La prima foto diventerà la copertina."
-          />
-        )}
+        <p className="font-body-md text-body-md text-on-surface-variant">
+          La prima foto diventa la copertina. Le foto servono anche per migliorare la descrizione con l'AI.
+        </p>
+        <CaricaFoto eventoId={evento.id} numeroFoto={evento.foto.length} />
+        <GestioneFoto eventoId={evento.id} foto={evento.foto} />
       </section>
     </Contenitore>
   )
