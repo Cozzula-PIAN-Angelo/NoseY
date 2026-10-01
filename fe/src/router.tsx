@@ -3,7 +3,9 @@ import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
 import AdminArtisti from '@/pages/AdminArtisti'
 import AdminUtenti from '@/pages/AdminUtenti'
+import Amici from '@/pages/Amici'
 import Accesso from '@/pages/Accesso'
+import Chat from '@/pages/Chat'
 import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
@@ -11,6 +13,7 @@ import MappaEventi from '@/pages/MappaEventi'
 import MieiEventi from '@/pages/MieiEventi'
 import MieiTicket from '@/pages/MieiTicket'
 import ModificaEvento from '@/pages/ModificaEvento'
+import Notifiche from '@/pages/Notifiche'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PartecipantiEvento from '@/pages/PartecipantiEvento'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
@@ -46,10 +49,10 @@ export const router = createBrowserRouter([
           { path: 'events/:id/participants', element: <PartecipantiEvento /> },
           { path: 'my-events', element: <MieiEventi /> },
           { path: 'tickets', element: <MieiTicket /> },
-          { path: 'friends', element: <PaginaProvvisoria titolo="Amici e richieste" card="FE2-10" /> },
-          { path: 'chat', element: <PaginaProvvisoria titolo="Chat" card="FE2-12" /> },
-          { path: 'chat/:chatId', element: <PaginaProvvisoria titolo="Conversazione" card="FE2-12" /> },
-          { path: 'notifications', element: <PaginaProvvisoria titolo="Notifiche" card="FE2-13" /> },
+          { path: 'friends', element: <Amici /> },
+          { path: 'chat', element: <Chat /> },
+          { path: 'chat/:chatId', element: <Chat /> },
+          { path: 'notifications', element: <Notifiche /> },
           { path: 'profile', element: <Profilo /> },
         ],
       },

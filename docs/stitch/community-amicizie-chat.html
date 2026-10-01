@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="it"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"inverse-on-surface":"#2c303b","on-tertiary":"#472a00","outline-variant":"#464554","surface":"#0f131d","surface-canvas":"#0b0f19","on-tertiary-fixed":"#2a1700","surface-tint":"#c0c1ff","secondary-fixed-dim":"#7bd0ff","surface-container-low":"#171b26","accent-gold-piercing":"#f59e0b","on-secondary-container":"#00374d","on-background":"#dfe2f1","inverse-primary":"#494bd6","status-programmato":"#818cf8","primary-container":"#8083ff","poi-ingresso":"#10b981","on-primary":"#1000a9","on-primary-fixed-variant":"#2f2ebe","accent-gold-glow":"rgba(245, 158, 11, 0.18)","status-annullato":"#ef4444","on-surface":"#dfe2f1","on-secondary-fixed-variant":"#004c69","tertiary-fixed":"#ffddb8","surface-card":"#111827","secondary":"#7bd0ff","status-in-corso":"#10b981","status-concluso":"#6b7280","primary-fixed-dim":"#c0c1ff","secondary-fixed":"#c4e7ff","primary":"#c0c1ff","on-secondary-fixed":"#001e2c","on-error":"#690005","surface-dim":"#0f131d","primary-fixed":"#e1e0ff","surface-glass":"rgba(17, 24, 39, 0.72)","surface-variant":"#313540","border-glass-hover":"rgba(99, 102, 241, 0.35)","poi-uscita":"#38bdf8","border-glass":"rgba(255, 255, 255, 0.08)","surface-container":"#1c1f2a","background":"#0f131d","error-container":"#93000a","outline":"#908fa0","on-secondary":"#00354a","tertiary":"#ffb95f","on-primary-fixed":"#07006c","on-surface-variant":"#c7c4d7","secondary-container":"#00a6e0","surface-container-lowest":"#0a0e18","surface-container-high":"#262a35","tertiary-fixed-dim":"#ffb95f","poi-emergenza":"#f43f5e","on-tertiary-fixed-variant":"#653e00","error":"#ffb4ab","surface-bright":"#353944","surface-deep":"#070a11","surface-container-highest":"#313540","on-primary-container":"#0d0096","on-error-container":"#ffdad6","tertiary-container":"#ca8100","inverse-surface":"#dfe2f1","on-tertiary-container":"#3e2400"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","gutter":"1.5rem","margin-mobile":"1rem","space-md":"1rem","space-xs":"0.25rem","space-xl":"2.5rem","gutter-mobile":"0.75rem","space-sm":"0.5rem","margin":"2rem"},"fontFamily":{"body-sm":["Plus Jakarta Sans"],"display-hero-mobile":["Plus Jakarta Sans"],"label-btn":["Inter"],"body-md":["Plus Jakarta Sans"],"label-code-status":["Inter"],"label-sm":["Inter"],"body-lg":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"display-hero":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"]},"fontSize":{"body-sm":["12px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"400"}],"display-hero-mobile":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"800"}],"label-btn":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","letterSpacing":"0em","fontWeight":"400"}],"label-code-status":["11px",{"lineHeight":"14px","letterSpacing":"0.08em","fontWeight":"700"}],"label-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"500"}],"body-lg":["16px",{"lineHeight":"26px","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-md":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"display-hero":["48px",{"lineHeight":"56px","letterSpacing":"-0.03em","fontWeight":"800"}],"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface-canvas text-on-surface font-body-md text-body-md min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface-glass backdrop-blur-md shadow-[0_4px_24px_-4px_rgba(0,0,0,0.6)]"><div class="h-16 max-w-[1440px] mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg"><a class="flex items-center gap-space-sm group focus:outline-none" data-path="esplora-eventi" href="#"><img alt="Logo_NoseY.png" class="h-8 w-auto object-contain transition-transform group-hover:scale-105" src="https://lh3.googleusercontent.com/aida/AEtjO1Vndiq4o6IVVJtH-p34E94ys6ErdgHIcom_Q_MOUFG1h5Fw3UwLwyK9nFzF1r3sWvgxPLNpqAVHeUuKUoHieHxb-X6jQtcbUYk__q04YLetcOw5E2PE9l5J7ZYkiE-6qf4j7rG49MQSj5aHcDRkcOvmExM8ekaSF-YtyA5qrLs0WAbtF7DrJjOjEhAerI9xuSubOvV2XHPk3Pjb3AlriSykvEBFhTcPREfryvjCYDxEddI4nqpKXhZHVVCafavybUEj-W_vkcGb"/><div class="flex items-center gap-space-xs"><span class="font-headline-md text-headline-md tracking-tight text-on-surface group-hover:text-primary transition-colors">NoseY</span><span class="px-space-xs py-0.5 rounded-full bg-surface-container font-label-code-status text-label-code-status uppercase tracking-wider text-status-in-corso flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-status-in-corso animate-pulse"></span>Live Hub</span></div></a><nav class="hidden lg:flex items-center gap-space-xs" data-active-classes="bg-surface-container text-on-surface font-headline-sm"><a class="px-space-md py-space-xs rounded-lg font-label-btn text-label-btn text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" data-path="esplora-eventi" href="#">Esplora Eventi</a><a class="px-space-md py-space-xs rounded-lg font-label-btn text-label-btn text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" data-path="artisti" href="#">Artisti</a><a aria-current="page" class="px-space-md py-space-xs rounded-lg transition-all bg-surface-container text-on-surface font-headline-sm" data-path="community-e-amicizie" href="#">Community &amp; Amicizie</a><a class="px-space-md py-space-xs rounded-lg font-label-btn text-label-btn text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" data-path="i-miei-ticket" href="#">I Miei Ticket</a></nav></div><div class="flex items-center gap-space-md"><div class="hidden sm:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low" title="WebSocket STOMP Broker Connesso"><span class="w-2 h-2 rounded-full bg-poi-ingresso animate-ping"></span><span class="font-label-code-status text-label-code-status uppercase text-on-surface-variant">STOMP ONLINE</span></div><div class="relative group"><button aria-expanded="false" aria-haspopup="true" aria-label="Pannello Notifiche" class="relative p-space-xs rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors flex items-center justify-center focus:outline-none" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1 right-1 flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-gold-piercing opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent-gold-piercing"></span></span></button><div class="absolute right-0 mt-2 w-80 rounded-xl bg-surface-card shadow-[0_20px_40px_-10px_rgba(0,0,0,0.85),0_0_24px_0_rgba(99,102,241,0.16)] backdrop-blur-2xl py-space-xs hidden group-hover:block hover:block z-50"><div class="px-space-md py-space-sm bg-surface-container-low flex items-center justify-between"><span class="font-headline-sm text-label-btn text-on-surface">Notifiche Feed</span><span class="font-label-code-status text-label-code-status text-accent-gold-piercing uppercase">3 Nuove</span></div><div class="p-space-xs space-y-1"><div class="p-space-xs rounded-lg hover:bg-surface-container transition-colors flex items-start gap-space-sm"><span class="material-symbols-outlined text-poi-uscita text-[20px] mt-0.5">event</span><div class="flex-1"><p class="font-label-sm text-label-sm text-on-surface">Nuovo Evento a Roma</p><p class="font-body-sm text-body-sm text-on-surface-variant truncate">Radar: Cyber Night Clubbing avviato</p></div></div><div class="p-space-xs rounded-lg hover:bg-surface-container transition-colors flex items-start gap-space-sm"><span class="material-symbols-outlined text-primary text-[20px] mt-0.5">person_add</span><div class="flex-1"><p class="font-label-sm text-label-sm text-on-surface">Richiesta d'Amicizia</p><p class="font-body-sm text-body-sm text-on-surface-variant truncate">Marco B. vuole connettersi</p></div></div><div class="p-space-xs rounded-lg hover:bg-surface-container transition-colors flex items-start gap-space-sm"><span class="material-symbols-outlined text-poi-ingresso text-[20px] mt-0.5">chat</span><div class="flex-1"><p class="font-label-sm text-label-sm text-on-surface">Chat Crittografata</p><p class="font-body-sm text-body-sm text-on-surface-variant truncate">Nuovo messaggio nel gruppo Stage 1</p></div></div></div></div></div><a class="hidden md:flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container font-label-btn text-label-btn text-tertiary hover:bg-surface-container-high transition-all shadow-[0_0_12px_rgba(245,158,11,0.12)]" data-path="crea-evento" href="#"><span class="material-symbols-outlined text-[18px]">add_circle</span><span>Crea Evento</span></a><div class="relative group"><button aria-haspopup="true" class="flex items-center gap-space-xs p-0.5 rounded-full hover:ring-2 hover:ring-primary-container transition-all focus:outline-none" type="button"><div class="relative w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span><span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-poi-ingresso flex items-center justify-center ring-2 ring-surface-canvas"><span class="material-symbols-outlined text-surface-canvas text-[10px] font-bold">check</span></span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] hidden sm:block">expand_more</span></button><div class="absolute right-0 mt-2 w-60 rounded-xl bg-surface-card shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8),0_0_24px_0_rgba(99,102,241,0.12)] backdrop-blur-2xl py-space-xs hidden group-hover:block hover:block z-50"><div class="px-space-md py-space-sm bg-surface-container-low"><div class="flex items-center gap-1"><p class="font-headline-sm text-label-btn text-on-surface leading-snug truncate">Clubber Resident</p><span class="material-symbols-outlined text-secondary text-[16px]">verified</span></div><p class="font-body-sm text-body-sm text-on-surface-variant truncate">alex@nosey.club</p></div><div class="py-space-xs"><a class="flex items-center gap-space-sm px-space-md py-space-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="profilo-utente" href="#"><span class="material-symbols-outlined text-[20px]">account_circle</span>Vedi Profilo</a><a class="flex items-center gap-space-sm px-space-md py-space-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="i-miei-ticket" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span>Ticket Wallet</a><a class="flex items-center gap-space-sm px-space-md py-space-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="community-e-amicizie" href="#"><span class="material-symbols-outlined text-[20px]">group</span>Amici &amp; Chat Live</a><a class="flex items-center gap-space-sm px-space-md py-space-xs font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="crea-evento" href="#"><span class="material-symbols-outlined text-[20px]">edit_calendar</span>Dashboard Organizzatore</a></div><div class="pt-space-xs border-t border-surface-container"><a class="flex items-center gap-space-sm px-space-md py-space-xs font-body-md text-body-md text-error hover:bg-surface-container transition-colors" data-path="login" href="#"><span class="material-symbols-outlined text-[20px]">logout</span>Esci</a></div></div></div></div></div></header><main class="w-full pt-16 bg-surface-canvas min-h-screen"><div class="flex flex-col w-full">
+<div class="max-w-[1440px] w-full mx-auto px-margin-mobile md:px-margin py-space-md">
+<!-- Top Bar: Telemetry & STOMP Circuit Live Indicator -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-low/90 backdrop-blur-xl px-space-md py-space-sm rounded-xl shadow-md mb-space-md">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-status-in-corso animate-pulse"></span>
+<span class="font-label-code-status text-label-code-status uppercase text-status-in-corso tracking-wider">STOMP /ws Connected</span>
+</div>
+<span class="text-outline-variant font-label-code-status text-label-code-status">|</span>
+<div class="flex items-center gap-space-xs text-on-surface-variant min-w-0">
+<span class="material-symbols-outlined text-[16px] text-secondary">lock</span>
+<span class="font-label-code-status text-label-code-status truncate uppercase text-on-surface">Queue: /user/queue/messages</span>
+</div>
+</div>
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-poi-ingresso">sensors</span>
+<span>Latenza Node: <strong class="text-on-surface font-label-code-status">18ms</strong></span>
+</div>
+<div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-0.5 rounded-full font-label-code-status text-label-code-status text-accent-gold-piercing">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span>E2EE NOSE-SEC V3</span>
+</div>
+</div>
+</div>
+<!-- 3-Column Social & Live Messaging Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+<!-- ================= LEFT COLUMN: FRIENDSHIP DIRECTORY & REQUEST ENGINE (3 Cols) ================= -->
+<section class="lg:col-span-3 flex flex-col gap-space-md">
+<!-- Tab Navigation & Hub Selector -->
+<div class="bg-surface-glass backdrop-blur-2xl rounded-xl p-space-sm shadow-xl flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-space-xs pt-space-xs pb-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Social Radar</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-code-status text-label-code-status uppercase">Live 8</span>
+</div>
+<!-- Segmented Tab Bar -->
+<div class="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-lg">
+<button class="py-space-xs text-center rounded-md font-label-btn text-label-btn bg-primary text-on-primary shadow-sm transition-all flex items-center justify-center gap-1" id="tab-btn-friends" onclick="switchFriendTab('friends')">
+<span>Amici</span>
+<span class="text-[10px] px-1 rounded-full bg-on-primary/20 text-on-primary">6</span>
+</button>
+<button class="relative py-space-xs text-center rounded-md font-label-btn text-label-btn text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1" id="tab-btn-requests" onclick="switchFriendTab('requests')">
+<span>Ricevute</span>
+<span class="w-4 h-4 flex items-center justify-center rounded-full bg-accent-gold-piercing text-on-tertiary-container font-label-code-status text-[10px] font-bold">2</span>
+</button>
+<button class="py-space-xs text-center rounded-md font-label-btn text-label-btn text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center" id="tab-btn-sent" onclick="switchFriendTab('sent')">
+<span>Inviate</span>
+</button>
+</div>
+<!-- Search Inner Field -->
+<div class="relative mt-space-xs">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[18px]">search</span>
+<input class="w-full pl-9 pr-space-sm py-2 rounded-lg bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container transition-all placeholder:text-outline" placeholder="Filtra contatti o clubber..." type="text"/>
+</div>
+<!-- VIEW 1: I Miei Amici (Active default) -->
+<div class="flex flex-col gap-1 max-h-[620px] overflow-y-auto pr-0.5" id="view-friends">
+<!-- Friend Item 1 (Selected Chat target: Sofia) -->
+<div class="group relative p-space-sm rounded-lg bg-surface-container/90 shadow-sm flex items-center gap-space-sm cursor-pointer transition-all">
+<div class="relative shrink-0">
+<img class="w-11 h-11 rounded-full object-cover" data-alt="Cyberpunk high-fashion Italian female clubber portrait with neon rim lighting and dark minimalist aesthetic, high quality studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJC-IjOrgYF68YfA7CTc1bqlN56fPew_wE_dwNLuOxiQyOSOFt9xEht2ru-W7y9anhfxDqcYh4WghJypMsyFW40ixtiTdLhzestoVOKn1bZyaRbL73V8BpqTfZXlAG-z5J0yN6hGteB30f3VAEKjFaYs0iTpZ-00pIBjJ9cMGJUJeEulOJ9lyEpN3rI720Iy18jBoNPMsSaALwfdPkgtGareF5LQl7qeQQ6O3mQnWG5oiVpOJHAgBK"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-poi-ingresso shadow-sm"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="font-label-btn text-label-btn text-on-surface truncate group-hover:text-primary transition-colors">Sofia Moretti</p>
+<span class="font-label-code-status text-[10px] text-on-surface-variant">22:42</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Ci vediamo al main stage alle 00:30?</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="material-symbols-outlined text-[12px] text-secondary">nightlife</span>
+<span class="font-label-code-status text-[10px] text-secondary truncate">Chronos Club Resident</span>
+</div>
+</div>
+</div>
+<!-- Friend Item 2 -->
+<div class="group p-space-sm rounded-lg hover:bg-surface-container-low transition-colors flex items-center gap-space-sm cursor-pointer">
+<div class="relative shrink-0">
+<img class="w-11 h-11 rounded-full object-cover" data-alt="Editorial portrait of an Italian male electronic techno producer with moody indigo backlight and sharp silhouettes in dark club environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDISKv3rmPcPsHIvQcydjN9XwNTmlSSG7K_PHu5DQW_EVhdWN8Ez_ETdoN9uABZ0tOjDZW0DbT3HnVstpc6_GDKf8QAcUvT3mTnerPfXiRrr3GW70GrDbKYK5Fa5gwT2OrvENZBxpS0W_RNmLFxH3k82aQcqC3Kwvnl1Cs1zLA-kol9mNDP94jVTsZs2BeaqKOSvX_VqEf1MWZ0habviIEDMl8yrbtgEuz0pyogyPCznrXsYYBm1c6z"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-poi-ingresso shadow-sm"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Matteo Valenti</p>
+<span class="font-label-code-status text-[10px] text-outline">19:15</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Ho sbloccato il pass backstage!</p>
+<span class="font-label-code-status text-[10px] text-outline uppercase">Amnesia Milano</span>
+</div>
+</div>
+<!-- Friend Item 3 -->
+<div class="group p-space-sm rounded-lg hover:bg-surface-container-low transition-colors flex items-center gap-space-sm cursor-pointer">
+<div class="relative shrink-0">
+<img class="w-11 h-11 rounded-full object-cover" data-alt="Portrait of an edgy artistic non-binary DJ wearing minimal black garments with violet holographic reflections in nightlife setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMBUfdGHgKfKoafK7JcyI6z5enoHkP0droYdrGYgw09Iud2ITbQi1fmyuzwUxk0urInQFLPuUXM6iR7nTXVzDc7aMdmnVHJ5KIVb130U1h1_6TzXIdTcyb-dCEgc4CI2kn4LviFgR_vDMhpD75QfaHGzeBpJlHtpD7ahc58zaJdqC-KFiqGl6QsMAQUnjXVbSkzwopxTQMV4WbjUngBnc02dNyowcUpOJMCcxCtg1-hjyXeHs3dzo4"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-outline shadow-sm"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Elena Rostagno</p>
+<span class="font-label-code-status text-[10px] text-outline">Ieri</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline truncate">Traccia favolosa quella di ieri sera.</p>
+<span class="font-label-code-status text-[10px] text-outline uppercase">Spazio 900</span>
+</div>
+</div>
+<!-- Friend Item 4 -->
+<div class="group p-space-sm rounded-lg hover:bg-surface-container-low transition-colors flex items-center gap-space-sm cursor-pointer">
+<div class="relative shrink-0">
+<div class="w-11 h-11 rounded-full bg-surface-container-high flex items-center justify-center font-headline-sm text-primary">
+<span>DL</span>
+</div>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-poi-ingresso shadow-sm"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Dario Lucidi</p>
+<span class="font-label-code-status text-[10px] text-outline">Lun</span>
+</div>
+<p class="font-body-sm text-body-sm text-outline truncate">Ci sentiamo venerdì per i biglietti</p>
+<span class="font-label-code-status text-[10px] text-outline uppercase">Cocoricò Riccione</span>
+</div>
+</div>
+</div>
+<!-- VIEW 2: Richieste Ricevute (Spec D7: Accetta / Rifiuta Silenzioso) -->
+<div class="hidden flex-col gap-space-xs max-h-[620px] overflow-y-auto" id="view-requests">
+<div class="p-space-xs bg-surface-container-lowest rounded-lg mb-1">
+<p class="font-label-sm text-label-sm text-accent-gold-piercing">Specifiche D7 • Rifiuto Silenzioso</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">L'utente mittente non riceverà alcun avviso in caso di rifiuto.</p>
+</div>
+<!-- Request Item A -->
+<div class="p-space-sm rounded-lg bg-surface-container-low shadow-sm flex flex-col gap-space-xs" id="req-card-1">
+<div class="flex items-center gap-space-sm">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait of a young music lover with sleek futuristic glasses illuminated by blue ambient lights in a dance venue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEfxl21OxYhi5o5VaI0bhR4Cy_tgbzf9XBHZyCoYA6JyHUjz0lwVKTwifnIWyNPBJlcjWWDDDXg7iTgJbeQKNmzOdKmRpcduqpa5Pms8Uprfhp68tCaXuGu_bVAK-Sn2HexhguBxEJZqwYX0UhLOriU88yOyUnCflipXOZHOHiATJHnjOFLr8DIC-0MPekw7C7vrHarqZjWBtvF1b6QUOfb9I4c9l5tI_UiSppRwg6qDckypGOlgFC"/>
+<div class="flex-1 min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Leonardo Riva</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Incontrato al Bunker Club</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-1">
+<button class="flex-1 py-1.5 px-space-xs rounded-md bg-primary hover:bg-inverse-primary text-on-primary font-label-btn text-label-btn flex items-center justify-center gap-1 shadow-sm transition-all" onclick="acceptRequest('req-card-1', 'Leonardo Riva')">
+<span class="material-symbols-outlined text-[16px]">how_to_reg</span>
+<span>Accetta</span>
+</button>
+<button class="py-1.5 px-space-sm rounded-md bg-surface-container-highest hover:bg-error-container text-on-surface-variant hover:text-error font-label-btn text-label-btn transition-colors" onclick="silentReject('req-card-1')" title="Rifiuto Silenzioso (Nessuna notifica)">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Request Item B -->
+<div class="p-space-sm rounded-lg bg-surface-container-low shadow-sm flex flex-col gap-space-xs" id="req-card-2">
+<div class="flex items-center gap-space-sm">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Striking modern portrait of an electronic festival attendee in glowing dark backdrop with warm ambient shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDP1wj0i4UGrqhE7DSCKktaZzEnhQOrKo8YGL_6BNgcL-cG5In8VeoWC7EwJRn1RSj3QmnoZyXs1uRmwO80Z40EztCgxjGWnxQ98LRfJtXsfGnJRCHCMNTVvIkzYARpvvMg7eWSCiNfH5S-8fcWUBNheKkZQX9p10RTKMncF16JGtQtQkNBBfPDcpzwak7QehiUC08V-VU-tDN7bb8_Ex5169Vc8TFxXuKbSlm9eYuLH52lZdhhOa8b"/>
+<div class="flex-1 min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Greta Galli</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Condivide 3 eventi futuri</p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-1">
+<button class="flex-1 py-1.5 px-space-xs rounded-md bg-primary hover:bg-inverse-primary text-on-primary font-label-btn text-label-btn flex items-center justify-center gap-1 shadow-sm transition-all" onclick="acceptRequest('req-card-2', 'Greta Galli')">
+<span class="material-symbols-outlined text-[16px]">how_to_reg</span>
+<span>Accetta</span>
+</button>
+<button class="py-1.5 px-space-sm rounded-md bg-surface-container-highest hover:bg-error-container text-on-surface-variant hover:text-error font-label-btn text-label-btn transition-colors" onclick="silentReject('req-card-2')" title="Rifiuto Silenzioso">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+</div>
+<!-- VIEW 3: Richieste Inviate (Spec D8: Ritira Richiesta) -->
+<div class="hidden flex-col gap-space-xs max-h-[620px] overflow-y-auto" id="view-sent">
+<div class="p-space-xs bg-surface-container-lowest rounded-lg mb-1">
+<p class="font-label-sm text-label-sm text-on-surface-variant">Richieste in stato <span class="text-tertiary font-label-code-status">INVIATA</span></p>
+</div>
+<!-- Sent Item 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low shadow-sm flex items-center justify-between gap-space-xs" id="sent-card-1">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center font-label-btn text-secondary">
+                  FS
+                </div>
+<div class="min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Federico Sandri</p>
+<span class="font-label-code-status text-[10px] text-tertiary uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>In attesa
+                  </span>
+</div>
+</div>
+<button class="px-space-xs py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface-variant font-label-sm text-label-sm transition-colors whitespace-nowrap" onclick="withdrawRequest('sent-card-1')">
+                Ritira
+              </button>
+</div>
+<!-- Sent Item 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low shadow-sm flex items-center justify-between gap-space-xs" id="sent-card-2">
+<div class="flex items-center gap-space-sm min-w-0">
+<img class="w-9 h-9 rounded-full object-cover" data-alt="Portrait of an Italian young woman enthusiast of underground techno in moody atmospheric dark venue" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd-F_DBEP4y5KUVcIa4ZOR4ZUEM_R8njulApgOiiT-flSrKr-dBIEnt5mJ6BwvrpAWA6FppitxYrtkGZH8HdoXH7tu8jRNBY0Kil2eAryQjJYJF67vUfLlH6JWWcYyWZRU0NG-aPO4AZZbazdY7dbGoot5_KLKaDg9eMX9jqENpLeHjV1H_f0HaQwjuXIvAWOEXJCqHOzpalEtWPOXPvmq7Tzfi67-39Bm_o6fioiAiUmu0plRsgqt"/>
+<div class="min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Chiara Conti</p>
+<span class="font-label-code-status text-[10px] text-tertiary uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>In attesa
+                  </span>
+</div>
+</div>
+<button class="px-space-xs py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface-variant font-label-sm text-label-sm transition-colors whitespace-nowrap" onclick="withdrawRequest('sent-card-2')">
+                Ritira
+              </button>
+</div>
+</div>
+</div>
+<!-- Privacy & Live Presence Status Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[24px]">visibility</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface">Visibilità Radar Live</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Visibile agli amici a &lt; 2km</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary-fixed after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-poi-ingresso"></div>
+</label>
+</div>
+</section>
+<!-- ================= CENTER COLUMN: ACTIVE E2EE WEBSOCKET CHAT (6 Cols) ================= -->
+<section class="lg:col-span-6 flex flex-col h-[760px] bg-surface-glass backdrop-blur-2xl rounded-xl shadow-2xl overflow-hidden">
+<!-- Chat Header: Session Telemetry & Recipient Profile -->
+<div class="px-space-md py-space-sm bg-surface-container flex items-center justify-between gap-space-md shrink-0">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative shrink-0">
+<img class="w-11 h-11 rounded-full object-cover" data-alt="Close-up cyberpunk portrait of Sofia Moretti with subtle purple neon light highlights and soft focus nightclub background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPuFEMsyqtRUAC8YFd1UKD01jCYUL7BlzDoIbcNFyzCNlKtITMzlsmb5EKm1B1b8qCjXl0o1-WJIJIiu29rBcppvNnP9_cEa_dP0egJb_yOMQ4-AsRA-qGo7-AxwhmZm02-k99bAGPdC4P_0o0luHNcqKnto0KWYMgAE9qpMgVjX8L7pVrAuTgi5Tj8okeMJrwMSCqqSdbndF2o5C7puO6io81hL-PLbs19Q3vUgYytS8wPulYHaQb"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-poi-ingresso ring-2 ring-surface-container"></span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate">Sofia Moretti</h2>
+<span class="px-1.5 py-0.2 rounded bg-surface-container-high text-secondary font-label-code-status text-[10px] uppercase">Amici</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">
+                Conosciuto a <span class="text-on-surface font-label-sm">Chronos Milano</span> • 2 partecipazioni in comune
+              </p>
+</div>
+</div>
+<!-- Encryption & Fast Actions -->
+<div class="flex items-center gap-space-xs shrink-0">
+<div class="hidden sm:flex flex-col items-end">
+<div class="flex items-center gap-1 font-label-code-status text-label-code-status text-poi-ingresso">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>CRITTOGRAFATO</span>
+</div>
+<span class="text-[10px] text-outline font-label-code-status">CHANNEL: /user/queue</span>
+</div>
+<button class="p-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface transition-colors" title="Dettagli Amicizia &amp; Opzioni Blocco">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Chat History Stream (ISO-8601 Timestamps, Badges, Delivery status) -->
+<div class="flex-1 p-space-md overflow-y-auto space-y-space-md" id="chat-messages-container">
+<!-- System Security Notice -->
+<div class="flex justify-center my-space-xs">
+<div class="bg-surface-container-lowest/80 px-space-md py-1 rounded-full flex items-center gap-space-xs font-label-code-status text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] text-accent-gold-piercing">shield_lock</span>
+<span>Canale STOMP certificato. Messaggi crittografati end-to-end con token sessione NoseY.</span>
+</div>
+</div>
+<!-- Incoming Message: Sofia -->
+<div class="flex items-end gap-space-xs max-w-[82%]">
+<img class="w-6 h-6 rounded-full object-cover shrink-0 mb-1" data-alt="Tiny avatar icon of Sofia Moretti with purple hue dark lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiG5F9G65gutu6OIejIkaz3aTlZ_Z_yfVE-wt43pribMP2DX8iPhp4H906c_uTlyE5YYbvUlslQeWYsiJJtiyHLbyg0WvQ9jhh7VnvQthwVYiJz3AMiGSijUJCW-YsG-l2vy1bZehvLPCsXjL7KqZ08UHWfWJ3X1GNqyTO6_4UEo67ogP5hOjdEV3rEgxkLusB6II-hQ8LChJUEg00vdZ5fi642wCWYiVGP2g4COHetcQS1aJFSdAC"/>
+<div class="flex flex-col gap-1 items-start">
+<span class="font-label-code-status text-[10px] text-outline ml-1">Sofia • 2025-05-18T22:38:12+02:00</span>
+<div class="bg-surface-container p-space-md rounded-2xl rounded-bl-sm shadow-md text-on-surface font-body-md text-body-md">
+                Ehi Alex! Sei già dentro al Chronos? La fila all'ingresso VIP scorre velocissima.
+              </div>
+</div>
+</div>
+<!-- Outgoing Message: User -->
+<div class="flex flex-col items-end gap-1 ml-auto max-w-[82%]">
+<span class="font-label-code-status text-[10px] text-outline mr-1">Tu • 2025-05-18T22:40:05+02:00</span>
+<div class="bg-primary text-on-primary p-space-md rounded-2xl rounded-br-sm shadow-md font-body-md text-body-md">
+              Arrivato ora al gate 2! Ho scansionato il pass con il wallet NoseY, 30 secondi e sono alla cassa token.
+            </div>
+<div class="flex items-center gap-1 font-label-code-status text-[10px] text-secondary mr-1">
+<span>22:40</span>
+<span class="material-symbols-outlined text-[14px]">done_all</span>
+</div>
+</div>
+<!-- Incoming Message: Sofia -->
+<div class="flex items-end gap-space-xs max-w-[82%]">
+<img class="w-6 h-6 rounded-full object-cover shrink-0 mb-1" data-alt="Tiny avatar icon of Sofia Moretti with purple hue dark lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIbrwOUqdRU8PawNux64rXEgF39lzmT163Ojyo5CGR4v-TBfPX01OS1mnXSBpYAtZlaW86k9HKa2suwZ83xd9_6inh_iT3LVWXVVjq89CzI4RkuOJz9x3Skyv0O7lMZJHSfae6C5gcBOg5nO74NkQW3Kj_23SXnUEVqk1bekq6Y7GYqAFADyR6AM0Mb-qeXSzcuNq4owSTqPEDf-vjMxt-8okpN9xBTuZVkIRe5TXueEheGQx78AK9"/>
+<div class="flex flex-col gap-1 items-start">
+<span class="font-label-code-status text-[10px] text-outline ml-1">Sofia • 2025-05-18T22:42:50+02:00</span>
+<div class="bg-surface-container p-space-md rounded-2xl rounded-bl-sm shadow-md text-on-surface font-body-md text-body-md">
+                Perfetto! Matteo è già nell'area bar con altri 2 ragazzi del radar. Ci vediamo sotto lo Stage 1 alle 00:30 quando inizia il set dei Kas:st?
+              </div>
+</div>
+</div>
+<!-- Live Dynamic Message Target Anchor -->
+<div id="chat-anchor"></div>
+</div>
+<!-- Chat Input Sub-System (puoiScrivere = true state & 2000 Char Limit) -->
+<div class="p-space-md bg-surface-container-low shrink-0 flex flex-col gap-space-xs shadow-lg">
+<div class="flex items-center justify-between text-outline">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-status-in-corso animate-ping"></span>
+<span class="font-label-code-status text-label-code-status text-on-surface-variant uppercase">puoiScrivere = true</span>
+</div>
+<div class="font-label-code-status text-[11px] text-outline" id="char-counter">
+              0 / 2000
+            </div>
+</div>
+<form class="flex items-center gap-space-xs" id="chat-form" onsubmit="sendStompMessage(event)">
+<div class="relative flex-1">
+<input class="w-full bg-surface-canvas text-on-surface placeholder:text-outline font-body-md text-body-md py-3 px-space-md rounded-lg focus:outline-none focus:bg-surface-container-lowest transition-all" id="chat-input" maxlength="2000" oninput="updateCharCounter(this)" placeholder="Scrivi un messaggio crittografato a Sofia..." type="text"/>
+<button class="absolute right-3 top-3 text-outline hover:text-on-surface transition-colors" title="Condividi POI Radar" type="button">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+</button>
+</div>
+<!-- Chakra UI / React Bits inspired neon-glow send CTA -->
+<button class="h-12 px-space-md bg-gradient-to-r from-primary-container to-inverse-primary hover:from-primary hover:to-primary-container text-on-primary-container font-label-btn text-label-btn rounded-lg flex items-center justify-center gap-space-xs shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.45)] transition-all shrink-0 active:scale-95" type="submit">
+<span>Invia</span>
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</form>
+</div>
+</section>
+<!-- ================= RIGHT COLUMN: SHARED EVENT CONTEXT & EVENT MATES (3 Cols) ================= -->
+<section class="lg:col-span-3 flex flex-col gap-space-md">
+<!-- Shared Event Card Spotlight -->
+<div class="bg-surface-glass backdrop-blur-2xl rounded-xl overflow-hidden shadow-xl flex flex-col">
+<div class="relative h-36 w-full">
+<div class="bg-cover bg-center w-full h-full" data-alt="Atmospheric underground electronic music stage with deep magenta and indigo laser beams cutting through haze over an electrified dancing crowd" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDWkuba4OOw1C_wME2fIDF4qxMeA1ejj-3xDw2twMMFmD15CtERqOpAZvVOqSuuYL7gOzZ5HoKs8K-KL8ACivDj3ja1ESuZKAqktrbZ1AyE0tojTh4mG93E3EnJ_98zMsr9WqM_W60qDoWXzHD3nGjr-9Bcvs5EsvcqkpvwQfp_5pvSIUHe439DnlDxvQ-DgFgnYEVS9m9vVH1isbAoaL4ahROyh1oJWIGJlzWVIzCo3mfTitKVs3RF')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/40 to-transparent"></div>
+<span class="absolute top-3 left-3 px-space-xs py-0.5 rounded bg-status-in-corso/20 backdrop-blur-md text-status-in-corso font-label-code-status text-label-code-status uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-status-in-corso animate-pulse"></span>In Corso Ora
+            </span>
+<span class="absolute top-3 right-3 px-space-xs py-0.5 rounded bg-surface-container-lowest/80 text-secondary font-label-code-status text-label-code-status">
+              SHARED EVENT
+            </span>
+<div class="absolute bottom-2 left-space-md right-space-md">
+<p class="font-headline-sm text-headline-sm text-on-surface truncate">Parallel Frequencies Night</p>
+<p class="font-body-sm text-body-sm text-secondary truncate">Chronos Milano • Stage 1 Techno</p>
+</div>
+</div>
+<div class="p-space-md bg-surface-card flex flex-col gap-space-sm">
+<div class="grid grid-cols-2 gap-space-xs font-label-code-status text-[11px] text-on-surface-variant bg-surface-container-low p-space-xs rounded-lg">
+<div>
+<span class="text-outline uppercase block">Check-in Tu:</span>
+<span class="text-poi-ingresso font-bold">22:35 VALIDATO</span>
+</div>
+<div>
+<span class="text-outline uppercase block">Check-in Sofia:</span>
+<span class="text-poi-ingresso font-bold">22:15 VALIDATO</span>
+</div>
+</div>
+<!-- Mini Radar POI Map Indicator -->
+<div class="flex items-center justify-between p-space-xs bg-surface-container rounded-lg">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-poi-ingresso text-[18px]">near_me</span>
+<span class="font-body-sm text-body-sm text-on-surface">Prossimità Radar: <strong class="text-secondary font-label-sm">45m</strong></span>
+</div>
+<span class="font-label-code-status text-[10px] text-accent-gold-piercing">ZONA BAR A</span>
+</div>
+</div>
+</div>
+<!-- Participants in Common & Friendship Action Matrix -->
+<div class="bg-surface-glass backdrop-blur-2xl rounded-xl p-space-md shadow-xl flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">groups</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Partecipanti</h3>
+</div>
+<span class="font-label-code-status text-label-code-status text-on-surface-variant uppercase">5 Radar Match</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant -mt-2">
+            Utenti presenti al Chronos con gradi di connessione reciproca:
+          </p>
+<!-- List of Event Mates with Full Friendship Matrix (NESSUNA, INVIATA, RICEVUTA, AMICI) -->
+<div class="flex flex-col gap-space-sm">
+<!-- User 1: Matrix state = NESSUNA (Action: 'Aggiungi') -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between gap-space-xs" id="mate-card-1">
+<div class="flex items-center gap-space-sm min-w-0">
+<img class="w-9 h-9 rounded-full object-cover shrink-0" data-alt="Portrait of an attractive electronic raver in dark atmosphere with faint cyan highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxH86RRa97qVHWz7To3HoncdBwx0ohZJuoURK7olOEhUIW9wWzzNQQFUWmcsKKicfk2WWZJvMXX7Y9lL2jVH4OgYDl9A62cNUrqEmEE9KxSlbT1tXiCkxHcBKhGJJ-w1t0B74w1K6pEUTlsAEqtBvnGHqKySAJo43NzrWBxghSK7vZJn2K3vlSSOy0MuBh8VNvW9Wzt4lgUibcI-V8UqaGxeXvCgLEn0cizJBVGfbmFDM9xpHAnur1"/>
+<div class="min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Lorenzo Bossi</p>
+<span class="font-label-code-status text-[10px] text-outline uppercase block truncate">Stato: Nessuna</span>
+</div>
+</div>
+<button class="px-space-sm py-1.5 rounded-md bg-primary hover:bg-inverse-primary text-on-primary font-label-btn text-label-btn flex items-center gap-1 shadow-sm transition-all whitespace-nowrap" onclick="changeFriendState('mate-card-1', 'INVIATA')">
+<span class="material-symbols-outlined text-[15px]">person_add</span>
+<span>Aggiungi</span>
+</button>
+</div>
+<!-- User 2: Matrix state = INVIATA (Action: 'In attesa' + 'Ritira') -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between gap-space-xs" id="mate-card-2">
+<div class="flex items-center gap-space-sm min-w-0">
+<img class="w-9 h-9 rounded-full object-cover shrink-0" data-alt="Atmospheric low-key portrait of a stylish techno party attendee in Milan club" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs_ZkalUjvPVFAgRrnnjad6aRcUREIR7w1r8YYX_hHl4wXUc5xcbLEbk6u0uOgRhGt_YFuHgW68TOjnUM17wUHyIM7tRheRY4QRVsz2MOG-R-hbmRyY69AYGa6Qk1497MN3zjK5lyRRTBR42pfMGCcMtmd12Lzl5Tyr1wpU9-RDf2xvljNqVTqSll3oyGMYDpTgp9odSlyTn642rLimqXRQwfK0qHDbsdVBJS9a5QMECBlQ3s5OIdU"/>
+<div class="min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Giulia Morandi</p>
+<span class="font-label-code-status text-[10px] text-tertiary uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-ping"></span>In attesa
+                  </span>
+</div>
+</div>
+<button class="px-space-xs py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface-variant font-label-sm text-label-sm transition-colors whitespace-nowrap" onclick="changeFriendState('mate-card-2', 'NESSUNA')">
+                Ritira
+              </button>
+</div>
+<!-- User 3: Matrix state = RICEVUTA (Action: 'Accetta' + 'Rifiuta') -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col gap-space-xs" id="mate-card-3">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-full bg-secondary-container/40 flex items-center justify-center font-label-btn text-secondary shrink-0">
+                    AC
+                  </div>
+<div class="min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Andrea Costa</p>
+<span class="font-label-code-status text-[10px] text-accent-gold-piercing uppercase">Richiesta Ricevuta</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs mt-1">
+<button class="flex-1 py-1 rounded bg-primary hover:bg-inverse-primary text-on-primary font-label-btn text-label-btn text-center shadow-sm transition-all" onclick="changeFriendState('mate-card-3', 'AMICI')">
+                  Accetta
+                </button>
+<button class="px-space-sm py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface-variant font-label-btn text-label-btn transition-colors" onclick="silentReject('mate-card-3')" title="Rifiuta Silenziosamente">
+                  Rifiuta
+                </button>
+</div>
+</div>
+<!-- User 4: Matrix state = AMICI (Action: 'Chat') -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-space-sm min-w-0">
+<img class="w-9 h-9 rounded-full object-cover shrink-0" data-alt="Portrait of an Italian clubber with dark chic outfit smiling in neon blue club atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdruFTyvojvxU_m-paoKl2AOSQvoXdMJykMuiZwPwchjyVKQJxEZ_zkXHRNDPDpiBKSWEeRBRl3hz2nrec8xuqWqqGhkVP1g8jU_4rFjwYwdo4d0-CHqZNvQtijv3MzdHru2rqWFUrxnecuzBYOFb1Y9M6-ftnS_CwlMy4xzsfK9PDpr1U66hG8ocx2C-IpM9wocjErBOgHpODGe8iLrPKyQIIVa0uuPwo2FaRwHbGBBz2v3PHKDPO"/>
+<div class="min-w-0">
+<p class="font-label-btn text-label-btn text-on-surface truncate">Matteo Valenti</p>
+<span class="font-label-code-status text-[10px] text-poi-ingresso uppercase flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-poi-ingresso"></span>Amici
+                  </span>
+</div>
+</div>
+<button class="px-space-sm py-1.5 rounded-md bg-surface-container-high hover:bg-surface-container-highest text-secondary font-label-btn text-label-btn flex items-center gap-1 transition-all whitespace-nowrap">
+<span class="material-symbols-outlined text-[15px]">chat</span>
+<span>Chat</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic Tab Switcher for Left Panel
+  function switchFriendTab(tab) {
+    const tabs = ['friends', 'requests', 'sent'];
+    tabs.forEach(t => {
+      const btn = document.getElementById('tab-btn-' + t);
+      const view = document.getElementById('view-' + t);
+      if (t === tab) {
+        btn.className = 'py-space-xs text-center rounded-md font-label-btn text-label-btn bg-primary text-on-primary shadow-sm transition-all flex items-center justify-center gap-1';
+        view.classList.remove('hidden');
+        view.classList.add('flex');
+      } else {
+        btn.className = 'py-space-xs text-center rounded-md font-label-btn text-label-btn text-on-surface-variant hover:text-on-surface transition-all flex items-center justify-center gap-1';
+        view.classList.remove('flex');
+        view.classList.add('hidden');
+      }
+    });
+  }
+
+  // Character Counter Manager for Chat Input
+  function updateCharCounter(input) {
+    const len = input.value.length;
+    const counter = document.getElementById('char-counter');
+    counter.textContent = `${len} / 2000`;
+    if (len > 1800) {
+      counter.classList.add('text-accent-gold-piercing');
+      counter.classList.remove('text-outline');
+    } else {
+      counter.classList.remove('text-accent-gold-piercing');
+      counter.classList.add('text-outline');
+    }
+  }
+
+  // Simulate Instant STOMP Message Transmission
+  function sendStompMessage(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const container = document.getElementById('chat-messages-container');
+    const anchor = document.getElementById('chat-anchor');
+    const nowIso = new Date().toISOString();
+    const nowHours = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+    const msgHtml = `
+      <div class="flex flex-col items-end gap-1 ml-auto max-w-[82%] animate-fade-in">
+        <span class="font-label-code-status text-[10px] text-outline mr-1">Tu • ${nowIso}</span>
+        <div class="bg-primary text-on-primary p-space-md rounded-2xl rounded-br-sm shadow-md font-body-md text-body-md break-words">
+          ${escapeHtml(msg)}
+        </div>
+        <div class="flex items-center gap-1 font-label-code-status text-[10px] text-secondary mr-1">
+          <span>${nowHours}</span>
+          <span class="material-symbols-outlined text-[14px]">done</span>
+        </div>
+      </div>
+    `;
+
+    anchor.insertAdjacentHTML('beforebegin', msgHtml);
+    input.value = '';
+    updateCharCounter(input);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Specification D7: Silent Request Rejection
+  function silentReject(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'scale(0.95)';
+      el.style.transition = 'all 0.25s ease';
+      setTimeout(() => {
+        el.remove();
+      }, 250);
+    }
+  }
+
+  // Accept incoming request
+  function acceptRequest(elementId, name) {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.innerHTML = `
+        <div class="p-space-sm rounded-lg bg-surface-container text-poi-ingresso font-label-sm text-center flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">verified</span>
+          <span>Hai accettato la richiesta di ${name}! Ora siete connessi.</span>
+        </div>
+      `;
+    }
+  }
+
+  // Withdraw sent request (Spec D8)
+  function withdrawRequest(elementId) {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.remove();
+    }
+  }
+
+  // Dynamic Friendship Matrix Transition
+  function changeFriendState(elementId, newState) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+
+    if (newState === 'INVIATA') {
+      el.innerHTML = `
+        <div class="flex items-center gap-space-sm min-w-0">
+          <img src="placeholder" data-alt="Portrait of an attractive electronic raver in dark atmosphere with faint cyan highlights" class="w-9 h-9 rounded-full object-cover shrink-0"/>
+          <div class="min-w-0">
+            <p class="font-label-btn text-label-btn text-on-surface truncate">Lorenzo Bossi</p>
+            <span class="font-label-code-status text-[10px] text-tertiary uppercase flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>In attesa
+            </span>
+          </div>
+        </div>
+        <button onclick="changeFriendState('${elementId}', 'NESSUNA')" class="px-space-xs py-1 rounded bg-surface-container-high hover:bg-surface-variant text-on-surface-variant font-label-sm text-label-sm transition-colors whitespace-nowrap">
+          Ritira
+        </button>
+      `;
+    } else if (newState === 'NESSUNA') {
+      el.innerHTML = `
+        <div class="flex items-center gap-space-sm min-w-0">
+          <img src="placeholder" data-alt="Portrait of an attractive raver clubber" class="w-9 h-9 rounded-full object-cover shrink-0"/>
+          <div class="min-w-0">
+            <p class="font-label-btn text-label-btn text-on-surface truncate">Lorenzo Bossi</p>
+            <span class="font-label-code-status text-[10px] text-outline uppercase block truncate">Stato: Nessuna</span>
+          </div>
+        </div>
+        <button onclick="changeFriendState('${elementId}', 'INVIATA')" class="px-space-sm py-1.5 rounded-md bg-primary hover:bg-inverse-primary text-on-primary font-label-btn text-label-btn flex items-center gap-1 shadow-sm transition-all whitespace-nowrap">
+          <span class="material-symbols-outlined text-[15px]">person_add</span>
+          <span>Aggiungi</span>
+        </button>
+      `;
+    } else if (newState === 'AMICI') {
+      el.innerHTML = `
+        <div class="flex items-center justify-between gap-space-xs w-full">
+          <div class="flex items-center gap-space-sm min-w-0">
+            <div class="w-9 h-9 rounded-full bg-secondary-container/40 flex items-center justify-center font-label-btn text-secondary shrink-0">AC</div>
+            <div class="min-w-0">
+              <p class="font-label-btn text-label-btn text-on-surface truncate">Andrea Costa</p>
+              <span class="font-label-code-status text-[10px] text-poi-ingresso uppercase flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-poi-ingresso"></span>Amici
+              </span>
+            </div>
+          </div>
+          <button class="px-space-sm py-1.5 rounded-md bg-surface-container-high hover:bg-surface-container-highest text-secondary font-label-btn text-label-btn flex items-center gap-1 transition-all whitespace-nowrap">
+            <span class="material-symbols-outlined text-[15px]">chat</span>
+            <span>Chat</span>
+          </button>
+        </div>
+      `;
+    }
+  }
+</script></main><footer class="w-full bg-surface-container-lowest mt-space-xl"><div class="max-w-[1440px] mx-auto px-margin py-space-xl"><div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-lg mb-space-lg"><div class="flex flex-col gap-space-xs"><div class="flex items-center gap-space-sm"><img alt="Logo_NoseY.png" class="h-6 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vndiq4o6IVVJtH-p34E94ys6ErdgHIcom_Q_MOUFG1h5Fw3UwLwyK9nFzF1r3sWvgxPLNpqAVHeUuKUoHieHxb-X6jQtcbUYk__q04YLetcOw5E2PE9l5J7ZYkiE-6qf4j7rG49MQSj5aHcDRkcOvmExM8ekaSF-YtyA5qrLs0WAbtF7DrJjOjEhAerI9xuSubOvV2XHPk3Pjb3AlriSykvEBFhTcPREfryvjCYDxEddI4nqpKXhZHVVCafavybUEj-W_vkcGb"/><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">NoseY</span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Piattaforma notturna d'élite per la scoperta di eventi dal vivo, ticketing sicuro e community radar-powered.</p></div><div class="flex flex-wrap items-center gap-space-lg"><div class="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant"><span class="w-2 h-2 rounded-full bg-status-in-corso"></span>WebSocket STOMP Attivo</div><div class="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant"><span class="w-2 h-2 rounded-full bg-poi-uscita"></span>Cloudinary Media Sync</div><div class="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant"><span class="w-2 h-2 rounded-full bg-status-programmato"></span>AES-256 Passcode Pass</div></div></div><div class="pt-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-md"><p class="font-body-sm text-body-sm text-on-surface-variant">© 2025 NoseY Live Experience System. Tutti i diritti riservati.</p><div class="flex items-center gap-space-md"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="privacy-policy" href="#">Privacy Policy</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="termini-di-servizio" href="#">Termini</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="radar-sicurezza" href="#">Radar Sicurezza</a></div></div></div></footer></body></html>

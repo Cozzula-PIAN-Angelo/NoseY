@@ -30,15 +30,24 @@ services:
         fromDatabase:
           name: nosey-db
           property: connectionString
-      # Origine del FE per il CORS, es. https://nosey-fe.onrender.com
+      # Origine del FE, es. https://nosey-fe.onrender.com (senza / finale, identica a quella
+      # che vede il browser). Vale per il CORS e anche per l'handshake WebSocket su /ws:
+      # se e' sbagliata, l'API funziona a meta' e il WebSocket viene rifiutato.
       - key: ALLOWED_ORIGIN
         sync: false
       # Chiave di firma dei JWT: Render la genera casuale al primo deploy.
       - key: JWT_SECRET
         generateValue: true
+      # Durata del token. Facoltativa: senza, il BE usa 24h (formato Duration, es. 24h, 30m).
+      - key: JWT_DURATA
+        value: 24h
       # Chiave di Google Gemini per il miglioramento della descrizione (decisione 18).
       - key: GEMINI_API_KEY
         sync: false
+      # Email: nessuna variabile. Senza il profilo "smtp" gira LogEmailService, che scrive
+      # nel log di nosey-be i codici di verifica e di reset ("[EMAIL FINTA] ... codice=").
+      # Per leggerli: Render > nosey-be > Logs. Le immagini stanno nel database (decisione 4):
+      # niente Cloudinary. BREVO_API_KEY, MAIL_FROM e SUPERADMIN_EMAIL non esistono ancora.
 
   # ---------- Frontend: build Vite statica ----------
   - type: web

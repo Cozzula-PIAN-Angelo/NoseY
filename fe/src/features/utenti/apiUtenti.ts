@@ -2,6 +2,7 @@
 // all'unica API dell'app (store/apiSlice.ts), che mette gia' token e gestione del 401.
 // Gli errori si leggono con leggiErrore() (lib/errori.ts); i codici possibili sono nei commenti
 // dei tipi di richiesta in types/utenti.ts.
+import type { RootState } from '@/store'
 import { apiSlice } from '@/store/apiSlice'
 import { accesso, utenteAggiornato } from '@/store/sessioneSlice'
 import type {
@@ -18,7 +19,10 @@ import type {
   VerificaRequest,
 } from '@/types/api'
 
-const apiConEtichette = apiSlice.enhanceEndpoints({ addTagTypes: ['Profilo'] })
+// 'Evento' e 'Partecipanti' sono degli eventi (apiEventi): il proprio avatar compare anche li'
+// (organizzatore, lista dei partecipanti), quindi l'immagine del profilo li fa ricaricare.
+const apiConEtichette = apiSlice.enhanceEndpoints({ addTagTypes: ['Profilo', 'Evento', 'Partecipanti'] })
+const dopoImmagine = ['Profilo' as const, 'Evento' as const, 'Partecipanti' as const]
 
 // Ogni risposta con l'utente aggiorna la sessione (barra, menu, ruolo per le rotte)
 type Aggiorna = { dispatch: (azione: unknown) => unknown; queryFulfilled: Promise<{ data: UtenteResponse }> }
@@ -100,21 +104,50 @@ export const apiUtenti = apiConEtichette.injectEndpoints({
       onQueryStarted: (_arg, api) => aggiornaSessione(api),
     }),
 
-    /** CaricaImmagineProfilo: multipart con "file", JPEG/PNG/WEBP fino a 2 MB (LIMITI_UTENTI) */
+    /**
+     * CaricaImmagineProfilo: multipart con "file", JPEG/PNG/WEBP fino a 2 MB (LIMITI_UTENTI).
+     * La risposta aggiorna subito sessione e profilo, senza aspettare che si ricarichino.
+     */
     caricaImmagineProfilo: build.mutation<UtenteResponse, File>({
       query: (file) => {
         const dati = new FormData()
         dati.append('file', file)
         return { url: '/api/users/me/avatar', method: 'POST', body: dati }
       },
-      invalidatesTags: ['Profilo'],
-      onQueryStarted: (_arg, api) => aggiornaSessione(api),
+      invalidatesTags: dopoImmagine,
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled
+          dispatch(utenteAggiornato(data))
+          dispatch(apiUtenti.util.upsertQueryData('vediProfilo', undefined, data))
+        } catch {
+          // FILE_NON_VALIDO, SERVIZIO_ESTERNO...: li mostra la pagina
+        }
+      },
     }),
 
-    /** RimuoviImmagineProfilo: 204; il profilo ricaricato aggiorna la sessione */
+    /**
+     * RimuoviImmagineProfilo: 204, niente utente nella risposta. Sessione e profilo si aggiornano
+     * subito qui; il 404 NON_TROVATO (gia' tolta, es. da un'altra scheda) lo gestisce la pagina
+     * e il profilo ricaricato (invalidatesTags vale anche sugli errori) rimette tutto in pari.
+     */
     rimuoviImmagineProfilo: build.mutation<void, void>({
       query: () => ({ url: '/api/users/me/avatar', method: 'DELETE' }),
-      invalidatesTags: ['Profilo'],
+      invalidatesTags: dopoImmagine,
+      async onQueryStarted(_arg, { dispatch, getState, queryFulfilled }) {
+        try {
+          await queryFulfilled
+        } catch {
+          return
+        }
+        const utente = (getState() as RootState).sessione.utente
+        if (utente) dispatch(utenteAggiornato({ ...utente, immagineProfilo: null }))
+        dispatch(
+          apiUtenti.util.updateQueryData('vediProfilo', undefined, (profilo) => {
+            profilo.immagineProfilo = null
+          }),
+        )
+      },
     }),
 
     /** CambioPassword: gli altri dispositivi escono, questo resta collegato */

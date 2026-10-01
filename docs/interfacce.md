@@ -216,7 +216,7 @@ Convenzioni:
 | `/friends` | Amici e richieste (ricevute, inviate) | login | ListaAmici, ListaRichieste... | Community (colonna Social) |
 | `/chat` | Elenco delle chat | login | ListaChat | Community & Chat |
 | `/chat/:chatId` | Conversazione | login | ListaMessaggi, WebSocket | Community & Chat |
-| `/notifications` | Notifiche: eventi, amicizie, chat | login | ListaNotifiche..., ContaNonLette | — |
+| `/notifications` | Notifiche: eventi, amicizie, chat | login | ListaNotifiche..., ContaNonLette | Community, Amicizie & Chat (pannello "Notifiche Feed") |
 | `/profile` | Profilo, avatar, password, elimina account | login | VediProfilo, ModificaProfilo, CambioPassword, Anonimizzazione | — |
 | `/login` | Accesso | ospite | Login | — |
 | `/register` | Registrazione | ospite | Registrazione | — |
@@ -273,6 +273,26 @@ Funzioni e tipi: `leggiErrore()` (`@/lib/errori`), `PaginaResponse` e `DIMENSION
 - **Accesso alle pagine**: rotte contenitore `SoloConLogin`, `SoloOspiti`,
   `SoloRuolo minimo="ADMIN"` in `src/router.tsx` (`@/components/layout`); dopo il login si
   torna al `?redirect=` (`urlLogin()`, `percorsoDopoLogin()` in `@/lib/dopoLogin`).
+
+### WebSocket (FE2-11)
+
+- **Connessione**: una sola per tutta l'app, la apre `ConnessioneLive` (in `App.tsx`) finche'
+  c'e' una sessione, con il token nel CONNECT; si riconnette da sola e dopo una riconnessione
+  ricarica ContaNonLette, chat e notifiche (decisione 22). Le pagine non la aprono.
+- **Ricevere**: `iscriviti<T>(coda, callback)` da `@/lib/websocket`, dentro un `useEffect`; la
+  funzione restituita annulla l'iscrizione. Il corpo arriva gia' convertito dal JSON e
+  l'iscrizione resta valida anche dopo una riconnessione.
+  `useEffect(() => iscriviti<MessaggioResponse>('/user/queue/messages', (m) => ...), [])`
+- **Inviare**: `invia('/app/chats/{chatId}/send', { testo })` → `false` se in quel momento non
+  c'e' connessione (il messaggio non parte). Gli errori arrivano su `/user/queue/errors`
+  (`ErroreWebSocket`); `TOKEN_NON_VALIDO` lo gestisce gia' `ConnessioneLive`.
+- **Stato**: `useStatoConnessione()` → `assente` · `connessione` · `connesso` · `riconnessione`,
+  per l'indicatore della schermata Community & Chat.
+- **Notifiche live** (FE2-13): le riceve gia' `useNotificheLive` (chiamato da `ConnessioneLive`)
+  in tutta l'app: avviso a comparsa, badge della campanella, lista della categoria e, per gli
+  eventi, dettaglio/POI/foto ricaricati (decisione 23). Le pagine non si iscrivono di nuovo.
+- **Dati finti**: `mocks/handlers/websocket.ts` fa da server STOMP; per simulare un arrivo live
+  `pubblicaFinto(utenteId, 'messages' | 'notifications' | 'errors', corpo)`.
 
 ### Da realizzare (nomi e props concordati qui)
 
