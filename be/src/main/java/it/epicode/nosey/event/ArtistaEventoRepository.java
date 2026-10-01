@@ -14,4 +14,7 @@ public interface ArtistaEventoRepository extends JpaRepository<ArtistaEvento, Ar
 
 	// AggiungiArtistaEvento, RimuoviArtistaEvento (sezione 6).
 	boolean existsByEventoIdAndArtistaId(UUID eventoId, UUID artistaId);
+
+	// EliminaArtista (sezione 12): vietata se l'artista e' associato a uno o piu' eventi.
+	boolean existsByArtistaId(UUID artistaId);
 }
