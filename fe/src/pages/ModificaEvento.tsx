@@ -1,14 +1,16 @@
-import { useState, type ReactNode } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { Caricamento, MessaggioErrore, StatoVuoto, stilePulsante, useAvviso } from '@/components/ui'
 import { useModificaEventoMutation, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { erroriSuiCampi } from '@/features/eventi/erroriEvento'
 import { FormEvento, type ErroriEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
+import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { modificheEvento, valoriDaEvento } from '@/features/eventi/modificheEvento'
 import { leggiErrore } from '@/lib/errori'
 
 // Modifica di un evento (FE1-07), rotta /events/:id/edit (solo con il login, solo il proprietario).
-// Qui arriveranno anche foto (FE1-09), mappa interna (FE1-10), artisti (FE1-11) e annullamento (FE1-13).
+// Sezioni: dati dell'evento (FE1-07), foto (#foto, FE1-09); poi mappa interna (FE1-10),
+// artisti (FE1-11) e annullamento (FE1-13).
 
 function Contenitore({ children }: { children: ReactNode }) {
   return (
@@ -25,6 +27,13 @@ export default function ModificaEvento() {
   const avviso = useAvviso()
   const navigate = useNavigate()
   const [erroriServer, setErroriServer] = useState<ErroriEvento>({})
+  const { hash } = useLocation()
+
+  // Dopo la creazione si arriva con #foto: il router non scorre da solo fino all'ancora
+  const caricato = evento !== undefined
+  useEffect(() => {
+    if (caricato && hash) document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [caricato, hash])
 
   if (!evento && isFetching) return <Contenitore><Caricamento riquadro testo="Carico l'evento..." /></Contenitore>
   if (error) {
@@ -105,6 +114,22 @@ export default function ModificaEvento() {
           onInvia={invia}
         />
       </div>
+
+      <section id="foto" aria-labelledby="titolo-foto" className="flex scroll-mt-20 flex-col gap-space-md rounded-2xl bg-surface-card p-space-md sm:p-space-lg">
+        <h2 id="titolo-foto" className="font-headline-sm text-headline-sm">
+          Foto
+        </h2>
+        {/* Caricamento, copertina e cancellazione arrivano con FE1-09 (Gestione delle foto) */}
+        {evento.foto.length > 0 ? (
+          <GalleriaFoto key={evento.id} foto={evento.foto} titoloEvento={evento.titolo} />
+        ) : (
+          <StatoVuoto
+            icona="add_photo_alternate"
+            titolo="Nessuna foto"
+            messaggio="Il caricamento delle foto arriva con la card FE1-09. La prima foto diventerà la copertina."
+          />
+        )}
+      </section>
     </Contenitore>
   )
 }

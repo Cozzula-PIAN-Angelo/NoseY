@@ -26,8 +26,9 @@ export default function CreaEvento() {
     }
     try {
       const evento = await crea(dati).unwrap()
-      avviso.successo('Evento creato', `«${evento.titolo}» è sulla mappa.`)
-      navigate(`/events/${evento.id}`)
+      avviso.successo('Evento creato', `«${evento.titolo}» è sulla mappa. Ora aggiungi qualche foto.`)
+      // Passo successivo: le foto (la prima diventa la copertina, e serve anche all'AI)
+      navigate(`/events/${evento.id}/edit#foto`)
     } catch (errore) {
       const campi = erroriSuiCampi(errore, dati)
       if (campi) {
