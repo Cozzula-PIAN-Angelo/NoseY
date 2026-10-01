@@ -58,6 +58,13 @@ public class EventoController {
 		eventoService.annulla(id, utente.id(), richiesta == null ? null : richiesta.motivo());
 	}
 
+	@PostMapping("/{id}/notifications")
+	@ResponseStatus(HttpStatus.CREATED)
+	public NotificaManualeResponse inviaNotificaManuale(@PathVariable UUID id,
+			@AuthenticationPrincipal UtenteAutenticato utente, @RequestBody @Valid NotificaManualeRequest richiesta) {
+		return eventoService.inviaNotificaManuale(id, utente.id(), richiesta.testo());
+	}
+
 	// Pubblico: con un token valido (facoltativo) calcola sonoProprietario/sonoIscritto.
 	// Un token scaduto o non valido non da' mai 401 qui (JwtFilter, sezione 14): utente = null.
 	@GetMapping("/{id}")
