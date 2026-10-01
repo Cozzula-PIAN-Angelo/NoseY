@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Mappa, type Coordinate } from '@/components/mappa'
 import { Button, DateTimeField, Icon, TextArea, TextField } from '@/components/ui'
 import { nelFuturo } from '@/lib/date'
@@ -56,6 +56,11 @@ type FormEventoProps = {
   /** L'evento e' gia' iniziato: la data d'inizio non si puo' piu' cambiare (EVENTO_GIA_INIZIATO) */
   inizioBloccato?: boolean
   onInvia: (valori: ValoriEvento) => void
+  /**
+   * Contenuto sotto il campo Descrizione (in modifica: il miglioramento con l'AI, FE1-12), con il
+   * testo scritto finora, anche se non ancora salvato, e il modo di sostituirlo
+   */
+  sottoDescrizione?: (descrizione: string, cambiaDescrizione: (testo: string) => void) => ReactNode
 }
 
 export function FormEvento({
@@ -65,6 +70,7 @@ export function FormEvento({
   erroriServer = NESSUN_ERRORE,
   inizioBloccato = false,
   onInvia,
+  sottoDescrizione,
 }: FormEventoProps) {
   const [valori, setValori] = useState<ValoriEvento>(iniziali)
   const [errori, setErrori] = useState<ErroriEvento>({})
@@ -111,6 +117,7 @@ export function FormEvento({
           errore={errore('descrizione')}
           aiuto="Facoltativa: potrai migliorarla con l'AI dopo aver caricato una foto."
         />
+        {sottoDescrizione?.(valori.descrizione, (testo) => cambia('descrizione', testo))}
         <div className="grid gap-space-md sm:grid-cols-2">
           <DateTimeField
             etichetta="Inizio"
