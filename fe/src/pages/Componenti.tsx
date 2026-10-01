@@ -167,6 +167,10 @@ const amicizieDiProva: Omit<PulsanteAmiciziaProps, 'eventoId'>[] = [
   { utente: { id: 'u-0003-elena', nome: 'Elena', cognome: 'Rostagno', immagineProfilo: null, attivo: true }, statoAmicizia: 'RICEVUTA', amiciziaId: 'am-03', chatId: null },
   { utente: { id: 'u-0001-sofia', nome: 'Sofia', cognome: 'Moretti', immagineProfilo: null, attivo: true }, statoAmicizia: 'AMICI', amiciziaId: 'am-01', chatId: 'c-01' },
   { utente: { id: 'u-0007-sospeso', nome: 'Utente', cognome: 'Sospeso', immagineProfilo: null, attivo: false }, statoAmicizia: 'NON_DISPONIBILE', amiciziaId: null, chatId: null },
+  // Amica poi anonimizzata: resta AMICI e la chat si apre in sola lettura
+  { utente: { id: 'u-0005-anonimo', nome: 'Utente', cognome: 'anonimo', immagineProfilo: null, attivo: false }, statoAmicizia: 'AMICI', amiciziaId: 'am-04', chatId: 'c-02' },
+  // Non arriva dal backend (un account non attivo e' NON_DISPONIBILE), solo per vedere il pulsante disattivato
+  { utente: { id: 'u-demo-inattivo', nome: 'Account', cognome: 'disattivato', immagineProfilo: null, attivo: false }, statoAmicizia: 'NESSUNA', amiciziaId: null, chatId: null },
 ]
 
 function Sezione({ titolo, children }: { titolo: string; children: ReactNode }) {

@@ -33,6 +33,8 @@ const ETICHETTE: Partial<Record<StatoAmicizia, { testo: string; colore: string }
 //   NESSUNA "aggiungi" · INVIATA "in attesa" + "ritira" · RICEVUTA "accetta" / "rifiuta"
 //   AMICI "chat" · NON_DISPONIBILE nessun pulsante
 // Dopo ogni azione apiSocial ricarica le liste dei partecipanti: lo stato nuovo arriva da li'.
+// Con un account non piu' attivo (sospeso o anonimizzato) i pulsanti restano visibili ma disattivati,
+// tranne "Chat": la chat resta leggibile, in sola lettura.
 export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId, chatId }: PulsanteAmiciziaProps) {
   const [richiedi, { isLoading: richiesta }] = useRichiediAmiciziaMutation()
   const [ritira, { isLoading: ritiro }] = useRitiraRichiestaMutation()
@@ -41,6 +43,8 @@ export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId, 
   const avviso = useAvviso()
   const nome = `${utente.nome} ${utente.cognome}`
   const occupato = richiesta || ritiro || accettazione || rifiuto
+  const nonAttivo = !utente.attivo
+  const motivo = nonAttivo ? 'Account non più attivo' : undefined
   const etichetta = ETICHETTE[statoAmicizia]
 
   async function esegui(azione: () => Promise<unknown>, riuscita: () => void) {
@@ -82,7 +86,15 @@ export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId, 
 
   if (statoAmicizia === 'NESSUNA') {
     return (
-      <Button size="sm" icona="person_add" onClick={aggiungi} inCorso={richiesta} aria-label={`Aggiungi ${nome} agli amici`}>
+      <Button
+        size="sm"
+        icona="person_add"
+        onClick={aggiungi}
+        inCorso={richiesta}
+        disabled={nonAttivo}
+        title={motivo}
+        aria-label={`Aggiungi ${nome} agli amici`}
+      >
         Aggiungi
       </Button>
     )
@@ -100,7 +112,8 @@ export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId, 
           size="sm"
           onClick={ritiraRichiesta}
           inCorso={ritiro}
-          disabled={!amiciziaId}
+          disabled={!amiciziaId || nonAttivo}
+          title={motivo}
           aria-label={`Ritira la richiesta di amicizia a ${nome}`}
         >
           Ritira
@@ -113,7 +126,8 @@ export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId, 
             icona="check"
             onClick={accettaRichiesta}
             inCorso={accettazione}
-            disabled={!amiciziaId || (occupato && !accettazione)}
+            disabled={!amiciziaId || nonAttivo || (occupato && !accettazione)}
+            title={motivo}
             aria-label={`Accetta la richiesta di amicizia di ${nome}`}
           >
             Accetta
@@ -123,7 +137,8 @@ export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId, 
             size="sm"
             onClick={rifiutaRichiesta}
             inCorso={rifiuto}
-            disabled={!amiciziaId || (occupato && !rifiuto)}
+            disabled={!amiciziaId || nonAttivo || (occupato && !rifiuto)}
+            title={motivo}
             aria-label={`Rifiuta la richiesta di amicizia di ${nome}`}
           >
             Rifiuta
