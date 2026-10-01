@@ -21,10 +21,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
- * RichiediAmicizia, AccettaAmicizia, RifiutaAmicizia, RitiraRichiesta e RimuoviAmicizia
+ * RichiediAmicizia, ListaAmici, ListaRichiesteRicevute, ListaRichiesteInviate, AccettaAmicizia,
+ * RifiutaAmicizia, RitiraRichiesta, RimuoviAmicizia e il calcolo di statoAmicizia
  * (progettazione v4, sezione 8).
  */
 @Service
@@ -40,6 +48,11 @@ public class AmiciziaService {
 	private final NotificheService notificheService;
 	private final LimitiService limitiService;
 	private final Clock clock;
+
+	// ListaAmici: per nome dell'amico, poi per cognome, senza distinguere maiuscole e minuscole.
+	private static final Comparator<AmiciziaResponse> PER_NOME_DELL_AMICO = Comparator
+			.comparing((AmiciziaResponse r) -> r.altroUtente().nome(), String.CASE_INSENSITIVE_ORDER)
+			.thenComparing(r -> r.altroUtente().cognome(), String.CASE_INSENSITIVE_ORDER);
 
 	@Transactional
 	public AmiciziaResponse richiedi(RichiediAmiciziaRequest richiesta, UUID utenteId) {
@@ -112,6 +125,47 @@ public class AmiciziaService {
 			case RITIRATA -> riapri(amicizia, utenteId, ricevente, evento, adesso);
 		}
 		return risposta(amicizia, ricevente);
+	}
+
+	@Transactional(readOnly = true)
+	public List<AmiciziaResponse> amici(UUID utenteId) {
+		return risposte(amiciziaRepository.trovaAmici(utenteId), utenteId, StatoAmiciziaVista.AMICI).stream()
+				.sorted(PER_NOME_DELL_AMICO)
+				.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public List<AmiciziaResponse> richiesteRicevute(UUID utenteId) {
+		return risposte(amiciziaRepository.trovaRicevute(utenteId), utenteId, StatoAmiciziaVista.RICEVUTA);
+	}
+
+	// Comprese le RIFIUTATA mascherate: per chi e' stato respinto restano "inviate" (D7).
+	@Transactional(readOnly = true)
+	public List<AmiciziaResponse> richiesteInviate(UUID utenteId) {
+		return risposte(amiciziaRepository.trovaInviate(utenteId), utenteId, StatoAmiciziaVista.INVIATA);
+	}
+
+	/**
+	 * statoAmicizia di chi chiede verso ognuno degli altri utenti, con una sola query sulle amicizie
+	 * (sezioni 7 e 18). La mappa ha una voce per ogni utente di altri, chiave il suo id.
+	 * Chi chiede non va passato fra gli altri.
+	 */
+	@Transactional(readOnly = true)
+	public Map<UUID, RelazioneAmicizia> relazioni(UUID utenteId, Collection<Utente> altri) {
+		if (altri.isEmpty()) {
+			return Map.of();
+		}
+		List<UUID> altriId = altri.stream().map(Utente::getId).toList();
+		Map<UUID, AmiciziaConChat> perAltroUtente = amiciziaRepository.trovaFraUtenteEAltri(utenteId, altriId)
+				.stream()
+				.collect(Collectors.toMap(r -> idAltroUtente(r.amicizia(), utenteId), Function.identity()));
+
+		Map<UUID, RelazioneAmicizia> relazioni = new HashMap<>();
+		for (Utente altro : altri) {
+			relazioni.put(altro.getId(), relazione(perAltroUtente.get(altro.getId()), utenteId,
+					altro.getStato() == StatoUtente.ATTIVO));
+		}
+		return relazioni;
 	}
 
 	@Transactional
@@ -187,6 +241,60 @@ public class AmiciziaService {
 		amicizia.setStato(StatoAmicizia.RIMOSSA);
 		amicizia.setChiusaDa(utenteRepository.getReferenceById(utenteId));
 		amicizia.setAggiornataIl(clock.instant());
+	}
+
+	// Tabella "statoAmicizia: come la vede X nei confronti di Y" della sezione 8; X e' chi chiede.
+	private RelazioneAmicizia relazione(AmiciziaConChat riga, UUID utenteId, boolean altroAttivo) {
+		StatoAmiciziaVista stato = riga == null
+				? StatoAmiciziaVista.NESSUNA
+				: statoVisto(riga.amicizia(), utenteId);
+		// Se Y non e' ATTIVO, tutto tranne AMICI diventa NON_DISPONIBILE.
+		if (!altroAttivo && stato != StatoAmiciziaVista.AMICI) {
+			return RelazioneAmicizia.NON_DISPONIBILE;
+		}
+		return switch (stato) {
+			case INVIATA, RICEVUTA, AMICI -> new RelazioneAmicizia(stato, riga.amicizia().getId(), riga.chatId());
+			case NESSUNA -> RelazioneAmicizia.NESSUNA;
+			case NON_DISPONIBILE -> RelazioneAmicizia.NON_DISPONIBILE;
+		};
+	}
+
+	private StatoAmiciziaVista statoVisto(Amicizia amicizia, UUID utenteId) {
+		boolean chiusaDaMe = amicizia.getChiusaDa() != null && amicizia.getChiusaDa().getId().equals(utenteId);
+		return switch (amicizia.getStato()) {
+			case PENDENTE -> amicizia.getRichiedente().getId().equals(utenteId)
+					? StatoAmiciziaVista.INVIATA
+					: StatoAmiciziaVista.RICEVUTA;
+			case ACCETTATA -> StatoAmiciziaVista.AMICI;
+			case RITIRATA -> StatoAmiciziaVista.NESSUNA;
+			// Chiusa da me: posso riaprire. Chiusa dall'altro: mascherata = il rifiuto non si vede (D7),
+			// non mascherata = ho ritirato io la richiesta.
+			case RIFIUTATA -> !chiusaDaMe && amicizia.isRichiestaMascherata()
+					? StatoAmiciziaVista.INVIATA
+					: StatoAmiciziaVista.NESSUNA;
+			case RIMOSSA -> chiusaDaMe ? StatoAmiciziaVista.NESSUNA : StatoAmiciziaVista.NON_DISPONIBILE;
+		};
+	}
+
+	// Le liste: l'altro utente e' gia' caricato dalla query, le chat si leggono tutte insieme.
+	private List<AmiciziaResponse> risposte(List<Amicizia> amicizie, UUID utenteId, StatoAmiciziaVista stato) {
+		if (amicizie.isEmpty()) {
+			return List.of();
+		}
+		Map<UUID, UUID> chatPerAmicizia = chatRepository
+				.findByAmiciziaIdIn(amicizie.stream().map(Amicizia::getId).toList()).stream()
+				.collect(Collectors.toMap(c -> c.getAmicizia().getId(), Chat::getId));
+		return amicizie.stream()
+				.map(a -> AmiciziaResponse.da(a, altroUtente(a, utenteId), stato, chatPerAmicizia.get(a.getId())))
+				.toList();
+	}
+
+	private Utente altroUtente(Amicizia amicizia, UUID utenteId) {
+		return amicizia.getRichiedente().getId().equals(utenteId) ? amicizia.getRicevente() : amicizia.getRichiedente();
+	}
+
+	private UUID idAltroUtente(Amicizia amicizia, UUID utenteId) {
+		return altroUtente(amicizia, utenteId).getId();
 	}
 
 	// 404 anche se l'amicizia esiste ma non riguarda chi chiede (sezione 8).

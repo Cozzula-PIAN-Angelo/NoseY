@@ -413,3 +413,56 @@ sostituisce con la pagina vera.
   `eventoId` diverso da quello appena inviato.
 - **Risposta con l'evento nuovo ma riga invariata**: la risposta e le liste successive non
   coinciderebbero.
+
+---
+
+## Decisione 14: ordine di ListaAmici e utenti non attivi nelle liste delle amicizie
+
+### Scelta
+
+- ListaAmici (sezione 8, "per nome dell'amico"): per nome, a parita' di nome per cognome, senza
+  distinguere maiuscole e minuscole. L'ordine si fa in Java, dopo la query.
+- Le tre liste (amici, richieste ricevute, richieste inviate) includono anche gli utenti sospesi
+  o anonimizzati, con `altroUtente.attivo = false`: il frontend disattiva i pulsanti, come per
+  `statoAmicizia`.
+
+### Motivazione
+
+- L'ordine in Java non dipende dalla collation del database (in locale e su Render puo' essere
+  diversa): stesso risultato ovunque.
+- La sezione 8 non chiede di escludere nessuno: una richiesta ricevuta da un utente poi sospeso
+  resta visibile, e accettarla da' 409 UTENTE_NON_ATTIVO come da progettazione.
+
+### Alternative scartate
+
+- **ORDER BY nella query** (con CASE sull'altro utente): l'ordine delle maiuscole dipenderebbe
+  dalla collation di Postgres.
+- **Nascondere gli utenti non attivi**: non previsto dalla progettazione, e un amico sospeso
+  sparirebbe mentre la chat resta in sola lettura.
+
+---
+
+## Decisione 15: chatId pronto nel calcolo di statoAmicizia
+
+### Scelta
+
+- `RelazioneAmicizia` (il calcolo di `statoAmicizia` che BE1 usa in ListaPartecipanti) ha anche
+  `chatId`: la chat della coppia, letta con un left join nella stessa query sulle amicizie.
+- `chatId` e' valorizzato, se la chat esiste, solo quando lo e' `amiciziaId` (INVIATA, RICEVUTA,
+  AMICI); con AMICI c'e' sempre. Con NESSUNA e NON_DISPONIBILE e' null.
+- `PartecipanteResponse` (sezione 7) non cambia qui: aggiungere `chatId` alla risposta resta una
+  scelta di BE1 e del team (punto aperto in `docs/interfacce.md`).
+
+### Motivazione
+
+- Il pulsante "Chat" della lista partecipanti deve aprire `/chat/:chatId`, ma la sezione 7 da'
+  solo `amiciziaId`. Con il dato gia' nel calcolo, aggiungerlo alla risposta non costa query in
+  piu' (sezione 18: una sola query sulle amicizie).
+- Stessa regola di `amiciziaId`: chi vede NESSUNA o NON_DISPONIBILE non riceve id della coppia.
+
+### Alternative scartate
+
+- **Niente `chatId`** (testo letterale della sezione 7): il frontend dovrebbe chiamare anche
+  ListaAmici solo per trovare la chat.
+- **`chatId` sempre, se la chat esiste** (come in `AmiciziaResponse`): con NON_DISPONIBILE
+  darebbe un id della coppia mentre `amiciziaId` e' null.
