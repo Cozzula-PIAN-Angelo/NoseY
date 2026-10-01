@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
+import AdminUtenti from '@/pages/AdminUtenti'
 import Accesso from '@/pages/Accesso'
 import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
@@ -67,7 +68,7 @@ export const router = createBrowserRouter([
       {
         element: <SoloRuolo minimo="ADMIN" />,
         children: [
-          { path: 'admin/users', element: <PaginaProvvisoria titolo="Admin: utenti" card="FE1-15" /> },
+          { path: 'admin/users', element: <AdminUtenti /> },
           { path: 'admin/artists', element: <PaginaProvvisoria titolo="Admin: artisti" card="FE1-16" /> },
         ],
       },

@@ -2,7 +2,6 @@
 // controlli nell'ordine del backend. Dati in datiSocial.ts; chi chiede si ricava dal token.
 // L'invio dei messaggi passa dal WebSocket (FE2-11): qui non c'e'.
 import { delay, http, HttpResponse } from 'msw'
-import { DIMENSIONE_MASSIMA, DIMENSIONE_PAGINA, type PaginaResponse } from '@/lib/pagine'
 import { LIMITI_SOCIAL, type AmiciziaResponse, type CategoriaNotifica, type ConteggiNonLette, type MessaggiResponse } from '@/types/api'
 import { nuovoId, trovaEvento, utenti } from '../dati'
 import {
@@ -26,25 +25,11 @@ import {
   trovaChat,
   type AmiciziaFinta,
 } from '../datiSocial'
-import { errore, leggiJson, nessunContenuto } from '../utili'
+import { errore, leggiJson, nessunContenuto, pagina } from '../utili'
 import { conLogin } from './auth'
 import { api, RITARDO } from './comuni'
 
 const adesso = () => new Date().toISOString()
-
-/** Pagina di una lista gia' ordinata, con ?page=&size= come il backend (size massimo 100) */
-function pagina<T>(lista: T[], url: URL): PaginaResponse<T> | null {
-  const page = Number(url.searchParams.get('page') ?? 0)
-  const size = Number(url.searchParams.get('size') ?? DIMENSIONE_PAGINA)
-  if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > DIMENSIONE_MASSIMA) return null
-  return {
-    contenuto: lista.slice(page * size, page * size + size),
-    pagina: page,
-    dimensione: size,
-    totaleElementi: lista.length,
-    totalePagine: Math.ceil(lista.length / size),
-  }
-}
 
 /** Amicizia che riguarda chi chiede: 404 se non esiste o e' di altri */
 function miaAmicizia(id: unknown, io: string): AmiciziaFinta | null {
