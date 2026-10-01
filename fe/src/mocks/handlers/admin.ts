@@ -2,14 +2,15 @@
 // Gli account sono quelli di datiSocial.ts (nome e cognome in dati.ts); serve un token di un
 // ADMIN o SUPERADMIN, per esempio sofia@nosey.it (ADMIN) o elena@nosey.it (SUPERADMIN).
 import { delay, http, HttpResponse } from 'msw'
-import type { AdminUtenteResponse, StatoUtente } from '@/types/api'
+import type { AdminUtenteResponse, Ruolo, StatoUtente } from '@/types/api'
 import { trovaUtente } from '../dati'
 import { account, type AccountFinto } from '../datiSocial'
-import { errore, pagina } from '../utili'
+import { errore, leggiJson, pagina } from '../utili'
 import { conLogin } from './auth'
 import { api, RITARDO } from './comuni'
 
 const STATI: StatoUtente[] = ['ATTIVO', 'SOSPESO', 'ANONIMIZZATO']
+const LIVELLO: Record<Ruolo, number> = { USER: 1, ADMIN: 2, SUPERADMIN: 3 }
 
 /** Solo ADMIN e SUPERADMIN, come /api/admin/** nel backend */
 function soloAdmin(request: Request) {
@@ -54,5 +55,23 @@ export const handlerAdmin = [
       .sort((x, y) => Date.parse(y.creatoIl) - Date.parse(x.creatoIl))
     const corpo = pagina(lista, url)
     return corpo ? HttpResponse.json(corpo) : errore('VALIDAZIONE', { page: 'Pagina non valida' })
+  }),
+
+  // CambiaStatoUtente: solo ATTIVO o SOSPESO, solo su ruoli inferiori al proprio e mai su se stessi.
+  // Con SOSPESO i token dell'utente smettono di valere (accountDaRichiesta vuole ATTIVO) e il login
+  // risponde ACCOUNT_SOSPESO
+  http.patch(api('/admin/users/:utenteId/status'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { account: io, risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const b = await leggiJson(request)
+    if (b.stato !== 'ATTIVO' && b.stato !== 'SOSPESO') return errore('STATO_NON_AMMESSO')
+    const a = account.find((x) => x.id === params.utenteId)
+    if (!a) return errore('NON_TROVATO')
+    if (a.id === io.id || LIVELLO[a.ruolo] >= LIVELLO[io.ruolo]) return errore('RUOLO_INSUFFICIENTE')
+    if (a.stato === 'ANONIMIZZATO') return errore('UTENTE_ANONIMIZZATO')
+    a.stato = b.stato
+    trovaUtente(a.id).attivo = a.stato === 'ATTIVO'
+    return HttpResponse.json(inAdminUtente(a))
   }),
 ]

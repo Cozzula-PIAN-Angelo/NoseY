@@ -3,7 +3,7 @@
 // (/api/admin/** → ADMIN, /api/superadmin/** → SUPERADMIN); le pagine sono gia' protette da SoloRuolo.
 import { DIMENSIONE_PAGINA } from '@/lib/pagine'
 import { apiSlice } from '@/store/apiSlice'
-import type { AdminUtenteResponse, PaginaResponse, ParametriListaUtenti } from '@/types/api'
+import type { AdminUtenteResponse, CambiaStatoUtenteRequest, PaginaResponse, ParametriListaUtenti, Uuid } from '@/types/api'
 
 const apiConEtichette = apiSlice.enhanceEndpoints({ addTagTypes: ['AdminUtente'] })
 
@@ -17,7 +17,13 @@ export const apiAdmin = apiConEtichette.injectEndpoints({
       }),
       providesTags: ['AdminUtente'],
     }),
+
+    /** CambiaStatoUtente: sospende (chiude anche le sessioni aperte) o riattiva un account */
+    cambiaStatoUtente: build.mutation<AdminUtenteResponse, { utenteId: Uuid; dati: CambiaStatoUtenteRequest }>({
+      query: ({ utenteId, dati }) => ({ url: `/api/admin/users/${utenteId}/status`, method: 'PATCH', body: dati }),
+      invalidatesTags: ['AdminUtente'],
+    }),
   }),
 })
 
-export const { useListaUtentiQuery } = apiAdmin
+export const { useListaUtentiQuery, useCambiaStatoUtenteMutation } = apiAdmin

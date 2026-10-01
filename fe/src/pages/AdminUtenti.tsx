@@ -1,13 +1,28 @@
 import { useState } from 'react'
-import { Caricamento, Icon, MessaggioErrore, Paginazione, Select, StatoVuoto, TextField, type Opzione } from '@/components/ui'
-import { useListaUtentiQuery } from '@/features/admin/apiAdmin'
+import {
+  Button,
+  Caricamento,
+  ConfirmDialog,
+  Icon,
+  MessaggioErrore,
+  Paginazione,
+  Select,
+  StatoVuoto,
+  TextField,
+  useAvviso,
+  type Opzione,
+} from '@/components/ui'
+import { useCambiaStatoUtenteMutation, useListaUtentiQuery } from '@/features/admin/apiAdmin'
+import { useAppSelector } from '@/hooks/redux'
 import { useValoreRitardato } from '@/hooks/useValoreRitardato'
 import { cx } from '@/lib/cx'
 import { giorno } from '@/lib/formato'
-import type { AdminUtenteResponse, Ruolo, StatoUtente } from '@/types/api'
+import { selezionaUtente } from '@/store/sessioneSlice'
+import type { AdminUtenteResponse, Ruolo, StatoUtente, UtenteResponse } from '@/types/api'
 
 // Pannello admin: utenti e ruoli (FE1-15), rotta /admin/users (solo ADMIN e SUPERADMIN).
 // Passo 1: tabella con ricerca (email, nome, cognome), filtro per stato e paginazione.
+// Passo 2: sospensione (con conferma: chiude le sessioni aperte) e riattivazione.
 
 const OPZIONI_STATO: Opzione<StatoUtente | ''>[] = [
   { valore: '', etichetta: 'Tutti gli stati' },
@@ -22,13 +37,26 @@ const RUOLI: Record<Ruolo, { etichetta: string; classi: string }> = {
   SUPERADMIN: { etichetta: 'Superadmin', classi: 'bg-accent-gold-piercing/15 text-accent-gold-piercing' },
 }
 
+/** Si gestiscono solo ruoli inferiori al proprio, e mai se stessi (altrimenti 403 RUOLO_INSUFFICIENTE) */
+const LIVELLO: Record<Ruolo, number> = { USER: 1, ADMIN: 2, SUPERADMIN: 3 }
+const puoGestire = (io: UtenteResponse | null, altro: AdminUtenteResponse) =>
+  !!io && io.id !== altro.id && LIVELLO[altro.ruolo] < LIVELLO[io.ruolo]
+
+type AzioniRiga = {
+  gestibile: boolean
+  inCorso: boolean
+  onSospendi: () => void
+  onRiattiva: () => void
+}
+
 const STATI: Record<StatoUtente, { etichetta: string; colore: string }> = {
   ATTIVO: { etichetta: 'Attivo', colore: 'bg-status-in-corso' },
   SOSPESO: { etichetta: 'Sospeso', colore: 'bg-tertiary' },
   ANONIMIZZATO: { etichetta: 'Anonimizzato', colore: 'bg-status-concluso' },
 }
 
-function RigaUtente({ utente }: { utente: AdminUtenteResponse }) {
+function RigaUtente({ utente, azioni }: { utente: AdminUtenteResponse; azioni: AzioniRiga }) {
+  const nome = `${utente.nome} ${utente.cognome}`
   const ruolo = RUOLI[utente.ruolo]
   const stato = STATI[utente.stato]
   return (
@@ -65,6 +93,26 @@ function RigaUtente({ utente }: { utente: AdminUtenteResponse }) {
       <td className="whitespace-nowrap px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant">
         {giorno(utente.creatoIl)}
       </td>
+      <td className="px-space-sm py-space-sm text-right">
+        {/* Un account anonimizzato non si tocca piu'; righe del proprio ruolo o superiore: niente azioni */}
+        {azioni.gestibile && utente.stato === 'ATTIVO' && (
+          <Button variant="danger" size="sm" icona="block" onClick={azioni.onSospendi} aria-label={`Sospendi ${nome}`}>
+            Sospendi
+          </Button>
+        )}
+        {azioni.gestibile && utente.stato === 'SOSPESO' && (
+          <Button
+            variant="secondary"
+            size="sm"
+            icona="lock_open"
+            onClick={azioni.onRiattiva}
+            inCorso={azioni.inCorso}
+            aria-label={`Riattiva ${nome}`}
+          >
+            Riattiva
+          </Button>
+        )}
+      </td>
     </tr>
   )
 }
@@ -77,6 +125,22 @@ export default function AdminUtenti() {
   const filtri = `${cerca}|${stato}`
   const [paginaScelta, setPaginaScelta] = useState({ filtri, numero: 0 })
   const numeroPagina = paginaScelta.filtri === filtri ? paginaScelta.numero : 0
+
+  const io = useAppSelector(selezionaUtente)
+  const [cambiaStato, { isLoading: cambioInCorso, originalArgs }] = useCambiaStatoUtenteMutation()
+  const [daSospendere, setDaSospendere] = useState<AdminUtenteResponse | null>(null)
+  const avviso = useAvviso()
+
+  async function impostaStato(utente: AdminUtenteResponse, stato: 'ATTIVO' | 'SOSPESO') {
+    const nome = `${utente.nome} ${utente.cognome}`
+    try {
+      await cambiaStato({ utenteId: utente.id, dati: { stato } }).unwrap()
+      if (stato === 'SOSPESO') avviso.info('Account sospeso', `${nome} non può più accedere: le sessioni aperte sono state chiuse.`)
+      else avviso.successo('Account riattivato', `${nome} può di nuovo accedere.`)
+    } catch (err) {
+      avviso.erroreApi(err)
+    }
+  }
 
   const { data, isFetching, error, refetch } = useListaUtentiQuery({
     search: cerca || undefined,
@@ -101,7 +165,7 @@ export default function AdminUtenti() {
     contenuto = (
       <div className="flex flex-col gap-space-md">
         <div className={cx('overflow-x-auto rounded-xl bg-surface-card transition-opacity', isFetching && 'opacity-60')}>
-          <table className="w-full min-w-[40rem] text-left">
+          <table className="w-full min-w-[46rem] text-left">
             <caption className="sr-only">Account registrati, dal più recente</caption>
             <thead>
               <tr className="font-label-code-status text-label-code-status uppercase text-outline">
@@ -110,11 +174,23 @@ export default function AdminUtenti() {
                 <th scope="col" className="px-space-sm py-space-sm font-normal">Stato</th>
                 <th scope="col" className="px-space-sm py-space-sm font-normal">Email</th>
                 <th scope="col" className="px-space-sm py-space-sm font-normal">Registrazione</th>
+                <th scope="col" className="px-space-sm py-space-sm text-right font-normal">
+                  <span className="sr-only">Azioni</span>
+                </th>
               </tr>
             </thead>
             <tbody>
               {data.contenuto.map((u) => (
-                <RigaUtente key={u.id} utente={u} />
+                <RigaUtente
+                  key={u.id}
+                  utente={u}
+                  azioni={{
+                    gestibile: puoGestire(io, u),
+                    inCorso: cambioInCorso && originalArgs?.utenteId === u.id,
+                    onSospendi: () => setDaSospendere(u),
+                    onRiattiva: () => impostaStato(u, 'ATTIVO'),
+                  }}
+                />
               ))}
             </tbody>
           </table>
@@ -145,6 +221,28 @@ export default function AdminUtenti() {
       </div>
 
       {contenuto}
+
+      <ConfirmDialog
+        aperta={daSospendere !== null}
+        titolo="Sospendere l'account?"
+        icona="block"
+        variante="danger"
+        testoConferma="Sospendi"
+        testoAnnulla="Annulla"
+        inCorso={cambioInCorso}
+        onConferma={async () => {
+          if (daSospendere) await impostaStato(daSospendere, 'SOSPESO')
+          setDaSospendere(null)
+        }}
+        onAnnulla={() => setDaSospendere(null)}
+      >
+        {daSospendere && (
+          <p className="font-body-md text-body-md">
+            {daSospendere.nome} {daSospendere.cognome} ({daSospendere.email}) non potrà più accedere e le sessioni aperte
+            verranno chiuse subito. I suoi eventi restano. Potrai riattivare l'account quando vuoi.
+          </p>
+        )}
+      </ConfirmDialog>
     </div>
   )
 }
