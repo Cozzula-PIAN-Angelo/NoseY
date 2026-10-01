@@ -79,7 +79,7 @@ class AdminArtistaTest {
 		ArtistaResponse artista = adminArtistaService.crea("Zucchero " + UUID.randomUUID(), null);
 
 		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
-				() -> adminArtistaService.modifica(artista.id(), null, null, null));
+				() -> adminArtistaService.modifica(artista.id(), null, null, null, false));
 
 		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.RICHIESTA_VUOTA);
 	}
@@ -87,7 +87,7 @@ class AdminArtistaTest {
 	@Test
 	void modificaArtistaInesistente404() {
 		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
-				() -> adminArtistaService.modifica(UUID.randomUUID(), "Nuovo nome", null, null));
+				() -> adminArtistaService.modifica(UUID.randomUUID(), "Nuovo nome", null, null, false));
 
 		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.NON_TROVATO);
 	}
@@ -99,7 +99,7 @@ class AdminArtistaTest {
 		ArtistaResponse daModificare = adminArtistaService.crea("Elisa " + UUID.randomUUID(), null);
 
 		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
-				() -> adminArtistaService.modifica(daModificare.id(), nomeEsistente.toUpperCase(), null, null));
+				() -> adminArtistaService.modifica(daModificare.id(), nomeEsistente.toUpperCase(), null, null, false));
 
 		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.ARTISTA_NOME_GIA_USATO);
 	}
@@ -109,16 +109,27 @@ class AdminArtistaTest {
 		String nome = "Negramaro " + UUID.randomUUID();
 		ArtistaResponse artista = adminArtistaService.crea(nome, null);
 
-		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), nome, null, null);
+		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), nome, null, null, false);
 
 		assertThat(risposta.nome()).isEqualTo(nome);
+	}
+
+	@Test
+	void modificaConNomeVuoto400() {
+		ArtistaResponse artista = adminArtistaService.crea("Caparezza " + UUID.randomUUID(), null);
+
+		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
+				() -> adminArtistaService.modifica(artista.id(), "", null, null, false));
+
+		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.VALIDAZIONE);
+		assertThat(eccezione.getCampi()).containsKey("nome");
 	}
 
 	@Test
 	void modificaDisattivaConAttivoFalse() {
 		ArtistaResponse artista = adminArtistaService.crea("Max Pezzali " + UUID.randomUUID(), null);
 
-		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), null, false, null);
+		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), null, false, null, false);
 
 		assertThat(risposta.attivo()).isFalse();
 		assertThat(artistaRepository.findById(artista.id())).get().extracting(Artista::isAttivo).isEqualTo(false);
@@ -129,9 +140,30 @@ class AdminArtistaTest {
 		ArtistaResponse artista = adminArtistaService.crea("Baustelle " + UUID.randomUUID(), null);
 		MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", pngMinimo());
 
-		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), null, null, file);
+		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), null, null, file, false);
 
 		assertThat(risposta.immagineUrl()).isNotNull().contains(artista.id().toString());
+	}
+
+	@Test
+	void modificaConRimuoviImmagineLaToglie() {
+		MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", pngMinimo());
+		ArtistaResponse artista = adminArtistaService.crea("Afterhours " + UUID.randomUUID(), file);
+
+		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), null, null, null, true);
+
+		assertThat(risposta.immagineUrl()).isNull();
+	}
+
+	@Test
+	void modificaConFileERimuoviImmagineInsieme400() {
+		ArtistaResponse artista = adminArtistaService.crea("Marlene Kuntz " + UUID.randomUUID(), null);
+		MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", pngMinimo());
+
+		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
+				() -> adminArtistaService.modifica(artista.id(), null, null, file, true));
+
+		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.VALIDAZIONE);
 	}
 
 	// --- EliminaArtista ---
