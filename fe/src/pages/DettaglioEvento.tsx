@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router'
 import { BadgeStato } from '@/components/eventi'
 import { Avatar, Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { ModerazioneEvento } from '@/features/admin/ModerazioneEvento'
 import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
 import { AnnullaEvento } from '@/features/eventi/AnnullaEvento'
@@ -11,8 +12,10 @@ import { MappaInterna } from '@/features/eventi/MappaInterna'
 import { NotificaPartecipanti } from '@/features/eventi/NotificaPartecipanti'
 import { TicketEvento } from '@/features/eventi/TicketEvento'
 import { useIscrizione } from '@/features/eventi/useIscrizione'
+import { useAppSelector } from '@/hooks/redux'
 import { leggiErrore } from '@/lib/errori'
 import { intervallo } from '@/lib/formato'
+import { selezionaUtente } from '@/store/sessioneSlice'
 import type { StatoEvento, UtentePubblicoResponse, Uuid } from '@/types/api'
 
 // Pagina dell'evento (FE1-05), rotta /events/:id (docs/interfacce.md). Pubblica: con il login
@@ -71,6 +74,7 @@ function SchedaEvento({ id }: { id: Uuid }) {
   // currentData (non data): passando a un altro evento non si vede, nemmeno per un attimo, quello di prima
   const { currentData: evento, isFetching, error, refetch } = useVediEventoQuery(id)
   const iscrizione = useIscrizione(id)
+  const io = useAppSelector(selezionaUtente)
   const [confermaAnnullamento, setConfermaAnnullamento] = useState(false)
   const [annullaEventoAperta, setAnnullaEventoAperta] = useState(false)
   // Il ticket si chiede solo se sono iscritto: altrimenti il backend risponderebbe 404
@@ -150,6 +154,8 @@ function SchedaEvento({ id }: { id: Uuid }) {
               <TicketEvento ticket={ticket} />
             </div>
           )}
+          {/* Moderazione (FE1-16): per gli admin, non sui propri eventi */}
+          {io && io.ruolo !== 'USER' && io.id !== evento.proprietario.id && <ModerazioneEvento key={evento.id} evento={evento} />}
         </aside>
       </div>
 

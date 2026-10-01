@@ -5,6 +5,7 @@ import { DIMENSIONE_PAGINA } from '@/lib/pagine'
 import { apiSlice } from '@/store/apiSlice'
 import type {
   AdminUtenteResponse,
+  AnnullaEventoModerazioneRequest,
   ArtistaRequest,
   ArtistaResponse,
   CambiaRuoloRequest,
@@ -16,7 +17,7 @@ import type {
 } from '@/types/api'
 
 // 'Artista' ed 'Evento' sono di apiEventi: nome e immagine di un artista compaiono anche li'
-const apiConEtichette = apiSlice.enhanceEndpoints({ addTagTypes: ['AdminUtente', 'ArtistaAdmin', 'Artista', 'Evento'] })
+const apiConEtichette = apiSlice.enhanceEndpoints({ addTagTypes: ['AdminUtente', 'ArtistaAdmin', 'Artista', 'Evento', 'Foto', 'Ticket'] })
 
 /** Catalogo pubblico degli artisti (ListaArtisti), da ricaricare dopo ogni modifica dell'admin */
 const CATALOGO = { type: 'Artista' as const, id: 'LISTA' }
@@ -84,6 +85,26 @@ export const apiAdmin = apiConEtichette.injectEndpoints({
       query: (artistaId) => ({ url: `/api/admin/artists/${artistaId}`, method: 'DELETE' }),
       invalidatesTags: (_r, _e, artistaId) => ['ArtistaAdmin', CATALOGO, { type: 'Artista', id: artistaId }],
     }),
+
+    // ---------------------------------------------------------------- Moderazione degli eventi (FE1-16)
+
+    /** RimuoviFotoModerazione: anche su eventi conclusi o annullati; avvisa chi organizza */
+    rimuoviFotoModerazione: build.mutation<void, { id: Uuid; fotoId: Uuid }>({
+      query: ({ id, fotoId }) => ({ url: `/api/admin/events/${id}/photos/${fotoId}`, method: 'DELETE' }),
+      // Se era la copertina, cambia anche nelle liste e sulla mappa
+      invalidatesTags: (_r, _e, { id }) => [{ type: 'Evento', id }, { type: 'Foto', id }, { type: 'Evento', id: 'LISTA' }],
+    }),
+
+    /** AnnullaEventoModerazione: motivo obbligatorio; avvisa chi organizza e chi partecipa */
+    annullaEventoModerazione: build.mutation<void, { id: Uuid; dati: AnnullaEventoModerazioneRequest }>({
+      query: ({ id, dati }) => ({ url: `/api/admin/events/${id}/cancel`, method: 'POST', body: dati }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: 'Evento', id },
+        { type: 'Evento', id: 'LISTA' },
+        { type: 'Evento', id: 'MIEI' },
+        { type: 'Ticket', id: 'MIEI' },
+      ],
+    }),
   }),
 })
 
@@ -95,4 +116,6 @@ export const {
   useCreaArtistaMutation,
   useModificaArtistaMutation,
   useEliminaArtistaMutation,
+  useRimuoviFotoModerazioneMutation,
+  useAnnullaEventoModerazioneMutation,
 } = apiAdmin

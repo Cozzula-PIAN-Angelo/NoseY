@@ -1,12 +1,13 @@
-// Endpoint finti del pannello admin (progettazione v4, sezioni 12 e 13): utenti, ruoli e catalogo artisti.
+// Endpoint finti del pannello admin (progettazione v4, sezioni 12 e 13): utenti, ruoli, catalogo artisti
+// e moderazione degli eventi.
 // Gli account sono quelli di datiSocial.ts (nome e cognome in dati.ts); serve un token di un
 // ADMIN o SUPERADMIN, per esempio sofia@nosey.it (ADMIN) o elena@nosey.it (SUPERADMIN, l'unica che
 // puo' cambiare i ruoli).
 import { delay, http, HttpResponse } from 'msw'
 import { LIMITI_EVENTI, type AdminUtenteResponse, type Ruolo, type StatoUtente } from '@/types/api'
-import { artisti, cancellaImmagine, eventi, nuovoId, salvaImmagine, trovaUtente } from '../dati'
-import { account, type AccountFinto } from '../datiSocial'
-import { errore, leggiJson, nessunContenuto, pagina } from '../utili'
+import { artisti, cancellaImmagine, eventi, nuovoId, salvaImmagine, trovaEvento, trovaUtente, type EventoFinto } from '../dati'
+import { account, notificheEventi, type AccountFinto } from '../datiSocial'
+import { errore, leggiJson, nessunContenuto, nonVuoto, pagina, statoDa } from '../utili'
 import { conLogin } from './auth'
 import { api, RITARDO } from './comuni'
 
@@ -31,6 +32,24 @@ function immagineArtista(dati: FormData | null): File | null | undefined {
 
 const nomeUsato = (nome: string, tranneId?: string) =>
   artisti.some((x) => x.id !== tranneId && x.nome.toLowerCase() === nome.toLowerCase())
+
+/**
+ * Evento da moderare: 404 se non esiste, 403 RUOLO_INSUFFICIENTE se e' di chi modera o di un ruolo
+ * uguale o superiore (gli account anonimizzati sono USER: i loro eventi li modera qualunque admin)
+ */
+function eventoDaModerare(id: unknown, io: AccountFinto): { evento: EventoFinto; risposta?: undefined } | { evento?: undefined; risposta: Response } {
+  const e = typeof id === 'string' ? trovaEvento(id) : undefined
+  if (!e) return { risposta: errore('NON_TROVATO') }
+  const proprietario = account.find((x) => x.id === e.proprietarioId)
+  if (e.proprietarioId === io.id || (proprietario && LIVELLO[proprietario.ruolo] >= LIVELLO[io.ruolo]))
+    return { risposta: errore('RUOLO_INSUFFICIENTE') }
+  return { evento: e }
+}
+
+/** Notifica di un evento, come NOTIFICA_EVENTO del backend */
+function notifica(destinatarioId: string, tipo: 'MODERAZIONE' | 'ANNULLAMENTO', e: EventoFinto, testo: string) {
+  notificheEventi.unshift({ id: nuovoId('ne'), destinatarioId, tipo, testo, eventoId: e.id, letta: false, creataIl: new Date().toISOString() })
+}
 
 /** Data di registrazione: gli account non la salvano, si ricava dall'ordine (gli ultimi sono i piu' recenti) */
 const creatoIl = (a: AccountFinto) => new Date(Date.UTC(2026, 0, 10) + account.indexOf(a) * 86_400_000).toISOString()
@@ -164,6 +183,45 @@ export const handlerAdmin = [
     }
     if (file) artista.immagineUrl = salvaImmagine(`/api/artists/${artista.id}/image`, file, file.type)
     return HttpResponse.json(artista)
+  }),
+
+  // ---------------------------------------------------------------- Moderazione degli eventi
+
+  // RimuoviFotoModerazione: come CancellaFoto (la copertina passa alla foto piu' vecchia rimasta),
+  // anche su eventi conclusi o annullati, piu' la notifica MODERAZIONE a chi organizza
+  http.delete(api('/admin/events/:id/photos/:fotoId'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { account: io, risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const { evento: e, risposta: rifiuto } = eventoDaModerare(params.id, io)
+    if (rifiuto) return rifiuto
+    const indice = e.foto.findIndex((f) => f.id === params.fotoId)
+    if (indice < 0) return errore('NON_TROVATO')
+    const [tolta] = e.foto.splice(indice, 1)
+    cancellaImmagine(tolta.url)
+    if (tolta.copertina && e.foto.length) e.foto[0].copertina = true
+    notifica(e.proprietarioId, 'MODERAZIONE', e, `Una foto del tuo evento «${e.titolo}» è stata rimossa dalla moderazione`)
+    return nessunContenuto()
+  }),
+
+  // AnnullaEventoModerazione: motivo obbligatorio; MODERAZIONE a chi organizza, ANNULLAMENTO a chi partecipa
+  http.post(api('/admin/events/:id/cancel'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { account: io, risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const b = await leggiJson(request)
+    if (!nonVuoto(b.motivo) || b.motivo.length > LIMITI_EVENTI.motivoAnnullamento)
+      return errore('VALIDAZIONE', { motivo: 'Obbligatorio, massimo 500 caratteri' })
+    const { evento: e, risposta: rifiuto } = eventoDaModerare(params.id, io)
+    if (rifiuto) return rifiuto
+    const stato = statoDa(e)
+    if (stato === 'CONCLUSO') return errore('EVENTO_CONCLUSO')
+    if (stato === 'ANNULLATO') return errore('EVENTO_ANNULLATO')
+    e.annullato = true
+    e.motivoAnnullamento = b.motivo.trim()
+    notifica(e.proprietarioId, 'MODERAZIONE', e, `Il tuo evento «${e.titolo}» è stato annullato dalla moderazione: ${e.motivoAnnullamento}`)
+    for (const p of e.partecipanti) notifica(p.utenteId, 'ANNULLAMENTO', e, `L'evento «${e.titolo}» è stato annullato: ${e.motivoAnnullamento}`)
+    return nessunContenuto()
   }),
 
   // EliminaArtista: solo se non e' in nessun evento, altrimenti 409 ARTISTA_IN_USO (va disattivato)
