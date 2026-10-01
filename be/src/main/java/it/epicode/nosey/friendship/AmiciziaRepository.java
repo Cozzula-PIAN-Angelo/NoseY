@@ -13,4 +13,12 @@ public interface AmiciziaRepository extends JpaRepository<Amicizia, UUID> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select a from Amicizia a where a.id = :id")
 	Optional<Amicizia> findConLockById(UUID id);
+
+	// La riga della coppia, in uno qualsiasi dei due versi: al massimo una (uq_amicizia_coppia).
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("""
+			select a from Amicizia a
+			where (a.richiedente.id = :utenteA and a.ricevente.id = :utenteB)
+			   or (a.richiedente.id = :utenteB and a.ricevente.id = :utenteA)""")
+	Optional<Amicizia> findConLockByCoppia(UUID utenteA, UUID utenteB);
 }

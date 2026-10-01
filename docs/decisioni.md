@@ -386,3 +386,30 @@ sostituisce con la pagina vera.
   piu' configurazione.
 - **Navigazione a mano con lo stato di React**: niente URL condivisibili, niente tasto
   "indietro" del browser.
+
+---
+
+## Decisione 13: la richiesta mascherata aggiorna anche evento e data
+
+### Scelta
+
+- In RichiediAmicizia (sezione 8), con la riga della coppia RIFIUTATA chiusa dal ricevente e
+  non mascherata, oltre a `richiesta_mascherata = true` si aggiornano anche `evento_id`
+  (l'evento della nuova richiesta) e `aggiornata_il`. Stato, `chiusa_da` e ricevente restano
+  quelli del rifiuto, e non parte nessuna notifica, come da progettazione.
+- Lo stato visto da chi chiede (`statoAmicizia`, sezione 8) e' l'enum `StatoAmiciziaVista`
+  (`NESSUNA | INVIATA | RICEVUTA | AMICI | NON_DISPONIBILE`): il nome `StatoAmicizia` e' gia'
+  quello dello stato salvato nel database.
+
+### Motivazione
+
+- Il rifiuto deve restare invisibile (D7). Con il solo flag, la risposta e ListaRichiesteInviate
+  mostrerebbero l'evento della richiesta vecchia, e la richiesta resterebbe nella posizione
+  vecchia dell'ordinamento per `aggiornata_il`: chi chiede potrebbe intuire il rifiuto.
+
+### Alternative scartate
+
+- **Solo `richiesta_mascherata = true`** (testo letterale della sezione 8): risposta con un
+  `eventoId` diverso da quello appena inviato.
+- **Risposta con l'evento nuovo ma riga invariata**: la risposta e le liste successive non
+  coinciderebbero.
