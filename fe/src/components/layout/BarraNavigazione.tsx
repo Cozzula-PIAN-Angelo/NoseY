@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { Icon } from '@/components/ui'
+import { useContaNonLetteQuery } from '@/features/social/apiSocial'
 import { useAppSelector } from '@/hooks/redux'
 import { cx } from '@/lib/cx'
 import { urlLogin } from '@/lib/dopoLogin'
@@ -44,8 +45,10 @@ export function BarraNavigazione() {
   // Il menu su mobile si chiude a ogni cambio di pagina
   useEffect(() => setMenuMobile(false), [pathname])
 
-  // Notifiche non lette (ContaNonLette): le collega FE2-13
-  const nonLette = 0
+  // Notifiche non lette (ContaNonLette, FE2-13): somma delle tre categorie. Si aggiorna da solo con
+  // le notifiche e i messaggi live (features/social/useNotificheLive) e quando si segnano lette
+  const { data: conteggi } = useContaNonLetteQuery(undefined, { skip: !utente })
+  const nonLette = utente && conteggi ? conteggi.events + conteggi.friendships + conteggi.chats : 0
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-surface-glass shadow-[0_4px_20px_-4px_rgba(0,0,0,0.5)] backdrop-blur-md">

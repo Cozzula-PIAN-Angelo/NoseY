@@ -2,10 +2,12 @@
 // rifiuterebbe, quindi anche il WebSocket risponde da qui. Stesse regole della sezione 11:
 // CONNECT con un token finto valido, SEND solo verso /app/**, SUBSCRIBE solo alle tre code.
 // Per far arrivare qualcosa live (chat, notifiche): pubblicaFinto(utenteId, 'messages', corpo).
+// InviaMessaggio (FE2-12) salva il messaggio nei dati finti e lo recapita a tutti e due i membri.
 import { ws } from 'msw'
 import type { ErroreWebSocket } from '@/lib/errori'
-import type { Uuid } from '@/types/api'
-import { accountDaRichiesta } from '../datiSocial'
+import { LIMITI_SOCIAL, type MessaggioResponse, type Uuid } from '@/types/api'
+import { nuovoId } from '../dati'
+import { accountDaRichiesta, inChatResponse, messaggi, trovaChat, type ChatFinta } from '../datiSocial'
 
 type Frame = { comando: string; header: Record<string, string>; corpo: string }
 
@@ -70,6 +72,75 @@ export function pubblicaFinto(utenteId: Uuid, coda: Coda, corpo: unknown) {
   connessioni.forEach((c) => c.utenteId === utenteId && mandaACoda(c, coda, corpo))
 }
 
+// ---------------------------------------------------------------- InviaMessaggio (FE2-12)
+
+const INVIO_CHAT = /^\/app\/chats\/([^/]+)\/send$/
+
+/** Istanti degli invii dell'ultimo minuto, per utente (limite MESSAGGI_CHAT) */
+const invii = new Map<Uuid, number[]>()
+
+/**
+ * Risposte finte dell'amico, per vedere arrivare un messaggio live anche senza backend.
+ * Con il prefisso, cosi' nessuno le scambia per messaggi veri.
+ */
+const RISPOSTE = ['Ci sono! 🎶', 'Perfetto, ci vediamo lì', 'Arrivo tra dieci minuti', 'Ahah, grande!', 'Ti scrivo appena entro'].map(
+  (r) => `🤖 Risposta automatica (dati finti): ${r}`,
+)
+const RITARDO_RISPOSTA = 2500
+/** Una risposta in attesa per chat: piu' messaggi di fila ricevono una sola risposta */
+const risposteInAttesa = new Map<Uuid, ReturnType<typeof setTimeout>>()
+
+function salvaEPubblica(c: ChatFinta, mittenteId: Uuid, testo: string) {
+  const m: MessaggioResponse = {
+    id: nuovoId('m'),
+    chatId: c.id,
+    mittenteId,
+    testo,
+    letto: false,
+    inviatoIl: new Date().toISOString(),
+  }
+  messaggi.push(m)
+  // A tutti e due i membri, come il backend dopo il commit
+  c.membri.forEach((id) => pubblicaFinto(id, 'messages', m))
+}
+
+// SEND /app/chats/{chatId}/send: controlli nell'ordine della sezione 11 (il token e' gia' verificato)
+function inviaMessaggio(connessione: Connessione, chatId: string, corpo: string) {
+  const io = connessione.utenteId
+  const adesso = Date.now()
+  const recenti = (invii.get(io) ?? []).filter((t) => adesso - t < 60_000)
+  if (recenti.length >= LIMITI_SOCIAL.messaggiAlMinuto) return mandaACoda(connessione, 'errors', erroreWs('TROPPE_RICHIESTE'))
+  invii.set(io, [...recenti, adesso])
+
+  let testo: unknown
+  try {
+    testo = (JSON.parse(corpo) as { testo?: unknown } | null)?.testo
+  } catch {
+    testo = undefined
+  }
+  if (typeof testo !== 'string' || !testo.trim() || testo.length > LIMITI_SOCIAL.testoMessaggio) {
+    return mandaACoda(connessione, 'errors', erroreWs('VALIDAZIONE'))
+  }
+
+  const c = trovaChat(chatId)
+  if (!c || !c.membri.includes(io)) return mandaACoda(connessione, 'errors', erroreWs('NON_MEMBRO'))
+  if (!inChatResponse(c, io).puoiScrivere) return mandaACoda(connessione, 'errors', erroreWs('CHAT_SOLA_LETTURA'))
+
+  salvaEPubblica(c, io, testo)
+
+  // L'amico risponde da solo dopo un attimo (solo nei dati finti)
+  const amico = c.membri[0] === io ? c.membri[1] : c.membri[0]
+  clearTimeout(risposteInAttesa.get(c.id))
+  risposteInAttesa.set(
+    c.id,
+    setTimeout(() => {
+      risposteInAttesa.delete(c.id)
+      if (!inChatResponse(c, amico).puoiScrivere) return
+      salvaEPubblica(c, amico, RISPOSTE[Math.floor(Math.random() * RISPOSTE.length)])
+    }, RITARDO_RISPOSTA),
+  )
+}
+
 const servizio = ws.link('*/ws')
 
 export const handlerWebSocket = [
@@ -111,8 +182,10 @@ export const handlerWebSocket = [
           } else if (!utenteDelToken(connessione.token)) {
             // Token revocato o scaduto dopo il CONNECT: controllato a ogni SEND
             mandaACoda(connessione, 'errors', erroreWs('TOKEN_NON_VALIDO'))
+          } else {
+            const invioChat = INVIO_CHAT.exec(frame.header.destination)
+            if (invioChat) inviaMessaggio(connessione, invioChat[1], frame.corpo)
           }
-          // Le destinazioni /app/** (es. /app/chats/{chatId}/send) si aggiungono qui con FE2-12
         } else if (frame.comando === 'DISCONNECT') {
           if (frame.header.receipt) manda({ comando: 'RECEIPT', header: { 'receipt-id': frame.header.receipt }, corpo: '' })
           client.close()

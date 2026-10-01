@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiSocial } from '@/features/social/apiSocial'
+import { useNotificheLive } from '@/features/social/useNotificheLive'
 import { apiUtenti } from '@/features/utenti/apiUtenti'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import type { ErroreWebSocket } from '@/lib/errori'
@@ -13,6 +14,7 @@ import { selezionaToken } from '@/store/sessioneSlice'
 //   arrivato mentre la connessione era giu' non e' passato dal WebSocket
 // - TOKEN_NON_VALIDO: si controlla la sessione con GET /api/users/me. Un 401 la chiude
 //   tramite apiSlice (avviso e login); se invece risponde, si riprova piu' tardi.
+// - notifiche live e badge della campanella: useNotificheLive (FE2-13).
 
 /** Attesa prima di riprovare quando il backend rifiuta un token che per le API e' ancora valido */
 const NUOVO_TENTATIVO_MS = 30_000
@@ -22,6 +24,7 @@ export function ConnessioneLive() {
   const dispatch = useAppDispatch()
   // Cambia per riaprire la connessione dopo un TOKEN_NON_VALIDO non confermato dalle API
   const [tentativo, setTentativo] = useState(0)
+  useNotificheLive()
 
   useEffect(() => {
     if (!token) return

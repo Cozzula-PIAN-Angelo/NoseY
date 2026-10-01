@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { BadgeStato } from '@/components/eventi'
-import { Avatar, Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { Avatar, Caricamento, ConfirmDialog, Icon, MessaggioErrore, Scheletro, StatoVuoto } from '@/components/ui'
 import { ModerazioneEvento } from '@/features/admin/ModerazioneEvento'
 import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
@@ -78,7 +78,12 @@ function SchedaEvento({ id }: { id: Uuid }) {
   const [confermaAnnullamento, setConfermaAnnullamento] = useState(false)
   const [annullaEventoAperta, setAnnullaEventoAperta] = useState(false)
   // Il ticket si chiede solo se sono iscritto: altrimenti il backend risponderebbe 404
-  const { currentData: ticket } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
+  const {
+    currentData: ticket,
+    isFetching: ticketInCaricamento,
+    error: erroreTicket,
+    refetch: ricaricaTicket,
+  } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
 
   if (!evento && isFetching) return <Caricamento riquadro testo="Carico l'evento..." />
   if (error) {
@@ -127,8 +132,10 @@ function SchedaEvento({ id }: { id: Uuid }) {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-space-md">
-          <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg">
+        {/* Da telefono (sotto lg) la colonna si "scioglie" nella griglia: titolo, azioni e ticket vanno
+            in cima, prima delle foto; gli altri riquadri restano dopo il contenuto */}
+        <aside className="flex flex-col gap-space-md max-lg:contents">
+          <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg max-lg:order-first">
             <BadgeStato stato={evento.stato} className="self-start" />
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile">{evento.titolo}</h1>
             <p className="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
@@ -137,7 +144,7 @@ function SchedaEvento({ id }: { id: Uuid }) {
             </p>
             <Proprietario utente={evento.proprietario} />
           </div>
-          <div className="rounded-2xl bg-surface-card p-space-lg">
+          <div className="rounded-2xl bg-surface-card p-space-lg max-lg:order-first">
             <AzioniEvento
               evento={evento}
               onIscriviti={iscrizione.iscrivi}
@@ -149,9 +156,21 @@ function SchedaEvento({ id }: { id: Uuid }) {
           {evento.sonoProprietario && (evento.stato === 'PROGRAMMATO' || evento.stato === 'IN_CORSO') && (
             <NotificaPartecipanti key={evento.id} evento={evento} />
           )}
-          {evento.sonoIscritto && ticket && (
-            <div id="ticket" className="scroll-mt-space-lg">
-              <TicketEvento ticket={ticket} />
+          {/* Il riquadro c'e' sempre per chi e' iscritto: «Il mio ticket» porta qui anche mentre carica */}
+          {evento.sonoIscritto && (
+            <div id="ticket" className="scroll-mt-space-lg max-lg:order-first">
+              {ticket ? (
+                <TicketEvento ticket={ticket} />
+              ) : erroreTicket ? (
+                <MessaggioErrore errore={erroreTicket} onRiprova={ricaricaTicket} />
+              ) : (
+                ticketInCaricamento && (
+                  <div role="status" aria-label="Caricamento del ticket" className="flex flex-col items-center gap-space-sm rounded-2xl bg-surface-card p-space-lg">
+                    <Scheletro className="size-40" />
+                    <Scheletro className="h-4 w-3/4" />
+                  </div>
+                )
+              )}
             </div>
           )}
           {/* Moderazione (FE1-16): per gli admin, non sui propri eventi */}

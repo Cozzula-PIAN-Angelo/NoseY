@@ -5,6 +5,7 @@ import AdminArtisti from '@/pages/AdminArtisti'
 import AdminUtenti from '@/pages/AdminUtenti'
 import Amici from '@/pages/Amici'
 import Accesso from '@/pages/Accesso'
+import Chat from '@/pages/Chat'
 import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
@@ -12,6 +13,7 @@ import MappaEventi from '@/pages/MappaEventi'
 import MieiEventi from '@/pages/MieiEventi'
 import MieiTicket from '@/pages/MieiTicket'
 import ModificaEvento from '@/pages/ModificaEvento'
+import Notifiche from '@/pages/Notifiche'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PartecipantiEvento from '@/pages/PartecipantiEvento'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
@@ -35,8 +37,8 @@ export const router = createBrowserRouter([
       { path: 'events/:id', element: <DettaglioEvento /> },
       { path: 'artists', element: <PaginaProvvisoria titolo="Catalogo artisti" card="FE1-11" /> },
       { path: 'artists/:artistaId', element: <PaginaProvvisoria titolo="Scheda artista" card="FE1-11" /> },
-      // Catalogo dei componenti comuni (FE1-01): non e' nella barra di navigazione
-      { path: 'componenti', element: <Componenti /> },
+      // Catalogo dei componenti comuni (FE1-01), con dati di prova: solo in sviluppo, non in produzione
+      ...(import.meta.env.DEV ? [{ path: 'componenti', element: <Componenti /> }] : []),
 
       // ---------- Login ----------
       {
@@ -48,9 +50,9 @@ export const router = createBrowserRouter([
           { path: 'my-events', element: <MieiEventi /> },
           { path: 'tickets', element: <MieiTicket /> },
           { path: 'friends', element: <Amici /> },
-          { path: 'chat', element: <PaginaProvvisoria titolo="Chat" card="FE2-12" /> },
-          { path: 'chat/:chatId', element: <PaginaProvvisoria titolo="Conversazione" card="FE2-12" /> },
-          { path: 'notifications', element: <PaginaProvvisoria titolo="Notifiche" card="FE2-13" /> },
+          { path: 'chat', element: <Chat /> },
+          { path: 'chat/:chatId', element: <Chat /> },
+          { path: 'notifications', element: <Notifiche /> },
           { path: 'profile', element: <Profilo /> },
         ],
       },

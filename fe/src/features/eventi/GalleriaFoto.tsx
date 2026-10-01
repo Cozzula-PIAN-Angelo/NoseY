@@ -51,7 +51,8 @@ export function GalleriaFoto({ foto, titoloEvento }: GalleriaFotoProps) {
               <button
                 type="button"
                 onClick={() => setIndice(n)}
-                aria-label={`Mostra la foto ${n + 1}${f.copertina ? ' (copertina)' : ''}`}
+                // La miniatura e' decorativa: la descrive l'etichetta del pulsante, con la didascalia se c'e'
+                aria-label={`Mostra la foto ${n + 1}${f.copertina ? ' (copertina)' : ''}${f.didascalia ? `: ${f.didascalia}` : ''}`}
                 aria-pressed={n === indice}
                 className={cx(
                   'block overflow-hidden rounded-lg transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container',

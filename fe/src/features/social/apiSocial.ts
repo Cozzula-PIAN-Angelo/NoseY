@@ -1,15 +1,19 @@
 // Chiamate alle API del lato social (progettazione v4, sezioni 8, 9 e 10): endpoint RTK Query
 // aggiunti all'unica API dell'app (store/apiSlice.ts), che mette gia' token e gestione del 401.
-// L'invio dei messaggi e le notifiche live passano dal WebSocket (FE2-11), non da qui.
+// L'invio dei messaggi e le notifiche live passano dal WebSocket (FE2-11), non da qui; i messaggi
+// che arrivano live entrano pero' nella cache dell'elenco delle chat e delle conversazioni (FE2-12).
 import { DIMENSIONE_PAGINA } from '@/lib/pagine'
+import { iscriviti } from '@/lib/websocket'
 import { apiSlice } from '@/store/apiSlice'
 import {
+  CODE_WEBSOCKET,
   LIMITI_SOCIAL,
   type AmiciziaResponse,
   type CategoriaNotifica,
   type ChatResponse,
   type ConteggiNonLette,
   type MessaggiResponse,
+  type MessaggioResponse,
   type NotificaResponse,
   type PaginaResponse,
   type RichiediAmiciziaRequest,
@@ -107,6 +111,32 @@ export const apiSocial = apiConEtichette.injectEndpoints({
     listaChat: build.query<ChatResponse[], void>({
       query: () => '/api/chats',
       providesTags: [{ type: 'Chat', id: LISTA }],
+      // Messaggi live (FE2-12): finche' l'elenco e' in cache, ogni messaggio su /user/queue/messages
+      // aggiorna la sua chat (ultimo messaggio, non letti) e la porta in cima, senza ricaricare.
+      // Una chat che non c'e' ancora (amicizia appena accettata) fa ricaricare l'elenco.
+      async onCacheEntryAdded(_arg, { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch }) {
+        try {
+          await cacheDataLoaded
+        } catch {
+          return // tolta dalla cache prima di arrivare
+        }
+        // Il badge della campanella lo aggiorna useNotificheLive (FE2-13), anche senza questo elenco
+        const annulla = iscriviti<MessaggioResponse>(CODE_WEBSOCKET.messaggi, (m) => {
+          let inElenco = false
+          updateCachedData((lista) => {
+            const i = lista.findIndex((c) => c.id === m.chatId)
+            if (i < 0) return
+            inElenco = true
+            const [chat] = lista.splice(i, 1)
+            chat.ultimoMessaggio = { testo: m.testo, mittenteId: m.mittenteId, inviatoIl: m.inviatoIl }
+            if (m.mittenteId === chat.amico.id) chat.nonLetti += 1
+            lista.unshift(chat)
+          })
+          if (!inElenco) dispatch(apiSocial.util.invalidateTags([{ type: 'Chat', id: LISTA }]))
+        })
+        await cacheEntryRemoved
+        annulla()
+      },
     }),
 
     /**
@@ -125,6 +155,26 @@ export const apiSocial = apiConEtichette.injectEndpoints({
         params: { size: LIMITI_SOCIAL.messaggiPerPagina, ...(before ? { before } : {}) },
       }),
       providesTags: (_r, _e, chatId) => [{ type: 'Messaggi', id: chatId }],
+      // Messaggi live (FE2-12): finche' la conversazione e' in cache, i suoi messaggi nuovi (quelli
+      // dell'amico e i propri, che il backend rimanda a tutti e due) entrano in testa alla prima
+      // pagina, senza doppioni. Il cursore delle pagine successive non cambia.
+      async onCacheEntryAdded(chatId, { cacheDataLoaded, cacheEntryRemoved, updateCachedData }) {
+        try {
+          await cacheDataLoaded
+        } catch {
+          return
+        }
+        const annulla = iscriviti<MessaggioResponse>(CODE_WEBSOCKET.messaggi, (m) => {
+          if (m.chatId !== chatId) return
+          updateCachedData((bozza) => {
+            const [recenti] = bozza.pages
+            if (!recenti || bozza.pages.some((p) => p.messaggi.some((x) => x.id === m.id))) return
+            recenti.messaggi.unshift(m)
+          })
+        })
+        await cacheEntryRemoved
+        annulla()
+      },
     }),
 
     /** SegnaChatLetta: all'apertura della chat; azzera anche la sua notifica */
