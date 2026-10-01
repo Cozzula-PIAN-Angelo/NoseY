@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Icon } from '@/components/ui'
+import { Button, Icon, MessaggioErrore, Scheletro, StatoVuoto } from '@/components/ui'
 import { Mappa, type Coordinate, type MarkerMappa } from '@/components/mappa'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { AnteprimaEvento } from '@/features/eventi/AnteprimaEvento'
@@ -24,7 +24,15 @@ const testiPosizione = {
 
 export default function MappaEventi() {
   const { stato, posizione, chiedi, dimentica } = usePosizioneUtente()
-  const { data: eventi = [] } = useListaEventiQuery(posizione ?? undefined)
+  // Cambiando posizione RTK Query tiene la lista precedente in data finche' arriva la nuova
+  // (isFetching): niente lampeggio, solo l'indicazione "aggiorno l'ordine".
+  const {
+    data: eventi = [],
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useListaEventiQuery(posizione ?? undefined)
   const [selezionatoId, setSelezionatoId] = useState<Uuid | null>(null)
   // Cercato ogni volta nella lista: se l'evento sparisce (es. dopo un aggiornamento) l'anteprima si chiude
   const selezionato = eventi.find((e) => e.id === selezionatoId) ?? null
@@ -100,10 +108,36 @@ export default function MappaEventi() {
             className="flex items-center justify-between px-space-xs font-label-code-status text-label-code-status uppercase text-outline"
           >
             <span>{posizione ? 'Dal più vicino' : 'In ordine di data'}</span>
-            <span className="text-secondary">{eventi.length} eventi</span>
+            {!isLoading && !error && (
+              <span aria-live="polite" className="text-secondary">
+                {isFetching ? 'Aggiorno l’ordine…' : `${eventi.length} ${eventi.length === 1 ? 'evento' : 'eventi'}`}
+              </span>
+            )}
           </h2>
           <div className="lg:max-h-[480px] lg:overflow-y-auto lg:pr-space-xs">
-            <ListaEventiMappa eventi={eventi} selezionatoId={selezionatoId} onSeleziona={scegliDallaLista} />
+            {isLoading ? (
+              <div role="status" aria-label="Caricamento degli eventi" className="flex flex-col gap-space-sm">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="flex flex-col gap-space-sm rounded-xl bg-surface-card p-space-md">
+                    <Scheletro className="h-4 w-24" />
+                    <Scheletro className="h-5 w-4/5" />
+                    <Scheletro className="h-4 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <MessaggioErrore errore={error} onRiprova={refetch} />
+            ) : eventi.length === 0 ? (
+              <StatoVuoto
+                icona="event_busy"
+                titolo="Nessun evento in programma"
+                messaggio="Al momento non ci sono eventi programmati o in corso. Torna a dare un'occhiata più tardi."
+              />
+            ) : (
+              <div className={isFetching ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
+                <ListaEventiMappa eventi={eventi} selezionatoId={selezionatoId} onSeleziona={scegliDallaLista} />
+              </div>
+            )}
           </div>
         </section>
 
