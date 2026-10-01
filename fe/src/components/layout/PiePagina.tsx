@@ -22,7 +22,7 @@ export function PiePagina() {
             </div>
             <div className="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant">
               <span className="h-2 w-2 rounded-full bg-poi-uscita" />
-              Cloudinary Media Sync
+              Immagini nel database
             </div>
             <div className="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant">
               <span className="h-2 w-2 rounded-full bg-status-programmato" />
