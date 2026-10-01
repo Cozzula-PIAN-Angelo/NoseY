@@ -2,6 +2,7 @@ package it.epicode.nosey.event;
 
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
+import it.epicode.nosey.common.Haversine;
 import it.epicode.nosey.notification.NotificheService;
 import it.epicode.nosey.notification.ParteEvento;
 import it.epicode.nosey.ticket.PartecipanteRepository;
@@ -32,7 +33,6 @@ import java.util.stream.Collectors;
 public class EventoService {
 
 	// Raggio medio della Terra: precisione sufficiente per ordinare gli eventi (non per navigare).
-	private static final double RAGGIO_TERRA_KM = 6371.0;
 
 	private final EventoRepository eventoRepository;
 	private final UtenteRepository utenteRepository;
@@ -65,7 +65,7 @@ public class EventoService {
 		// l'ordine, mai il numero di eventi restituiti (requisito della traccia).
 		return eventi.stream()
 				.map(evento -> EventoMappaResponse.da(evento, copertine.get(evento.getId()),
-						distanzaKm(lat, lng, evento.getLat(), evento.getLng()), adesso))
+						Haversine.km(lat, lng, evento.getLat(), evento.getLng()), adesso))
 				.sorted(Comparator.comparingDouble(EventoMappaResponse::distanzaKm))
 				.toList();
 	}
@@ -94,16 +94,6 @@ public class EventoService {
 		// getEvento().getId() non carica l'evento: l'id del proxy e' gia' noto.
 		return fotoEventoRepository.findByEventoIdInAndCopertinaTrue(ids).stream()
 				.collect(Collectors.toMap(foto -> foto.getEvento().getId(), Function.identity()));
-	}
-
-	private double distanzaKm(double lat1, double lng1, double lat2, double lng2) {
-		double dLat = Math.toRadians(lat2 - lat1);
-		double dLng = Math.toRadians(lng2 - lng1);
-		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-				+ Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-				* Math.sin(dLng / 2) * Math.sin(dLng / 2);
-		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-		return RAGGIO_TERRA_KM * c;
 	}
 
 	@Transactional
@@ -166,7 +156,7 @@ public class EventoService {
 			double nuovaLat = latCambiata ? richiesta.lat() : evento.getLat();
 			double nuovaLng = lngCambiata ? richiesta.lng() : evento.getLng();
 			boolean poiFuoriRaggio = poiRepository.findByEventoId(evento.getId()).stream()
-					.anyMatch(poi -> distanzaKm(nuovaLat, nuovaLng, poi.getLat(), poi.getLng()) > RAGGIO_POI_KM);
+					.anyMatch(poi -> Haversine.km(nuovaLat, nuovaLng, poi.getLat(), poi.getLng()) > RAGGIO_POI_KM);
 			if (poiFuoriRaggio) {
 				throw new ApplicazioneException(CodiceErrore.POI_FUORI_RAGGIO,
 						"Un POI resterebbe a piu' di 2 km dall'evento");
