@@ -1,5 +1,6 @@
 // Componenti comuni dell'interfaccia (FE1-01), usati da tutti e due i frontend.
 // Import: import { Button, TextField } from '@/components/ui'
+export { Avatar } from './Avatar'
 export { Avvisi, useAvviso } from './Avvisi'
 export { Button, stilePulsante, type ButtonSize, type ButtonVariant } from './Button'
 export { CampoPassword } from './CampoPassword'

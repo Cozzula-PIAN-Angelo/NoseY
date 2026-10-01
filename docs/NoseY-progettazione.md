@@ -754,6 +754,7 @@ ListaPartecipanti        GET /api/events/{id}/participants
       proprietario    boolean  ← il proprietario compare in cima alla lista, anche se non è iscritto
       statoAmicizia   NESSUNA | INVIATA | RICEVUTA | AMICI | NON_DISPONIBILE   (vista di chi chiede)
       amiciziaId      valorizzato con INVIATA, RICEVUTA e AMICI, altrimenti null
+      chatId          la chat della coppia (decisione 20): con AMICI c'è sempre, con INVIATA e RICEVUTA se esiste già, altrimenti null
   - Ordine: il proprietario, poi i partecipanti per emesso_il
   - Errori: 404 NON_TROVATO, 403 NESSUN_TICKET
   - Note: statoAmicizia dice al frontend quale pulsante mostrare:

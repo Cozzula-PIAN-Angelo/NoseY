@@ -88,7 +88,7 @@ export const TESTI_ERRORE: Record<CodiceErrore, TestoErrore> = {
   },
   CATEGORIA_NON_VALIDA: { titolo: 'Categoria non valida', messaggio: 'La categoria di notifica richiesta non esiste.' },
   NON_AUTENTICATO: { titolo: 'Sessione scaduta', messaggio: 'Accedi di nuovo per continuare.' },
-  ACCESSO_NEGATO: { titolo: 'Accesso negato', messaggio: 'Questa sezione è riservata agli amministratori.' },
+  ACCESSO_NEGATO: { titolo: 'Accesso negato', messaggio: 'Questa sezione è riservata all’amministrazione.' },
   NON_TROVATO: { titolo: 'Non trovato', messaggio: 'Quello che cerchi non esiste o è stato rimosso.' },
   CONFLITTO: {
     titolo: 'Operazione non possibile',
@@ -121,14 +121,14 @@ export const TESTI_ERRORE: Record<CodiceErrore, TestoErrore> = {
   },
   ACCOUNT_SOSPESO: {
     titolo: 'Account sospeso',
-    messaggio: 'Il tuo account è stato sospeso da un amministratore.',
+    messaggio: 'Il tuo account è stato sospeso dall’amministrazione.',
   },
 
   // Utente
   PASSWORD_UGUALE: { titolo: 'Password uguale', messaggio: 'La nuova password deve essere diversa da quella attuale.' },
   ULTIMO_SUPERADMIN: {
     titolo: 'Operazione non consentita',
-    messaggio: 'Sei l’unico superadmin: nomina un altro superadmin prima di eliminare il tuo account.',
+    messaggio: 'Il tuo è l’unico account superadmin: nominane un altro prima di eliminare il tuo.',
   },
 
   // Eventi
@@ -163,8 +163,8 @@ export const TESTI_ERRORE: Record<CodiceErrore, TestoErrore> = {
   },
 
   // Artisti
-  ARTISTA_GIA_ASSOCIATO: { titolo: 'Artista già presente', messaggio: 'Questo artista è già nella line-up dell’evento.' },
-  ARTISTA_NON_ATTIVO: { titolo: 'Artista non disponibile', messaggio: 'Questo artista non è più attivo nel catalogo.' },
+  ARTISTA_GIA_ASSOCIATO: { titolo: 'Artista già presente', messaggio: 'L’artista è già nella line-up dell’evento.' },
+  ARTISTA_NON_ATTIVO: { titolo: 'Artista non disponibile', messaggio: 'L’artista non è più disponibile nel catalogo.' },
   ARTISTA_NOME_GIA_USATO: { titolo: 'Nome già usato', messaggio: 'Esiste già un artista con questo nome.' },
   ARTISTA_IN_USO: {
     titolo: 'Artista in uso',
@@ -176,55 +176,55 @@ export const TESTI_ERRORE: Record<CodiceErrore, TestoErrore> = {
     titolo: 'Iscrizione non possibile',
     messaggio: 'Non puoi iscriverti a un evento che hai creato tu.',
   },
-  GIA_ISCRITTO: { titolo: 'Sei già iscritto', messaggio: 'Trovi il tuo ticket in I Miei Ticket.' },
+  GIA_ISCRITTO: { titolo: 'Hai già il ticket', messaggio: 'Lo trovi in I Miei Ticket.' },
   NESSUN_TICKET: {
     titolo: 'Serve un ticket',
     messaggio: 'Iscriviti all’evento per vedere i partecipanti e chiedere l’amicizia.',
   },
 
   // Amicizie
-  RICHIESTA_A_SE_STESSO: { titolo: 'Richiesta non valida', messaggio: 'Non puoi chiedere l’amicizia a te stesso.' },
-  UTENTE_NON_ATTIVO: { titolo: 'Utente non disponibile', messaggio: 'Questo utente non è più attivo.' },
+  RICHIESTA_A_SE_STESSO: { titolo: 'Richiesta non valida', messaggio: 'Non puoi chiedere l’amicizia al tuo stesso account.' },
+  UTENTE_NON_ATTIVO: { titolo: 'Account non disponibile', messaggio: 'Questo account non è più attivo.' },
   RICHIESTA_GIA_INVIATA: {
     titolo: 'Richiesta già inviata',
-    messaggio: 'Hai già chiesto l’amicizia a questo utente: attendi la sua risposta.',
+    messaggio: 'Hai già chiesto l’amicizia a questa persona: attendi la risposta.',
   },
   RICHIESTA_GIA_RICEVUTA: {
     titolo: 'Hai già una richiesta',
-    messaggio: 'Questo utente ti ha già chiesto l’amicizia: accettala dalle richieste ricevute.',
+    messaggio: 'Questa persona ti ha già chiesto l’amicizia: accettala dalle richieste ricevute.',
   },
-  GIA_AMICI: { titolo: 'Siete già amici', messaggio: 'Puoi scrivergli direttamente in chat.' },
+  GIA_AMICI: { titolo: 'Amicizia già attiva', messaggio: 'Potete scrivervi direttamente in chat.' },
   AMICIZIA_NON_DISPONIBILE: {
     titolo: 'Amicizia non disponibile',
-    messaggio: 'Questo utente ha rimosso l’amicizia: solo lui può riaprirla.',
+    messaggio: 'L’altra persona ha rimosso l’amicizia: può riaprirla solo chi l’ha rimossa.',
   },
   NON_RICEVENTE: { titolo: 'Operazione non consentita', messaggio: 'Solo chi ha ricevuto la richiesta può rispondere.' },
   NON_RICHIEDENTE: { titolo: 'Operazione non consentita', messaggio: 'Solo chi ha inviato la richiesta può ritirarla.' },
   NON_IN_ATTESA: { titolo: 'Richiesta già gestita', messaggio: 'Questa richiesta di amicizia non è più in attesa.' },
-  NON_AMICI: { titolo: 'Non siete amici', messaggio: 'Non c’è un’amicizia attiva da rimuovere.' },
+  NON_AMICI: { titolo: 'Nessuna amicizia attiva', messaggio: 'Non c’è un’amicizia attiva da rimuovere.' },
 
   // Chat
   NON_MEMBRO: { titolo: 'Chat non disponibile', messaggio: 'Questa chat non ti appartiene.' },
   CHAT_SOLA_LETTURA: {
     titolo: 'Chat in sola lettura',
-    messaggio: 'Non puoi più scrivere in questa chat: l’amicizia non è attiva o l’utente non è più attivo.',
+    messaggio: 'Non puoi più scrivere in questa chat: l’amicizia non è attiva o l’altro account non è più attivo.',
   },
   TOKEN_NON_VALIDO: { titolo: 'Connessione scaduta', messaggio: 'La sessione della chat è scaduta: accedi di nuovo.' },
 
   // Admin
   RUOLO_INSUFFICIENTE: {
     titolo: 'Operazione non consentita',
-    messaggio: 'Puoi agire solo su utenti con un ruolo inferiore al tuo, e mai su te stesso.',
+    messaggio: 'Puoi agire solo su account con un ruolo inferiore al tuo, e mai sul tuo.',
   },
   STATO_NON_AMMESSO: { titolo: 'Stato non valido', messaggio: 'Lo stato può essere solo Attivo o Sospeso.' },
   UTENTE_ANONIMIZZATO: {
-    titolo: 'Utente anonimizzato',
+    titolo: 'Account anonimizzato',
     messaggio: 'L’account è stato eliminato: non si può più modificare.',
   },
   RUOLO_NON_AMMESSO: { titolo: 'Ruolo non valido', messaggio: 'Il ruolo può essere solo Utente o Admin.' },
   UTENTE_NON_VERIFICATO: {
-    titolo: 'Utente non verificato',
-    messaggio: 'L’utente deve prima verificare la sua email.',
+    titolo: 'Account non verificato',
+    messaggio: 'L’email di questo account non è ancora stata verificata.',
   },
 }
 

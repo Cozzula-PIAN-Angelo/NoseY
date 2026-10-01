@@ -2,6 +2,7 @@
 import { delay, http, HttpResponse } from 'msw'
 import type { PartecipanteResponse, StatoAmicizia } from '@/types/api'
 import { amicizieCorrente, eventi, ID_UTENTE_CORRENTE, inTicket, nuovoId, trovaUtente } from '../dati'
+import { chatDellaCoppia } from '../datiSocial'
 import { errore, nessunContenuto, statoDa } from '../utili'
 import { api, evento, nonLoggato, RITARDO } from './comuni'
 
@@ -52,7 +53,13 @@ export const handlerPartecipanti = [
       const stato: StatoAmicizia =
         !utente.attivo && amicizia?.stato !== 'AMICI' ? 'NON_DISPONIBILE' : (amicizia?.stato ?? 'NESSUNA')
       const conId = stato === 'INVIATA' || stato === 'RICEVUTA' || stato === 'AMICI'
-      return { utente, proprietario, statoAmicizia: stato, amiciziaId: conId ? amicizia!.amiciziaId : null }
+      return {
+        utente,
+        proprietario,
+        statoAmicizia: stato,
+        amiciziaId: conId ? amicizia!.amiciziaId : null,
+        chatId: conId ? (chatDellaCoppia(ID_UTENTE_CORRENTE, utenteId)?.id ?? null) : null,
+      }
     }
 
     const lista: PartecipanteResponse[] = []
