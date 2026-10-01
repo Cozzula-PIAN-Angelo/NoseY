@@ -16,6 +16,8 @@ type MarkerBase = Coordinate & {
   /** Testo per chi usa lo screen reader e al passaggio del mouse, es. il titolo dell'evento */
   etichetta?: string
   onClick?: () => void
+  /** Se presente il marker si puo' trascinare: riceve la nuova posizione quando lo si lascia */
+  onSposta?: (punto: Coordinate) => void
 }
 
 /** Marker di un evento (colore dallo stato) oppure di un POI (icona dal tipo) */

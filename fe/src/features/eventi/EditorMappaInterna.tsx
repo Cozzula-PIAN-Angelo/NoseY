@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { IconaPoi, Mappa, STILE_POI, type Coordinate, type MarkerMappa } from '@/components/mappa'
-import { Button, Icon, Select, TextField, useAvviso, type Opzione } from '@/components/ui'
+import { Button, ConfirmDialog, Icon, Select, TextField, useAvviso, type Opzione } from '@/components/ui'
 import { cx } from '@/lib/cx'
-import { LIMITI_EVENTI, type EventoDettaglioResponse, type TipoPoi } from '@/types/api'
-import { useCreaPoiMutation } from './apiEventi'
+import { LIMITI_EVENTI, type EventoDettaglioResponse, type PoiResponse, type TipoPoi } from '@/types/api'
+import { useCancellaPoiMutation, useCreaPoiMutation, useModificaPoiMutation } from './apiEventi'
 
 // Editor della mappa interna (FE1-10) nella modifica dell'evento: clic sulla mappa per
-// scegliere il punto, poi tipo ed etichetta e «Aggiungi». I POI salvati compaiono nella
-// pagina dell'evento (sezione "Come muoversi").
+// scegliere il punto, poi tipo ed etichetta e «Aggiungi»; i POI si spostano trascinandoli e
+// si cancellano dall'elenco. I POI salvati compaiono nella pagina dell'evento ("Come muoversi").
 
 const TIPI: Opzione<TipoPoi>[] = [
   { valore: 'INGRESSO', etichetta: 'Ingresso' },
@@ -20,12 +20,42 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
   const [tipo, setTipo] = useState<TipoPoi>('INGRESSO')
   const [etichetta, setEtichetta] = useState('')
   const [crea, { isLoading }] = useCreaPoiMutation()
+  const [modificaPoi] = useModificaPoiMutation()
+  const [cancellaPoi, { isLoading: cancellazioneInCorso }] = useCancellaPoiMutation()
+  const [daCancellare, setDaCancellare] = useState<PoiResponse | null>(null)
   const avviso = useAvviso()
+
+  /** Spostamento trascinando il marker: subito sulla mappa, annullato se il backend rifiuta (apiEventi) */
+  async function sposta(poi: PoiResponse, punto: Coordinate) {
+    try {
+      await modificaPoi({ id: evento.id, poiId: poi.id, dati: punto }).unwrap()
+    } catch (err) {
+      avviso.erroreApi(err)
+    }
+  }
+
+  async function confermaCancellazione() {
+    if (!daCancellare) return
+    try {
+      await cancellaPoi({ id: evento.id, poiId: daCancellare.id }).unwrap()
+      avviso.info(`${STILE_POI[daCancellare.tipo].etichetta} eliminato`)
+    } catch (err) {
+      avviso.erroreApi(err)
+    }
+    setDaCancellare(null)
+  }
 
   const marker: MarkerMappa[] = [
     { id: evento.id, tipo: 'evento', stato: evento.stato, lat: evento.lat, lng: evento.lng, etichetta: evento.titolo },
     ...evento.poi.map(
-      (p): MarkerMappa => ({ id: p.id, tipo: p.tipo, lat: p.lat, lng: p.lng, etichetta: p.etichetta ?? undefined }),
+      (p): MarkerMappa => ({
+        id: p.id,
+        tipo: p.tipo,
+        lat: p.lat,
+        lng: p.lng,
+        etichetta: p.etichetta ?? undefined,
+        onSposta: (punto) => sposta(p, punto),
+      }),
     ),
   ]
 
@@ -51,6 +81,7 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
       <p className="font-body-md text-body-md text-on-surface-variant">
         Clicca sulla mappa nel punto di un ingresso, di un'uscita o di un punto di emergenza,
         dentro il cerchio di {LIMITI_EVENTI.raggioPoiKm} km attorno all'evento. Avvicinati con la rotellina per più precisione.
+        Per spostare un punto già salvato trascinalo.
       </p>
 
       <Mappa
@@ -97,7 +128,7 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
           {evento.poi.map((p) => (
             <li key={p.id} className="flex items-center gap-space-sm rounded-xl bg-surface-container-low p-space-sm">
               <IconaPoi tipo={p.tipo} />
-              <div className="flex min-w-0 flex-col">
+              <div className="flex min-w-0 flex-1 flex-col">
                 <span className={cx('font-label-code-status text-label-code-status uppercase', STILE_POI[p.tipo].testo)}>
                   {STILE_POI[p.tipo].etichetta}
                 </span>
@@ -105,10 +136,32 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
                   {p.etichetta ?? 'Senza etichetta'}
                 </span>
               </div>
+              <button
+                type="button"
+                onClick={() => setDaCancellare(p)}
+                aria-label={`Elimina ${STILE_POI[p.tipo].etichetta.toLowerCase()}${p.etichetta ? ` «${p.etichetta}»` : ''}`}
+                className="shrink-0 rounded-lg p-1.5 text-on-surface-variant transition-colors hover:bg-status-annullato/10 hover:text-status-annullato focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container"
+              >
+                <Icon nome="delete" size={18} />
+              </button>
             </li>
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        aperta={daCancellare !== null}
+        titolo={`Eliminare ${daCancellare ? STILE_POI[daCancellare.tipo].etichetta.toLowerCase() : 'il punto'}?`}
+        icona="wrong_location"
+        variante="danger"
+        testoConferma="Elimina"
+        inCorso={cancellazioneInCorso}
+        onConferma={confermaCancellazione}
+        onAnnulla={() => setDaCancellare(null)}
+      >
+        {daCancellare?.etichetta ? `«${daCancellare.etichetta}» sparirà dalla mappa interna.` : 'Il punto sparirà dalla mappa interna.'} I
+        partecipanti riceveranno una notifica.
+      </ConfirmDialog>
 
       <p className="flex items-center gap-1 font-body-sm text-body-sm text-outline">
         <Icon nome="info" size={16} />

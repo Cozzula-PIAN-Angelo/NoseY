@@ -166,6 +166,22 @@ export const apiEventi = apiConEtichette.injectEndpoints({
 
     modificaPoi: build.mutation<PoiResponse, { id: Uuid; poiId: Uuid; dati: ModificaPoiRequest }>({
       query: ({ id, poiId, dati }) => ({ url: `/api/events/${id}/pois/${poiId}`, method: 'PATCH', body: dati }),
+      // Aggiornamento ottimistico (FE1-10): il POI cambia subito nel dettaglio dell'evento, cosi'
+      // un marker trascinato non torna indietro mentre la richiesta e' in corso; se il backend
+      // rifiuta (es. POI_TROPPO_LONTANO) si annulla e il marker torna al suo posto.
+      async onQueryStarted({ id, poiId, dati }, { dispatch, queryFulfilled }) {
+        const patch = dispatch(
+          apiEventi.util.updateQueryData('vediEvento', id, (bozza) => {
+            const poi = bozza.poi.find((p) => p.id === poiId)
+            if (!poi) return
+            if (dati.tipo != null) poi.tipo = dati.tipo
+            if (dati.lat != null) poi.lat = dati.lat
+            if (dati.lng != null) poi.lng = dati.lng
+            if (dati.etichetta != null) poi.etichetta = dati.etichetta.trim() || null
+          }),
+        )
+        queryFulfilled.catch(patch.undo)
+      },
       invalidatesTags: (_r, _e, { id }) => [
         { type: 'Poi', id },
         { type: 'Evento', id },

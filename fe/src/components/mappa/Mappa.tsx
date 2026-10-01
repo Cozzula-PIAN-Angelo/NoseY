@@ -73,6 +73,8 @@ export default function Mappa({
             latitude={m.lat}
             longitude={m.lng}
             anchor="center"
+            draggable={m.onSposta !== undefined}
+            onDragEnd={m.onSposta ? (e) => m.onSposta?.(arrotonda(e.lngLat)) : undefined}
             onClick={(e) => {
               // Senza questo il clic sul marker arriverebbe anche alla mappa (scelta del punto)
               e.originalEvent.stopPropagation()
@@ -93,7 +95,7 @@ export default function Mappa({
               }}
               className={cx(
                 'block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                m.onClick ? 'cursor-pointer' : 'cursor-default',
+                m.onSposta ? 'cursor-grab active:cursor-grabbing' : m.onClick ? 'cursor-pointer' : 'cursor-default',
               )}
             >
               {m.tipo === 'evento' ? <IconaEvento stato={m.stato} selezionato={m.selezionato} /> : <IconaPoi tipo={m.tipo} />}
