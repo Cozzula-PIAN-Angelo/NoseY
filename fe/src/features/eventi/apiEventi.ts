@@ -211,7 +211,8 @@ export const apiEventi = apiConEtichette.injectEndpoints({
 
     aggiungiArtistaEvento: build.mutation<ArtistaResponse, { id: Uuid; artistaId: Uuid }>({
       query: ({ id, artistaId }) => ({ url: `/api/events/${id}/artists/${artistaId}`, method: 'POST' }),
-      invalidatesTags: (_r, _e, { id }) => [{ type: 'Evento', id }],
+      // Dopo un errore (artista disattivato o eliminato nel frattempo) si ricarica anche il catalogo
+      invalidatesTags: (_r, errore, { id }) => [{ type: 'Evento', id }, ...(errore ? [{ type: 'Artista' as const, id: LISTA }] : [])],
     }),
 
     rimuoviArtistaEvento: build.mutation<void, { id: Uuid; artistaId: Uuid }>({
