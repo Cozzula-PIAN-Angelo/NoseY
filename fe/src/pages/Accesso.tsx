@@ -10,6 +10,7 @@ import { LIMITI_UTENTI } from '@/types/api'
 // riprende "NoseY - Registrazione Account" (docs/stitch/registrazione-account.png), come la
 // registrazione: pannello di benvenuto a sinistra, form con la barra sfumata a destra.
 // Dopo il login apiUtenti salva la sessione e SoloOspiti porta al ?redirect= (o alla home).
+// Con ?email= (dopo il reset della password, FE2-06) l'email e' gia' scritta e si parte dalla password.
 
 const COSA_TROVI = [
   { icona: 'qr_code_2', titolo: 'I tuoi ticket', testo: 'Il codice QR di ogni evento a cui ti sei iscritto, pronto all’ingresso.' },
@@ -27,7 +28,8 @@ export default function Accesso() {
   const avviso = useAvviso()
   const navigate = useNavigate()
   const [parametri] = useSearchParams()
-  const [email, setEmail] = useState('')
+  const emailIniziale = parametri.get('email') ?? ''
+  const [email, setEmail] = useState(emailIniziale)
   const [password, setPassword] = useState('')
   const [errori, setErrori] = useState<Errori>({})
   // Errore che non riguarda un campo (credenziali, account sospeso, troppi tentativi): sopra il pulsante
@@ -143,7 +145,7 @@ export default function Accesso() {
               }}
               errore={errori.email}
               placeholder="utente@dominio.it"
-              autoFocus
+              autoFocus={!emailIniziale}
             />
 
             <div className="flex flex-col gap-space-xs">
@@ -157,9 +159,10 @@ export default function Accesso() {
                   setErrori((er) => ({ ...er, password: undefined }))
                 }}
                 errore={errori.password}
+                autoFocus={!!emailIniziale}
               />
               <Link
-                to="/forgot-password"
+                to={`/forgot-password${conRedirect}`}
                 className="self-end font-body-sm text-body-sm text-primary transition-colors hover:text-primary-fixed"
               >
                 Password dimenticata?

@@ -11,6 +11,7 @@ import MieiTicket from '@/pages/MieiTicket'
 import ModificaEvento from '@/pages/ModificaEvento'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
+import PasswordDimenticata from '@/pages/PasswordDimenticata'
 import Registrazione from '@/pages/Registrazione'
 import VerificaEmail from '@/pages/VerificaEmail'
 
@@ -56,7 +57,7 @@ export const router = createBrowserRouter([
           { path: 'login', element: <Accesso /> },
           { path: 'register', element: <Registrazione /> },
           { path: 'verify', element: <VerificaEmail /> },
-          { path: 'forgot-password', element: <PaginaProvvisoria titolo="Password dimenticata" card="FE2-06" /> },
+          { path: 'forgot-password', element: <PasswordDimenticata /> },
         ],
       },
 
