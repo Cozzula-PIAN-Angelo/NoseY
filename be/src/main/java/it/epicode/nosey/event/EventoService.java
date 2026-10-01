@@ -70,6 +70,18 @@ public class EventoService {
 				.toList();
 	}
 
+	@Transactional(readOnly = true)
+	public List<EventoMappaResponse> mieiEventi(UUID proprietarioId) {
+		// Tutti, anche conclusi e annullati, per dataEvento decrescente (sezione 2).
+		// distanzaKm sempre null: chi guarda i propri eventi non ha passato una posizione.
+		List<Evento> eventi = eventoRepository.findByProprietarioIdOrderByDataEventoDesc(proprietarioId);
+		Map<UUID, FotoEvento> copertine = copertine(eventi);
+		Instant adesso = clock.instant();
+		return eventi.stream()
+				.map(evento -> EventoMappaResponse.da(evento, copertine.get(evento.getId()), null, adesso))
+				.toList();
+	}
+
 	/**
 	 * Le copertine di tutti gli eventi con una sola query, non una per evento. I byte delle
 	 * foto non si leggono (campo LAZY): per l'URL basta la versione.
