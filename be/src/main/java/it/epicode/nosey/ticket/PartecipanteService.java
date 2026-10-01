@@ -17,10 +17,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
- * IscrizioneEvento, VediMiaPartecipazione, CancellaPartecipazione (progettazione v4, sezione 7).
+ * IscrizioneEvento, VediMiaPartecipazione, CancellaPartecipazione, MieiTicket
+ * (progettazione v4, sezioni 2 e 7).
  */
 @Service
 @RequiredArgsConstructor
@@ -93,6 +98,33 @@ public class PartecipanteService {
 			throw new ApplicazioneException(codice, "Ci si puo' disiscrivere solo da un evento PROGRAMMATO");
 		}
 		partecipanteRepository.delete(partecipante);
+	}
+
+	@Transactional(readOnly = true)
+	public List<TicketResponse> mieiTicket(UUID utenteId) {
+		Instant adesso = clock.instant();
+		List<Partecipante> partecipazioni = partecipanteRepository.findByUtenteId(utenteId);
+
+		Comparator<Partecipante> perDataEvento = Comparator.comparing(p -> p.getEvento().getDataEvento());
+		List<Partecipante> attivi = partecipazioni.stream()
+				.filter(p -> attivo(p.getEvento(), adesso))
+				.sorted(perDataEvento)
+				.toList();
+		List<Partecipante> passati = partecipazioni.stream()
+				.filter(p -> !attivo(p.getEvento(), adesso))
+				.sorted(perDataEvento.reversed())
+				.toList();
+
+		return Stream.concat(attivi.stream(), passati.stream())
+				.map(p -> TicketResponse.da(p, adesso))
+				.toList();
+	}
+
+	// PROGRAMMATO/IN_CORSO prima (per dataEvento crescente), CONCLUSO/ANNULLATO poi
+	// (per dataEvento decrescente) - sezione 2.
+	private boolean attivo(Evento evento, Instant adesso) {
+		StatoEvento stato = StatoEvento.calcola(evento, adesso);
+		return stato == StatoEvento.PROGRAMMATO || stato == StatoEvento.IN_CORSO;
 	}
 
 	private Partecipante trova(UUID eventoId, UUID utenteId) {

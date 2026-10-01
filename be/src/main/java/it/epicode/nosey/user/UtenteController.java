@@ -4,6 +4,8 @@ import it.epicode.nosey.auth.UtenteAutenticato;
 import it.epicode.nosey.common.ImmagineContenuto;
 import it.epicode.nosey.event.EventoMappaResponse;
 import it.epicode.nosey.event.EventoService;
+import it.epicode.nosey.ticket.PartecipanteService;
+import it.epicode.nosey.ticket.TicketResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -33,6 +35,7 @@ public class UtenteController {
 
 	private final UtenteService utenteService;
 	private final EventoService eventoService;
+	private final PartecipanteService partecipanteService;
 
 	@GetMapping("/me")
 	public UtenteResponse vediProfilo(@AuthenticationPrincipal UtenteAutenticato utente) {
@@ -68,6 +71,11 @@ public class UtenteController {
 	@GetMapping("/me/events")
 	public List<EventoMappaResponse> mieiEventi(@AuthenticationPrincipal UtenteAutenticato utente) {
 		return eventoService.mieiEventi(utente.id());
+	}
+
+	@GetMapping("/me/tickets")
+	public List<TicketResponse> mieiTicket(@AuthenticationPrincipal UtenteAutenticato utente) {
+		return partecipanteService.mieiTicket(utente.id());
 	}
 
 	/**
