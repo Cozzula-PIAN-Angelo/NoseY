@@ -585,3 +585,28 @@ Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
   sopra.
 - **Chiave composta evento + utente**: inutile, solo il proprietario supera il 403; cambierebbe la
   chiave indicata in `docs/interfacce.md` senza vantaggi.
+
+---
+
+## Decisione 20: chatId in PartecipanteResponse
+
+### Scelta
+
+- `PartecipanteResponse` di ListaPartecipanti (BE1-17) ha anche `chatId`, oltre ai campi della
+  sezione 7: `{ utente, proprietario, statoAmicizia, amiciziaId, chatId }`.
+- Stessa regola di `RelazioneAmicizia` (decisione 15): valorizzato, se la chat esiste, solo quando
+  lo e' `amiciziaId` (INVIATA, RICEVUTA, AMICI); con AMICI c'e' sempre. Con NESSUNA e
+  NON_DISPONIBILE e' null.
+- Chiude il punto aperto su `chatId` in `docs/interfacce.md`.
+
+### Motivazione
+
+- Il pulsante "Chat" della lista partecipanti (`PulsanteAmicizia`) apre `/chat/:chatId`: con il
+  dato nella risposta non serve una seconda chiamata.
+- Il dato e' gia' letto nella stessa query sulle amicizie (decisione 15, sezione 18): nessun costo
+  in piu'.
+
+### Alternative scartate
+
+- **Testo letterale della sezione 7 (senza `chatId`)**: il frontend dovrebbe chiamare anche
+  ListaAmici solo per trovare la chat.
