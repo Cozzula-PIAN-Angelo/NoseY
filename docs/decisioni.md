@@ -317,3 +317,43 @@ altrimenti si leggerebbero lo stesso.
 - **Testcontainers**: database pulito a ogni esecuzione, ma richiede Docker su ogni PC del team
   e altre dipendenze.
 - **Solo unit test con Mockito**: piu' veloci, ma l'accorpamento verificato solo su mock.
+
+---
+
+## Decisione 11: WebSocket nativo, frame vietati scartati senza chiudere la connessione
+
+### Scelta
+
+- STOMP su WebSocket nativo all'indirizzo `/ws`, senza SockJS. Il frontend usa `@stomp/stompjs`.
+- Origini ammesse per l'handshake: la stessa proprieta' del CORS, `app.cors.allowed-origins`
+  (variabile `ALLOWED_ORIGIN`), non una nuova `FRONTEND_URL` come nella sezione 11.
+- jti e scadenza del token restano nel Principal della sessione (`UtenteAutenticato`), non
+  vengono copiati negli attributi di sessione come indica la sezione 11.
+- SEND o SUBSCRIBE verso una destinazione non ammessa: il frame viene scartato e l'errore
+  `ACCESSO_NEGATO` va su `/user/queue/errors`, senza chiudere la connessione. Solo un CONNECT non
+  valido (o un frame senza CONNECT valido) riceve un frame ERROR, che chiude la connessione:
+  header `message` = codice, corpo `{ codice, messaggio }`.
+- Nessuna dipendenza `spring-security-messaging`: i controlli sono in un `ChannelInterceptor`.
+- `WebSocketSicurezzaTest` non e' `@Transactional` (decisione 10): il server legge il database
+  da altri thread, quindi i dati si salvano davvero e si cancellano alla fine di ogni test.
+
+### Motivazione
+
+- Tutti i browser supportano il WebSocket e Render accetta le connessioni WebSocket: SockJS
+  aggiungerebbe una dipendenza al frontend e URL diversi (`/ws/...`) senza un caso reale.
+- Una sola variabile per le origini evita che CORS e WebSocket vadano fuori sincrono su Render.
+- `UtenteAutenticato` contiene gia' jti e scadenza: una copia negli attributi andrebbe tenuta
+  allineata senza nessun vantaggio.
+- Il frontend non manda mai frame verso destinazioni vietate: se succede e' un errore di
+  programmazione, e chiudere la connessione costringerebbe a riconnettersi e ricaricare tutto.
+  Un CONNECT senza token valido invece non ha una sessione da tenere aperta.
+- Il frame ERROR di default contiene il messaggio dell'eccezione, con dettagli interni.
+- `spring-security-messaging` attiverebbe anche il controllo CSRF sul CONNECT, inutile con il
+  token nell'header.
+
+### Alternative scartate
+
+- **SockJS**: utile solo per browser o proxy senza WebSocket.
+- **Frame ERROR per ogni destinazione vietata**: piu' semplice, ma chiude la connessione.
+- **`@EnableWebSocketSecurity` con regole sulle destinazioni**: piu' configurazione e CSRF sul
+  CONNECT, per controlli che stanno in poche righe.
