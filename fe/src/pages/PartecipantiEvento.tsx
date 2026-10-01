@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router'
-import { Avatar, Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { Avatar, Caricamento, Icon, MessaggioErrore, StatoVuoto, stilePulsante } from '@/components/ui'
 import { useListaPartecipantiQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { PulsanteAmicizia } from '@/features/social/PulsanteAmicizia'
 import { leggiErrore } from '@/lib/errori'
@@ -51,8 +51,28 @@ export default function PartecipantiEvento() {
   if (!partecipanti && isFetching) {
     contenuto = <Caricamento riquadro testo="Carico i partecipanti..." />
   } else if (error) {
+    const { codice } = leggiErrore(error)
+    // 403 NESSUN_TICKET: la lista la vede solo chi ha un ticket o chi organizza. Se ci si puo' ancora
+    // iscrivere, si porta alla pagina dell'evento dove c'e' il pulsante "Iscriviti"
+    const iscrivibile = evento?.stato === 'PROGRAMMATO' || evento?.stato === 'IN_CORSO'
     contenuto =
-      leggiErrore(error).codice === 'NON_TROVATO' ? (
+      codice === 'NESSUN_TICKET' ? (
+        <StatoVuoto
+          icona="confirmation_number"
+          titolo="Serve un ticket"
+          messaggio={
+            iscrivibile
+              ? 'I partecipanti li vede chi è iscritto all’evento o lo organizza. Iscriviti per vederli e chiedere l’amicizia.'
+              : 'I partecipanti li vede solo chi era iscritto all’evento o lo ha organizzato.'
+          }
+          azione={
+            <Link to={`/events/${id}`} className={stilePulsante({ variant: iscrivibile ? 'primary' : 'secondary' })}>
+              {iscrivibile && <Icon nome="confirmation_number" size={18} />}
+              {iscrivibile ? 'Vai all’evento per iscriverti' : 'Torna all’evento'}
+            </Link>
+          }
+        />
+      ) : codice === 'NON_TROVATO' ? (
         <StatoVuoto icona="event_busy" titolo="Evento non trovato" messaggio="L'evento non esiste o il collegamento non è corretto." />
       ) : (
         <MessaggioErrore errore={error} onRiprova={refetch} />
