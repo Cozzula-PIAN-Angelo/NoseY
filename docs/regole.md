@@ -5,16 +5,21 @@ Regole comuni per board, branch e pull request. Valgono per tutte le card nuove.
 ## Branch
 
 - `main` e' protetto: si unisce solo con una pull request approvata da un collega.
-- Un branch per card, creato da `main` aggiornato, con l'ID della card nel nome:
+- **Ognuno lavora sul proprio branch personale**, per tutte le sue card; il collegamento con
+  la card sta nel titolo della pull request (sotto).
 
-  ```
-  feature/<ID-CARD>-<descrizione-breve>
-  ```
+  | Branch | Di chi |
+  |---|---|
+  | `Alb` | Alberto (BE1) |
+  | `dev-angelo` | Angelo (BE2) |
+  | `Vale` | Valentina (FE1) |
+  | `BaldGuy` | Claudio (FE2) |
 
-  esempi: `feature/BE1-01-flyway`, `feature/FE2-01-router`, `feature/TEAM-01-regole`
-- Prima di aprire la pull request si porta dentro `main` (`git fetch` + `git merge origin/main`)
-  e si risolvono qui gli eventuali conflitti, non nell'editor di GitHub.
-- Dopo il merge il branch della card si puo' cancellare.
+- Prima di iniziare una card si porta dentro `main` aggiornato (`git fetch` + `git merge origin/main`),
+  cosi' si parte dal lavoro di tutti.
+- Prima di aprire la pull request si porta di nuovo dentro `main` e si risolvono qui gli
+  eventuali conflitti, non nell'editor di GitHub.
+- Il branch personale non si cancella dopo il merge: si continua a usarlo per le card successive.
 
 ## Pull request
 

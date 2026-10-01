@@ -4,9 +4,10 @@
 import { setupWorker } from 'msw/browser'
 import { handlerContenuti } from './handlers/contenuti'
 import { handlerEventi } from './handlers/eventi'
+import { handlerImmagini } from './handlers/immagini'
 import { handlerPartecipanti } from './handlers/partecipanti'
 
-export const worker = setupWorker(...handlerEventi, ...handlerContenuti, ...handlerPartecipanti)
+export const worker = setupWorker(...handlerImmagini, ...handlerEventi, ...handlerContenuti, ...handlerPartecipanti)
 
 export function avviaDatiFinti() {
   return worker.start({

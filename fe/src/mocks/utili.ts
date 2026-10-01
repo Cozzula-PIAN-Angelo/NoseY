@@ -86,7 +86,8 @@ export async function leggiJson(request: Request): Promise<Record<string, unknow
   }
 }
 
-// Immagine segnaposto (SVG con i colori di Stitch), senza scaricare nulla da internet
+// Immagine segnaposto (SVG con i colori di Stitch), senza scaricare nulla da internet.
+// La servono i GET finti delle immagini (handlers/immagini.ts), come fa il backend.
 export function immagineFinta(testo: string, tinta: number): string {
   testo = testo.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
@@ -94,5 +95,5 @@ export function immagineFinta(testo: string, tinta: number): string {
 <stop offset="0" stop-color="hsl(${tinta},70%,30%)"/><stop offset="1" stop-color="#0b0f19"/></linearGradient></defs>
 <rect width="800" height="500" fill="url(#g)"/>
 <text x="40" y="450" font-family="sans-serif" font-size="36" font-weight="700" fill="#dfe2f1">${testo}</text></svg>`
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+  return svg
 }

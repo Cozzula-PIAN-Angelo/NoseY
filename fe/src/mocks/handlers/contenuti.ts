@@ -1,7 +1,7 @@
 // Endpoint finti di foto, POI e artisti dell'evento (progettazione v4, sezioni 4, 5 e 6).
 import { delay, http, HttpResponse } from 'msw'
 import { LIMITI_EVENTI, type PoiResponse, type TipoPoi } from '@/types/api'
-import { artisti, fotoOrdinate, nuovoId } from '../dati'
+import { artisti, cancellaImmagine, fotoOrdinate, nuovoId, salvaImmagine } from '../dati'
 import { distanzaKm, errore, latValida, leggiJson, lngValida, nessunContenuto } from '../utili'
 import { api, evento, eventoDelProprietario, RITARDO } from './comuni'
 
@@ -30,10 +30,11 @@ export const handlerContenuti = [
     if (risposta) return risposta
     if (e.foto.length >= LIMITI_EVENTI.fotoPerEvento) return errore('LIMITE_FOTO')
 
+    const id = nuovoId('f')
     const foto = {
-      id: nuovoId('f'),
-      // Nel browser il file diventa un indirizzo locale, valido finche' la pagina resta aperta
-      url: URL.createObjectURL(file),
+      id,
+      // Come il backend: percorso relativo del GET pubblico, servito da handlers/immagini.ts
+      url: salvaImmagine(`/api/events/${e.id}/photos/${id}/image`, file, file.type),
       didascalia: typeof didascalia === 'string' && didascalia.trim() ? didascalia.trim() : null,
       copertina: !e.foto.some((f) => f.copertina),
     }
@@ -66,6 +67,7 @@ export const handlerContenuti = [
     const indice = e.foto.findIndex((f) => f.id === params.fotoId)
     if (indice < 0) return errore('NON_TROVATO')
     const [tolta] = e.foto.splice(indice, 1)
+    cancellaImmagine(tolta.url)
     if (tolta.copertina && e.foto.length) e.foto[0].copertina = true
     return nessunContenuto()
   }),
