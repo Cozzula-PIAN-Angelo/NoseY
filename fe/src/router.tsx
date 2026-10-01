@@ -11,6 +11,7 @@ import ModificaEvento from '@/pages/ModificaEvento'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
 import Registrazione from '@/pages/Registrazione'
+import VerificaEmail from '@/pages/VerificaEmail'
 
 // Rotte concordate in docs/interfacce.md (TEAM-02). Percorsi in inglese, parametri con gli
 // stessi nomi dell'API. Ogni card sostituisce la PaginaProvvisoria della propria pagina.
@@ -53,7 +54,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'login', element: <PaginaProvvisoria titolo="Accesso" card="FE2-05" /> },
           { path: 'register', element: <Registrazione /> },
-          { path: 'verify', element: <PaginaProvvisoria titolo="Verifica email" card="FE2-04" /> },
+          { path: 'verify', element: <VerificaEmail /> },
           { path: 'forgot-password', element: <PaginaProvvisoria titolo="Password dimenticata" card="FE2-06" /> },
         ],
       },
