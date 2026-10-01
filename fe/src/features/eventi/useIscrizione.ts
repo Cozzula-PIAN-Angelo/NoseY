@@ -3,6 +3,7 @@ import { leggiErrore } from '@/lib/errori'
 import { vaiAlLogin } from '@/lib/navigazione'
 import type { Uuid } from '@/types/api'
 import { useCancellaIscrizioneMutation, useIscrivitiMutation } from './apiEventi'
+import { messaggioIscrizione, type AzioneIscrizione } from './messaggiIscrizione'
 
 // Iscrizione a un evento e suo annullamento (FE1-06). Non serve sapere prima se l'utente ha fatto
 // l'accesso: se non l'ha fatto il backend risponde 401 NON_AUTENTICATO e si va al login, con il
@@ -12,13 +13,19 @@ export function useIscrizione(eventoId: Uuid) {
   const [cancella, { isLoading: annullamentoInCorso }] = useCancellaIscrizioneMutation()
   const avviso = useAvviso()
 
-  /** 401 → login; gli altri errori come avviso */
-  function gestisciErrore(errore: unknown) {
-    if (leggiErrore(errore).codice === 'NON_AUTENTICATO') {
+  /**
+   * 401 → login; codici previsti (GIA_ISCRITTO, EVENTO_CONCLUSO...) → messaggio pensato per
+   * l'iscrizione (messaggiIscrizione.ts); il resto → testo generico del codice.
+   */
+  function gestisciErrore(errore: unknown, azione: AzioneIscrizione) {
+    const { codice } = leggiErrore(errore)
+    if (codice === 'NON_AUTENTICATO') {
       vaiAlLogin(`/events/${eventoId}`)
       return
     }
-    avviso.erroreApi(errore)
+    const specifico = messaggioIscrizione(codice, azione)
+    if (specifico) avviso[specifico.tipo](specifico.titolo, specifico.messaggio)
+    else avviso.erroreApi(errore)
   }
 
   async function iscrivi() {
@@ -26,7 +33,7 @@ export function useIscrizione(eventoId: Uuid) {
       const ticket = await iscriviti(eventoId).unwrap()
       avviso.successo('Iscrizione completata', `Il tuo ticket per «${ticket.evento.titolo}» è pronto.`)
     } catch (errore) {
-      gestisciErrore(errore)
+      gestisciErrore(errore, 'iscrizione')
     }
   }
 
@@ -37,7 +44,7 @@ export function useIscrizione(eventoId: Uuid) {
       avviso.info('Iscrizione annullata', 'Il ticket non è più valido. Puoi iscriverti di nuovo quando vuoi.')
       return true
     } catch (errore) {
-      gestisciErrore(errore)
+      gestisciErrore(errore, 'annullamento')
       return false
     }
   }
