@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,5 +44,11 @@ public class AdminArtistaController {
 			@RequestParam(required = false) Boolean attivo,
 			@RequestParam(required = false) MultipartFile file) {
 		return adminArtistaService.modifica(artistaId, nome, attivo, file);
+	}
+
+	@DeleteMapping("/{artistaId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void elimina(@PathVariable UUID artistaId) {
+		adminArtistaService.elimina(artistaId);
 	}
 }

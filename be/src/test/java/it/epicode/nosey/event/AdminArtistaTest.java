@@ -2,19 +2,24 @@ package it.epicode.nosey.event;
 
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
+import it.epicode.nosey.user.RuoloRepository;
+import it.epicode.nosey.user.Utente;
+import it.epicode.nosey.user.UtenteRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * CreaArtista (progettazione v4, sezione 12): nome unico senza distinzione di maiuscole/minuscole.
+ * CreaArtista, ModificaArtista, EliminaArtista (progettazione v4, sezione 12): solo ADMIN.
  * Test di integrazione sul database locale: ogni test viene annullato alla fine.
  */
 @SpringBootTest
@@ -25,6 +30,14 @@ class AdminArtistaTest {
 	private AdminArtistaService adminArtistaService;
 	@Autowired
 	private ArtistaRepository artistaRepository;
+	@Autowired
+	private ArtistaEventoRepository artistaEventoRepository;
+	@Autowired
+	private EventoRepository eventoRepository;
+	@Autowired
+	private UtenteRepository utenteRepository;
+	@Autowired
+	private RuoloRepository ruoloRepository;
 
 	@Test
 	void creaArtistaConNomeNuovo() {
@@ -121,8 +134,66 @@ class AdminArtistaTest {
 		assertThat(risposta.immagineUrl()).isNotNull().contains(artista.id().toString());
 	}
 
+	// --- EliminaArtista ---
+
+	@Test
+	void eliminaArtistaInesistente404() {
+		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
+				() -> adminArtistaService.elimina(UUID.randomUUID()));
+
+		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.NON_TROVATO);
+	}
+
+	@Test
+	void eliminaArtistaSenzaEventiLoCancella() {
+		ArtistaResponse artista = adminArtistaService.crea("Vinicio Capossela " + UUID.randomUUID(), null);
+
+		adminArtistaService.elimina(artista.id());
+
+		assertThat(artistaRepository.findById(artista.id())).isEmpty();
+	}
+
+	@Test
+	void eliminaArtistaAssociatoAUnEvento409() {
+		ArtistaResponse artista = adminArtistaService.crea("Subsonica " + UUID.randomUUID(), null);
+		associaAdEvento(artista.id());
+
+		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
+				() -> adminArtistaService.elimina(artista.id()));
+
+		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.ARTISTA_IN_USO);
+		assertThat(artistaRepository.findById(artista.id())).isPresent();
+	}
+
 	// Primi byte di firma PNG: bastano a StorageService per riconoscere il tipo (sniffing sui magic byte).
 	private static byte[] pngMinimo() {
 		return new byte[] { (byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A };
+	}
+
+	private void associaAdEvento(UUID artistaId) {
+		Utente proprietario = new Utente();
+		proprietario.setRuolo(ruoloRepository.findByNome("USER").orElseThrow());
+		proprietario.setEmail("test-" + UUID.randomUUID() + "@nosey.test");
+		proprietario.setPasswordHash("non-usata");
+		proprietario.setNome("Anna");
+		proprietario.setCognome("Bianchi");
+		proprietario.setVerificato(true);
+		proprietario.setCreatoIl(Instant.now());
+		utenteRepository.save(proprietario);
+
+		Evento evento = new Evento();
+		evento.setProprietario(proprietario);
+		evento.setTitolo("Concerto al parco");
+		evento.setDataEvento(Instant.now().plus(Duration.ofDays(7)));
+		evento.setDataFine(Instant.now().plus(Duration.ofDays(8)));
+		evento.setLat(45.07);
+		evento.setLng(7.69);
+		evento.setCreatoIl(Instant.now());
+		eventoRepository.save(evento);
+
+		ArtistaEvento artistaEvento = new ArtistaEvento();
+		artistaEvento.setEvento(evento);
+		artistaEvento.setArtista(artistaRepository.findById(artistaId).orElseThrow());
+		artistaEventoRepository.save(artistaEvento);
 	}
 }

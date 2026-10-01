@@ -23,6 +23,7 @@ public class AdminArtistaService {
 	private static final long DIMENSIONE_MASSIMA_BYTE = 5L * 1024 * 1024; // 5 MB, come FotoService
 
 	private final ArtistaRepository artistaRepository;
+	private final ArtistaEventoRepository artistaEventoRepository;
 	private final StorageService storageService;
 
 	@Transactional
@@ -74,5 +75,15 @@ public class AdminArtistaService {
 			artista.setImmagineContentType(immagine.contentType());
 		}
 		return ArtistaResponse.da(artista);
+	}
+
+	@Transactional
+	public void elimina(UUID artistaId) {
+		Artista artista = artistaRepository.findConLockById(artistaId)
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Artista non trovato"));
+		if (artistaEventoRepository.existsByArtistaId(artistaId)) {
+			throw new ApplicazioneException(CodiceErrore.ARTISTA_IN_USO, "L'artista e' associato a uno o piu' eventi");
+		}
+		artistaRepository.delete(artista);
 	}
 }
