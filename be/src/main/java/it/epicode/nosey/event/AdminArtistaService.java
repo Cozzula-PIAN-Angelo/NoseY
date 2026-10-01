@@ -45,17 +45,23 @@ public class AdminArtistaService {
 	}
 
 	@Transactional
-	public ArtistaResponse modifica(UUID artistaId, String nome, Boolean attivo, MultipartFile file) {
-		boolean nomeValorizzato = nome != null && !nome.isBlank();
+	public ArtistaResponse modifica(UUID artistaId, String nome, Boolean attivo, MultipartFile file,
+			boolean rimuoviImmagine) {
+		// nome fornito (anche "") e' diverso da non fornito (null): "" deve dare errore, non essere ignorato.
+		boolean nomeFornito = nome != null;
 		boolean immagineValorizzata = file != null && !file.isEmpty();
-		if (!nomeValorizzato && attivo == null && !immagineValorizzata) {
+		if (immagineValorizzata && rimuoviImmagine) {
+			throw new ApplicazioneException(CodiceErrore.VALIDAZIONE, "Uno o piu' campi non sono validi",
+					Map.of("file", "non si puo' caricare un'immagine e rimuoverla nella stessa richiesta"));
+		}
+		if (!nomeFornito && attivo == null && !immagineValorizzata && !rimuoviImmagine) {
 			throw new ApplicazioneException(CodiceErrore.RICHIESTA_VUOTA, "Nessun campo da modificare");
 		}
 
 		Artista artista = artistaRepository.findConLockById(artistaId)
 				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Artista non trovato"));
 
-		if (nomeValorizzato) {
+		if (nomeFornito) {
 			String nomeValido = nome.strip();
 			if (nomeValido.isEmpty()) {
 				throw new ApplicazioneException(CodiceErrore.VALIDAZIONE, "Uno o piu' campi non sono validi",
@@ -73,6 +79,9 @@ public class AdminArtistaService {
 			ImmagineValidata immagine = storageService.valida(file, DIMENSIONE_MASSIMA_BYTE);
 			artista.setImmagine(immagine.contenuto());
 			artista.setImmagineContentType(immagine.contentType());
+		} else if (rimuoviImmagine) {
+			artista.setImmagine(null);
+			artista.setImmagineContentType(null);
 		}
 		return ArtistaResponse.da(artista);
 	}

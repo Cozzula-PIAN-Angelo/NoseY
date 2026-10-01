@@ -38,12 +38,14 @@ public class AdminArtistaController {
 	}
 
 	// Multipart: tutti i campi facoltativi come parametri, non un body JSON (serve poter allegare un file).
+	// rimuoviImmagine=true e file sono alternativi: il service rifiuta la combinazione (400 VALIDAZIONE).
 	@PatchMapping("/{artistaId}")
 	public ArtistaResponse modifica(@PathVariable UUID artistaId,
 			@RequestParam(required = false) @Size(max = 100) String nome,
 			@RequestParam(required = false) Boolean attivo,
-			@RequestParam(required = false) MultipartFile file) {
-		return adminArtistaService.modifica(artistaId, nome, attivo, file);
+			@RequestParam(required = false) MultipartFile file,
+			@RequestParam(defaultValue = "false") boolean rimuoviImmagine) {
+		return adminArtistaService.modifica(artistaId, nome, attivo, file, rimuoviImmagine);
 	}
 
 	@DeleteMapping("/{artistaId}")
