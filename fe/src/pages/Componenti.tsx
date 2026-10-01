@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
+import MappaEventi from '@/pages/MappaEventi'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
@@ -162,6 +163,14 @@ export default function Componenti() {
         </p>
         <h1 className="font-headline-lg text-headline-lg">Catalogo componenti</h1>
       </header>
+
+      {/* Anteprima delle pagine FE1 finche' non c'e' il router (FE2-01) */}
+      <section className="rounded-xl border border-dashed border-outline-variant p-space-md">
+        <p className="mb-space-md font-label-code-status text-label-code-status uppercase text-outline">
+          Anteprima pagina /map (FE1-04)
+        </p>
+        <MappaEventi />
+      </section>
 
       <Sezione titolo="Pulsanti">
         <div className="flex flex-wrap items-center gap-space-sm">
