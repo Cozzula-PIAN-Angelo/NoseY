@@ -16,6 +16,7 @@ import { useCambiaRuoloMutation, useCambiaStatoUtenteMutation, useListaUtentiQue
 import { useAppSelector } from '@/hooks/redux'
 import { useValoreRitardato } from '@/hooks/useValoreRitardato'
 import { cx } from '@/lib/cx'
+import { leggiErrore } from '@/lib/errori'
 import { giorno } from '@/lib/formato'
 import { selezionaUtente } from '@/store/sessioneSlice'
 import type { AdminUtenteResponse, Ruolo, StatoUtente, UtenteResponse } from '@/types/api'
@@ -24,6 +25,8 @@ import type { AdminUtenteResponse, Ruolo, StatoUtente, UtenteResponse } from '@/
 // Passo 1: tabella con ricerca (email, nome, cognome), filtro per stato e paginazione.
 // Passo 2: sospensione (con conferma: chiude le sessioni aperte) e riattivazione.
 // Passo 3: cambio di ruolo USER ↔ ADMIN, solo per il SUPERADMIN (con conferma: l'utente deve rientrare).
+// Passo 4: messaggi per gli errori dovuti a una tabella non aggiornata (un altro admin, o l'utente
+// stesso, ha cambiato l'account nel frattempo). Dopo l'errore la tabella si ricarica da sola.
 
 const OPZIONI_STATO: Opzione<StatoUtente | ''>[] = [
   { valore: '', etichetta: 'Tutti gli stati' },
@@ -60,6 +63,35 @@ type AzioniRiga = {
   onSospendi: () => void
   onRiattiva: () => void
   onCambiaRuolo: () => void
+}
+
+/**
+ * Messaggio con il nome dell'account per i rifiuti del backend previsti dalla card (piu' UTENTE_NON_ATTIVO
+ * del cambio di ruolo); undefined per gli altri errori, che usano il testo generico del codice
+ */
+function messaggioRifiuto(errore: unknown, nome: string): { titolo: string; messaggio: string } | undefined {
+  switch (leggiErrore(errore).codice) {
+    case 'RUOLO_INSUFFICIENTE':
+      return {
+        titolo: 'Operazione non consentita',
+        messaggio: `${nome} ora ha un ruolo uguale o superiore al tuo: non puoi più modificare questo account.`,
+      }
+    case 'UTENTE_ANONIMIZZATO':
+      return {
+        titolo: 'Account eliminato',
+        messaggio: `L’account di ${nome} è stato anonimizzato su richiesta dell’utente: non si può più modificare.`,
+      }
+    case 'UTENTE_NON_VERIFICATO':
+      return {
+        titolo: 'Email da verificare',
+        messaggio: `L’email di ${nome} non è ancora verificata: potrai cambiarne il ruolo dopo la verifica.`,
+      }
+    case 'UTENTE_NON_ATTIVO':
+      return {
+        titolo: 'Account non attivo',
+        messaggio: `L’account di ${nome} è sospeso: riattivalo prima di cambiarne il ruolo.`,
+      }
+  }
 }
 
 /** Azione che chiede conferma */
@@ -173,7 +205,9 @@ export default function AdminUtenti() {
         `${nome} vedrà il nuovo ruolo al prossimo accesso.`,
       )
     } catch (err) {
-      avviso.erroreApi(err)
+      const rifiuto = messaggioRifiuto(err, nome)
+      if (rifiuto) avviso.attenzione(rifiuto.titolo, rifiuto.messaggio)
+      else avviso.erroreApi(err)
     }
   }
 
@@ -184,7 +218,9 @@ export default function AdminUtenti() {
       if (stato === 'SOSPESO') avviso.info('Account sospeso', `${nome} non può più accedere: le sessioni aperte sono state chiuse.`)
       else avviso.successo('Account riattivato', `${nome} può di nuovo accedere.`)
     } catch (err) {
-      avviso.erroreApi(err)
+      const rifiuto = messaggioRifiuto(err, nome)
+      if (rifiuto) avviso.attenzione(rifiuto.titolo, rifiuto.messaggio)
+      else avviso.erroreApi(err)
     }
   }
 
