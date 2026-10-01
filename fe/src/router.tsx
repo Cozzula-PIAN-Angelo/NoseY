@@ -5,6 +5,8 @@ import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
 import MappaEventi from '@/pages/MappaEventi'
+import MieiEventi from '@/pages/MieiEventi'
+import MieiTicket from '@/pages/MieiTicket'
 import ModificaEvento from '@/pages/ModificaEvento'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
@@ -34,8 +36,8 @@ export const router = createBrowserRouter([
           { path: 'events/new', element: <CreaEvento /> },
           { path: 'events/:id/edit', element: <ModificaEvento /> },
           { path: 'events/:id/participants', element: <PaginaProvvisoria titolo="Partecipanti" card="FE1-14" /> },
-          { path: 'my-events', element: <PaginaProvvisoria titolo="I miei eventi" card="FE1-08" /> },
-          { path: 'tickets', element: <PaginaProvvisoria titolo="I miei ticket" card="FE1-08" /> },
+          { path: 'my-events', element: <MieiEventi /> },
+          { path: 'tickets', element: <MieiTicket /> },
           { path: 'friends', element: <PaginaProvvisoria titolo="Amici e richieste" card="FE2-10" /> },
           { path: 'chat', element: <PaginaProvvisoria titolo="Chat" card="FE2-12" /> },
           { path: 'chat/:chatId', element: <PaginaProvvisoria titolo="Conversazione" card="FE2-12" /> },
