@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -46,6 +47,19 @@ public class EventoController {
 	public EventoDettaglioResponse crea(@AuthenticationPrincipal UtenteAutenticato utente,
 			@RequestBody @Valid EventoRequest richiesta) {
 		return eventoService.crea(richiesta, utente.id());
+	}
+
+	@PatchMapping("/{id}")
+	public EventoDettaglioResponse modifica(@PathVariable UUID id, @AuthenticationPrincipal UtenteAutenticato utente,
+			@RequestBody @Valid ModificaEventoRequest richiesta) {
+		return eventoService.modifica(id, utente.id(), richiesta);
+	}
+
+	@PostMapping("/{id}/cancel")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void annulla(@PathVariable UUID id, @AuthenticationPrincipal UtenteAutenticato utente,
+			@RequestBody(required = false) @Valid AnnullaEventoRequest richiesta) {
+		eventoService.annulla(id, utente.id(), richiesta == null ? null : richiesta.motivo());
 	}
 
 	// Pubblico: con un token valido (facoltativo) calcola sonoProprietario/sonoIscritto.
