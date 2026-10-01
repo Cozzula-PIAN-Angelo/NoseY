@@ -1,5 +1,7 @@
 package it.epicode.nosey.chat;
 
+import it.epicode.nosey.auth.TokenService;
+import it.epicode.nosey.auth.UtenteAutenticato;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
 import it.epicode.nosey.event.Evento;
@@ -19,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Limit;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
@@ -32,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Chat (progettazione v4, sezione 9): ListaChat con ordine, nonLetti e puoiScrivere, ListaMessaggi
- * con il cursore (nessun doppione scorrendo all'indietro) e SegnaChatLetta, con i loro errori.
+ * con il cursore (nessun doppione scorrendo all'indietro), SegnaChatLetta e InviaMessaggio (sezione 11,
+ * senza il WebSocket: il push dopo il commit e' in ChatWebSocketTest), con i loro errori.
  * Test di integrazione sul database locale (decisione 10): ogni test viene annullato alla fine.
  */
 @SpringBootTest
@@ -57,6 +61,8 @@ class ChatServiceTest {
 	private RuoloRepository ruoloRepository;
 	@Autowired
 	private EventoRepository eventoRepository;
+	@Autowired
+	private TokenService tokenService;
 	@Autowired
 	private EntityManager entityManager;
 
@@ -273,7 +279,119 @@ class ChatServiceTest {
 		assertErrore(CodiceErrore.NON_MEMBRO, () -> chatService.segnaLetta(chat.getId(), anna.getId()));
 	}
 
+	// --- InviaMessaggio ---
+
+	@Test
+	void invia_salvaIlMessaggioERiapreLaNotificaDelDestinatario() {
+		Chat chat = chat(amicizia(mario, luigi, StatoAmicizia.ACCETTATA), T0);
+		NotificaChat perLuigi = notifica(luigi, chat);
+		perLuigi.setLetta(true);
+		notificaChatRepository.saveAndFlush(perLuigi);
+
+		chatService.invia(chat.getId(), new InviaMessaggioRequest("ciao Luigi"), autenticato(mario));
+		entityManager.clear();
+
+		MessaggiResponse messaggi = chatService.messaggi(chat.getId(), null, 30, luigi.getId());
+		assertThat(messaggi.messaggi()).singleElement().satisfies(m -> {
+			assertThat(m.mittenteId()).isEqualTo(mario.getId());
+			assertThat(m.testo()).isEqualTo("ciao Luigi");
+			assertThat(m.letto()).isFalse();
+		});
+		NotificaChat notifica = notificaChatRepository.findById(perLuigi.getId()).orElseThrow();
+		assertThat(notifica.isLetta()).isFalse();
+		assertThat(notifica.getAggiornataIl()).isAfter(T0);
+		// Solo il destinatario: il mittente non riceve una NOTIFICA_CHAT per i propri messaggi.
+		assertThat(notificaChatRepository.findAll()).noneMatch(n -> n.getDestinatario().getId().equals(mario.getId()));
+	}
+
+	@Test
+	void invia_senzaNotificaDelDestinatario_laCrea() {
+		Chat chat = chat(amicizia(mario, luigi, StatoAmicizia.ACCETTATA), T0);
+
+		chatService.invia(chat.getId(), new InviaMessaggioRequest("ciao"), autenticato(luigi));
+		entityManager.clear();
+
+		assertThat(notificaChatRepository.findAll())
+				.filteredOn(n -> n.getChat().getId().equals(chat.getId()))
+				.singleElement()
+				.satisfies(n -> {
+					assertThat(n.getDestinatario().getId()).isEqualTo(mario.getId());
+					assertThat(n.isLetta()).isFalse();
+				});
+	}
+
+	@Test
+	void invia_controlliNellOrdineDellaProgettazione() {
+		Chat chat = chat(amicizia(mario, luigi, StatoAmicizia.ACCETTATA), T0);
+		InviaMessaggioRequest vuoto = new InviaMessaggioRequest(" ");
+		InviaMessaggioRequest valido = new InviaMessaggioRequest("ciao");
+
+		// 1. token: prima di tutto il resto, anche con testo non valido e chat non sua.
+		UtenteAutenticato scaduto = new UtenteAutenticato(anna.getId(), "USER", UUID.randomUUID(),
+				Instant.now().minusSeconds(1));
+		assertErrore(CodiceErrore.TOKEN_NON_VALIDO, () -> chatService.invia(chat.getId(), vuoto, scaduto));
+		UtenteAutenticato revocato = autenticato(anna);
+		tokenService.revocaTutti(anna.getId());
+		assertErrore(CodiceErrore.TOKEN_NON_VALIDO, () -> chatService.invia(chat.getId(), vuoto, revocato));
+
+		// 3. validazione prima dell'appartenenza alla chat.
+		UtenteAutenticato annaValida = autenticato(anna);
+		assertErrore(CodiceErrore.VALIDAZIONE, () -> chatService.invia(chat.getId(), vuoto, annaValida));
+		assertErrore(CodiceErrore.VALIDAZIONE, () -> chatService.invia(chat.getId(), null, annaValida));
+		assertErrore(CodiceErrore.VALIDAZIONE, () -> chatService.invia(chat.getId(),
+				new InviaMessaggioRequest("x".repeat(2001)), annaValida));
+
+		// 4. membro della chat.
+		assertErrore(CodiceErrore.NON_TROVATO, () -> chatService.invia(UUID.randomUUID(), valido, annaValida));
+		assertErrore(CodiceErrore.NON_MEMBRO, () -> chatService.invia(chat.getId(), valido, annaValida));
+
+		assertThat(messaggioRepository.trovaPiuRecenti(chat.getId(), Limit.of(10))).isEmpty();
+	}
+
+	@Test
+	void invia_testoLungoAlMassimo_accettato() {
+		Chat chat = chat(amicizia(mario, luigi, StatoAmicizia.ACCETTATA), T0);
+
+		chatService.invia(chat.getId(), new InviaMessaggioRequest("x".repeat(2000)), autenticato(mario));
+
+		assertThat(messaggioRepository.trovaPiuRecenti(chat.getId(), Limit.of(10))).hasSize(1);
+	}
+
+	@Test
+	void invia_chatInSolaLettura_rifiutato() {
+		Chat rimossa = chat(amicizia(mario, luigi, StatoAmicizia.RIMOSSA), T0);
+		Chat conAnna = chat(amicizia(mario, anna, StatoAmicizia.ACCETTATA), T0);
+		anna.setStato(StatoUtente.SOSPESO);
+		utenteRepository.saveAndFlush(anna);
+		InviaMessaggioRequest valido = new InviaMessaggioRequest("ciao");
+		UtenteAutenticato autenticatoMario = autenticato(mario);
+
+		assertErrore(CodiceErrore.CHAT_SOLA_LETTURA, () -> chatService.invia(rimossa.getId(), valido, autenticatoMario));
+		assertErrore(CodiceErrore.CHAT_SOLA_LETTURA, () -> chatService.invia(conAnna.getId(), valido, autenticatoMario));
+		assertThat(messaggioRepository.trovaPiuRecenti(rimossa.getId(), Limit.of(10))).isEmpty();
+		assertThat(messaggioRepository.trovaPiuRecenti(conAnna.getId(), Limit.of(10))).isEmpty();
+	}
+
+	@Test
+	void invia_trentaMessaggiAlMinuto_poiTroppeRichiesteAncheConTestoNonValido() {
+		Chat chat = chat(amicizia(mario, luigi, StatoAmicizia.ACCETTATA), T0);
+		UtenteAutenticato autenticatoMario = autenticato(mario);
+		for (int i = 0; i < 30; i++) {
+			chatService.invia(chat.getId(), new InviaMessaggioRequest("messaggio " + i), autenticatoMario);
+		}
+
+		// 2. il limite viene prima della validazione.
+		assertErrore(CodiceErrore.TROPPE_RICHIESTE,
+				() -> chatService.invia(chat.getId(), new InviaMessaggioRequest(" "), autenticatoMario));
+		// Il limite e' per utente: Luigi scrive ancora.
+		chatService.invia(chat.getId(), new InviaMessaggioRequest("risposta"), autenticato(luigi));
+	}
+
 	// --- Supporto ---
+
+	private UtenteAutenticato autenticato(Utente utente) {
+		return tokenService.verifica(tokenService.emetti(utente).token()).orElseThrow();
+	}
 
 	private boolean puoiScrivere(List<ChatResponse> lista, Chat chat) {
 		return lista.stream().filter(c -> c.id().equals(chat.getId())).findFirst().orElseThrow().puoiScrivere();
