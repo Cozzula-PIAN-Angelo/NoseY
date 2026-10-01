@@ -37,8 +37,16 @@ export function MenuUtente({ utente }: { utente: UtenteResponse }) {
     }
   }, [aperto])
 
+  // Prima si lascia la pagina, poi la sessione: da una pagina protetta, uscendo prima,
+  // la sua rotta rimanderebbe al login invece che alla home. Il router cambia pagina in una
+  // transizione di React, quindi la sessione si chiude solo quando la home e' davvero a schermo.
+  const [inUscita, setInUscita] = useState(false)
+  useEffect(() => {
+    if (inUscita && pathname === '/') dispatch(uscita())
+  }, [inUscita, pathname, dispatch])
+
   function esci() {
-    dispatch(uscita())
+    setInUscita(true)
     naviga('/')
   }
 

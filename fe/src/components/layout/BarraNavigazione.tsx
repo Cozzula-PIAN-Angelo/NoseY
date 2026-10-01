@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router'
 import { Icon } from '@/components/ui'
 import { useAppSelector } from '@/hooks/redux'
 import { cx } from '@/lib/cx'
+import { urlLogin } from '@/lib/dopoLogin'
 import { selezionaUtente } from '@/store/sessioneSlice'
 import { MenuUtente } from './MenuUtente'
 
@@ -37,7 +38,7 @@ const voceAttiva = 'bg-surface-container text-on-surface font-headline-sm'
 
 export function BarraNavigazione() {
   const utente = useAppSelector(selezionaUtente)
-  const { pathname } = useLocation()
+  const { pathname, search, hash } = useLocation()
   const [menuMobile, setMenuMobile] = useState(false)
 
   // Il menu su mobile si chiude a ogni cambio di pagina
@@ -114,7 +115,7 @@ export function BarraNavigazione() {
           ) : (
             // Su mobile solo l'icona, grande come l'hamburger: il testo ruberebbe spazio al logo
             <Link
-              to="/login"
+              to={urlLogin(pathname + search + hash)}
               aria-label="Accedi"
               className="flex items-center gap-space-xs rounded-lg bg-primary p-space-xs font-label-btn text-label-btn text-on-primary shadow-md transition-all hover:bg-primary-container sm:px-space-md"
             >
