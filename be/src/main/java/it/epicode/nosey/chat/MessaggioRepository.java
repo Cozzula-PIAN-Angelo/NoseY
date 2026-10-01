@@ -51,4 +51,13 @@ public interface MessaggioRepository extends JpaRepository<Messaggio, UUID> {
 			update Messaggio m set m.letto = true
 			where m.chat.id = :chatId and m.mittente.id <> :utenteId and m.letto = false""")
 	int segnaLettiDellAltro(UUID chatId, UUID utenteId);
+
+	// SegnaTutteLette per chats (sezione 10): come segnaLettiDellAltro, in tutte le chat dell'utente.
+	@Modifying(flushAutomatically = true)
+	@Query("""
+			update Messaggio m set m.letto = true
+			where m.mittente.id <> :utenteId and m.letto = false
+			and m.chat.id in (select c.id from Chat c
+					where c.amicizia.richiedente.id = :utenteId or c.amicizia.ricevente.id = :utenteId)""")
+	int segnaTuttiLettiDellAltro(UUID utenteId);
 }
