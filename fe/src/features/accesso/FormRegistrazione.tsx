@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { Button, CampoPassword, DateTimeField, TextField } from '@/components/ui'
 import { cx } from '@/lib/cx'
-import { LIMITI_UTENTI } from '@/types/api'
+import { bytePassword, LIMITI_UTENTI } from '@/types/api'
 import { robustezzaPassword } from './robustezzaPassword'
 import { ORDINE_CAMPI, validaRegistrazione, type ErroriRegistrazione } from './validaRegistrazione'
 
@@ -123,25 +123,33 @@ export function FormRegistrazione({ inCorso = false, erroriServer = NESSUN_ERROR
           etichetta="Password"
           obbligatorio
           autoComplete="new-password"
-          contaByte={LIMITI_UTENTI.passwordMaxByte}
           value={v.password}
           onChange={(e) => cambia('password', e.target.value)}
           id="reg-password"
           errore={errori.password}
           placeholder="Almeno 8 caratteri"
         />
-        {/* Robustezza: 4 barrette come nel design */}
+        {/* Come nel design: 4 barrette di robustezza, poi giudizio a sinistra e byte a destra */}
         <div aria-hidden="true" className="grid grid-cols-4 gap-1.5">
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
-              className={cx('h-1 rounded transition-colors', n <= robustezza.livello ? COLORI_ROBUSTEZZA[robustezza.livello] : 'bg-surface-container')}
+              className={cx(
+                'h-1 rounded transition-colors',
+                n <= robustezza.livello ? COLORI_ROBUSTEZZA[robustezza.livello] : 'bg-surface-container-highest',
+              )}
             />
           ))}
         </div>
-        <p aria-live="polite" className="font-body-sm text-body-sm text-outline">
-          {robustezza.testo}
-        </p>
+        <div className="flex items-center justify-between gap-space-sm">
+          <p aria-live="polite" className="font-body-sm text-body-sm text-outline">
+            {robustezza.testo}
+          </p>
+          {/* Il limite vero del backend: 72 byte in UTF-8 (accenti ed emoji pesano di piu') */}
+          <span className="shrink-0 font-label-code-status text-label-code-status text-outline">
+            {bytePassword(v.password)} / {LIMITI_UTENTI.passwordMaxByte} byte
+          </span>
+        </div>
       </div>
 
       <CampoPassword
