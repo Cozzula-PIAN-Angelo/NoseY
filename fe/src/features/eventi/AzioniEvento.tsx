@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { Button, Icon, stilePulsante } from '@/components/ui'
 import type { EventoDettaglioResponse } from '@/types/api'
 
@@ -18,7 +19,6 @@ const nonAncora = 'Non ancora disponibile'
 //   proprietario  → Modifica, Annulla evento (solo se PROGRAMMATO o IN_CORSO), Partecipanti
 //   iscritto      → Il mio ticket (porta al ticket nella pagina), Annulla iscrizione (solo se PROGRAMMATO), Partecipanti
 //   altri         → Iscriviti (solo se PROGRAMMATO o IN_CORSO)
-// I link sono <a> finche' non c'e' il router (FE2-01): poi diventano <Link to=...>.
 export function AzioniEvento({ evento, onIscriviti, onAnnullaIscrizione, onAnnullaEvento, inCorso }: AzioniEventoProps) {
   const attivo = evento.stato === 'PROGRAMMATO' || evento.stato === 'IN_CORSO'
   const { sonoProprietario, sonoIscritto } = evento
@@ -38,10 +38,10 @@ export function AzioniEvento({ evento, onIscriviti, onAnnullaIscrizione, onAnnul
             Hai organizzato tu questo evento
           </p>
           {attivo && (
-            <a href={`/events/${evento.id}/edit`} className={stilePulsante({ pieno: true })}>
+            <Link to={`/events/${evento.id}/edit`} className={stilePulsante({ pieno: true })}>
               <Icon nome="edit" size={18} />
               Modifica evento
-            </a>
+            </Link>
           )}
         </>
       )}
@@ -75,10 +75,10 @@ export function AzioniEvento({ evento, onIscriviti, onAnnullaIscrizione, onAnnul
       )}
 
       {(sonoProprietario || sonoIscritto) && (
-        <a href={`/events/${evento.id}/participants`} className={stilePulsante({ variant: 'secondary', pieno: true })}>
+        <Link to={`/events/${evento.id}/participants`} className={stilePulsante({ variant: 'secondary', pieno: true })}>
           <Icon nome="groups" size={18} />
           Vedi i partecipanti
-        </a>
+        </Link>
       )}
 
       {/* Azioni irreversibili in fondo, in rosso */}
