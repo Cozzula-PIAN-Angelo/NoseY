@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router'
 import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
 import Componenti from '@/pages/Componenti'
+import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
 import MappaEventi from '@/pages/MappaEventi'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
@@ -29,7 +30,7 @@ export const router = createBrowserRouter([
       {
         element: <SoloConLogin />,
         children: [
-          { path: 'events/new', element: <PaginaProvvisoria titolo="Crea evento" card="FE1-07" /> },
+          { path: 'events/new', element: <CreaEvento /> },
           { path: 'events/:id/edit', element: <PaginaProvvisoria titolo="Modifica evento" card="FE1-07" /> },
           { path: 'events/:id/participants', element: <PaginaProvvisoria titolo="Partecipanti" card="FE1-14" /> },
           { path: 'my-events', element: <PaginaProvvisoria titolo="I miei eventi" card="FE1-08" /> },

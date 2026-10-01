@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
+import { useAppDispatch, useAppSelector } from '@/hooks/redux'
+import { accesso, selezionaUtente, uscita } from '@/store/sessioneSlice'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
@@ -114,6 +116,51 @@ const registrazioneRifiutata = erroreFinto('VALIDAZIONE', 400, {
   password: 'La lunghezza deve essere compresa tra 8 e 72',
 })
 
+// Solo in sviluppo: entra con l'utente "loggato" dei dati finti (mocks/dati.ts), per provare
+// le pagine protette (es. /events/new) finche' non c'e' la pagina di login (FE2-05).
+// Il token e' finto: con il backend vero (VITE_DATI_FINTI=false) le chiamate rispondono 401.
+function SessioneDiProva() {
+  const dispatch = useAppDispatch()
+  const utente = useAppSelector(selezionaUtente)
+
+  function entra() {
+    dispatch(
+      accesso({
+        token: 'token-dei-dati-finti',
+        scadenza: new Date(Date.now() + 24 * 3_600_000).toISOString(),
+        utente: {
+          id: 'u-0000-valentina',
+          email: 'valentina@esempio.it',
+          nome: 'Valentina',
+          cognome: 'Ferro',
+          indirizzo: null,
+          dataNascita: null,
+          immagineProfilo: null,
+          ruolo: 'USER',
+        },
+      }),
+    )
+  }
+
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-space-sm rounded-xl border border-dashed border-tertiary/50 p-space-md">
+      <p className="font-body-md text-body-md text-on-surface-variant">
+        <strong className="text-tertiary">Sessione di prova (dati finti):</strong>{' '}
+        {utente ? `accesso come ${utente.nome} ${utente.cognome}` : 'nessun accesso'}
+      </p>
+      {utente ? (
+        <Button size="sm" variant="secondary" icona="logout" onClick={() => dispatch(uscita())}>
+          Esci
+        </Button>
+      ) : (
+        <Button size="sm" variant="gold" icona="login" onClick={entra}>
+          Accedi con l'utente finto
+        </Button>
+      )}
+    </section>
+  )
+}
+
 function Sezione({ titolo, children }: { titolo: string; children: ReactNode }) {
   return (
     <section className="rounded-xl bg-surface-card p-space-lg">
@@ -162,6 +209,8 @@ export default function Componenti() {
         </p>
         <h1 className="font-headline-lg text-headline-lg">Catalogo componenti</h1>
       </header>
+
+      {import.meta.env.DEV && <SessioneDiProva />}
 
 
       <Sezione titolo="Pulsanti">
