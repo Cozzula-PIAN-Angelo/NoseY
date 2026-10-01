@@ -1,6 +1,8 @@
 package it.epicode.nosey.event;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,4 +20,16 @@ public interface FotoEventoRepository extends JpaRepository<FotoEvento, UUID> {
 
 	// Per il GET pubblico dell'immagine (decisione 9): la foto deve appartenere a quell'evento.
 	Optional<FotoEvento> findByIdAndEventoId(UUID id, UUID eventoId);
+
+	// LIMITE_FOTO: max 10 per evento (progettazione v4, sezione 4).
+	long countByEventoId(UUID eventoId);
+
+	// ModificaFoto, passo 1: eseguita SUBITO, prima di impostare la nuova copertina
+	// (l'indice unico parziale non ammette due copertine nemmeno per un istante).
+	@Modifying(flushAutomatically = true)
+	@Query("update FotoEvento f set f.copertina = false where f.evento.id = :eventoId")
+	void azzeraCopertina(UUID eventoId);
+
+	// CancellaFoto: la copertina passa alla foto rimasta piu' vecchia.
+	Optional<FotoEvento> findFirstByEventoIdOrderByCaricataIlAsc(UUID eventoId);
 }
