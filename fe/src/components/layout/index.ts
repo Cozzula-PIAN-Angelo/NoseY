@@ -3,3 +3,4 @@
 export { BarraNavigazione } from './BarraNavigazione'
 export { MenuUtente } from './MenuUtente'
 export { PiePagina } from './PiePagina'
+export { SoloConLogin, SoloOspiti, SoloRuolo } from './Protezioni'
