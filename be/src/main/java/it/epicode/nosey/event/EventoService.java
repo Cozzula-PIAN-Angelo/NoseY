@@ -3,6 +3,8 @@ package it.epicode.nosey.event;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
 import it.epicode.nosey.common.Haversine;
+import it.epicode.nosey.common.Limite;
+import it.epicode.nosey.common.LimitiService;
 import it.epicode.nosey.notification.NotificheService;
 import it.epicode.nosey.notification.ParteEvento;
 import it.epicode.nosey.ticket.PartecipanteRepository;
@@ -41,6 +43,7 @@ public class EventoService {
 	private final PoiRepository poiRepository;
 	private final PartecipanteRepository partecipanteRepository;
 	private final NotificheService notificheService;
+	private final LimitiService limitiService;
 	private final Clock clock;
 
 	private static final double RAGGIO_POI_KM = 2.0;
@@ -211,6 +214,24 @@ public class EventoService {
 		evento.setStato(StatoEventoDb.ANNULLATO);
 		evento.setMotivoAnnullamento(motivo == null || motivo.isBlank() ? null : motivo.strip());
 		notificheService.notificaAnnullamento(evento);
+	}
+
+	/**
+	 * InviaNotificaManuale (sezione 10). Il limite si consuma DOPO il controllo del proprietario
+	 * (decisione 19): la chiave e' l'id dell'evento, e prima chiunque potrebbe esaurirne la quota.
+	 */
+	@Transactional
+	public NotificaManualeResponse inviaNotificaManuale(UUID id, UUID proprietarioId, String testo) {
+		Evento evento = eventoRepository.findConLockById(id)
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Evento non trovato"));
+		if (!evento.getProprietario().getId().equals(proprietarioId)) {
+			throw new ApplicazioneException(CodiceErrore.NON_PROPRIETARIO, "Non sei il proprietario dell'evento");
+		}
+		// Il tentativo conta anche se poi l'evento risulta concluso o annullato.
+		limitiService.consuma(Limite.NOTIFICHE_MANUALI, id.toString());
+		StatoEvento.controllaScrivibile(evento, clock.instant());
+
+		return new NotificaManualeResponse(notificheService.notificaManuale(evento, testo));
 	}
 
 	@Transactional(readOnly = true)

@@ -2,6 +2,7 @@ package it.epicode.nosey.user;
 
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,7 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UtenteRepository extends JpaRepository<Utente, UUID> {
+// JpaSpecificationExecutor: ListaUtenti (sezione 12) ha filtri facoltativi.
+public interface UtenteRepository extends JpaRepository<Utente, UUID>, JpaSpecificationExecutor<Utente> {
 
 	Optional<Utente> findByEmail(String email);
 

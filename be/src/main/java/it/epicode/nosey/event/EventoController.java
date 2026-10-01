@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class EventoController {
 
 	private final EventoService eventoService;
+	private final ArtistaService artistaService;
 
 	// Pubblico. lat/lng facoltativi (insieme o nessuno: controllato nel service);
 	// il frontend li arrotonda a 2 decimali prima di chiamare (sezione 3).
@@ -58,11 +60,32 @@ public class EventoController {
 		eventoService.annulla(id, utente.id(), richiesta == null ? null : richiesta.motivo());
 	}
 
+	@PostMapping("/{id}/notifications")
+	@ResponseStatus(HttpStatus.CREATED)
+	public NotificaManualeResponse inviaNotificaManuale(@PathVariable UUID id,
+			@AuthenticationPrincipal UtenteAutenticato utente, @RequestBody @Valid NotificaManualeRequest richiesta) {
+		return eventoService.inviaNotificaManuale(id, utente.id(), richiesta.testo());
+	}
+
 	// Pubblico: con un token valido (facoltativo) calcola sonoProprietario/sonoIscritto.
 	// Un token scaduto o non valido non da' mai 401 qui (JwtFilter, sezione 14): utente = null.
 	@GetMapping("/{id}")
 	public EventoDettaglioResponse vedi(@PathVariable UUID id,
 			@AuthenticationPrincipal UtenteAutenticato utente) {
 		return eventoService.vedi(id, utente == null ? null : utente.id());
+	}
+
+	@PostMapping("/{id}/artists/{artistaId}")
+	@ResponseStatus(HttpStatus.CREATED)
+	public ArtistaResponse aggiungiArtista(@PathVariable UUID id, @PathVariable UUID artistaId,
+			@AuthenticationPrincipal UtenteAutenticato utente) {
+		return artistaService.aggiungiAEvento(id, artistaId, utente.id());
+	}
+
+	@DeleteMapping("/{id}/artists/{artistaId}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void rimuoviArtista(@PathVariable UUID id, @PathVariable UUID artistaId,
+			@AuthenticationPrincipal UtenteAutenticato utente) {
+		artistaService.rimuoviDaEvento(id, artistaId, utente.id());
 	}
 }

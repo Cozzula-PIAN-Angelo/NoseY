@@ -7,6 +7,8 @@ import it.epicode.nosey.common.LimitiService;
 import it.epicode.nosey.event.Evento;
 import it.epicode.nosey.event.EventoRepository;
 import it.epicode.nosey.event.StatoEvento;
+import it.epicode.nosey.friendship.AmiciziaService;
+import it.epicode.nosey.friendship.RelazioneAmicizia;
 import it.epicode.nosey.mail.TicketEmailEvent;
 import it.epicode.nosey.notification.NotificheService;
 import it.epicode.nosey.user.Utente;
@@ -20,11 +22,12 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 /**
- * IscrizioneEvento, VediMiaPartecipazione, CancellaPartecipazione, MieiTicket
+ * IscrizioneEvento, VediMiaPartecipazione, ListaPartecipanti, CancellaPartecipazione, MieiTicket
  * (progettazione v4, sezioni 2 e 7).
  */
 @Service
@@ -35,6 +38,7 @@ public class PartecipanteService {
 	private final UtenteRepository utenteRepository;
 	private final PartecipanteRepository partecipanteRepository;
 	private final NotificheService notificheService;
+	private final AmiciziaService amiciziaService;
 	private final LimitiService limitiService;
 	private final ApplicationEventPublisher eventi;
 	private final Clock clock;
@@ -73,6 +77,31 @@ public class PartecipanteService {
 				evento.getDataEvento(), partecipante.getCodice().toString()));
 
 		return TicketResponse.da(partecipante, clock.instant());
+	}
+
+	@Transactional(readOnly = true)
+	public List<PartecipanteResponse> lista(UUID eventoId, UUID utenteId) {
+		Evento evento = eventoRepository.findById(eventoId)
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Evento non trovato"));
+		Utente proprietario = evento.getProprietario();
+		// Il proprietario vede la lista anche senza ticket (D6).
+		if (!proprietario.getId().equals(utenteId)
+				&& !partecipanteRepository.existsByEventoIdAndUtenteId(eventoId, utenteId)) {
+			throw new ApplicazioneException(CodiceErrore.NESSUN_TICKET,
+					"Serve un ticket per vedere i partecipanti di questo evento");
+		}
+
+		// Il proprietario in cima, anche se non e' iscritto, poi i partecipanti per emesso_il;
+		// chi fa la richiesta non compare.
+		List<Utente> utenti = Stream.concat(Stream.of(proprietario),
+						partecipanteRepository.trovaUtentiPerEventoInOrdine(eventoId).stream())
+				.filter(u -> !u.getId().equals(utenteId))
+				.toList();
+		Map<UUID, RelazioneAmicizia> relazioni = amiciziaService.relazioni(utenteId, utenti);
+
+		return utenti.stream()
+				.map(u -> PartecipanteResponse.da(u, u.getId().equals(proprietario.getId()), relazioni.get(u.getId())))
+				.toList();
 	}
 
 	@Transactional(readOnly = true)

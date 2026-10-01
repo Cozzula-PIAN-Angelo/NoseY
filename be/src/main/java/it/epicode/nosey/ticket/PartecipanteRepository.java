@@ -22,6 +22,10 @@ public interface PartecipanteRepository extends JpaRepository<Partecipante, UUID
 	@Query("select p.utente from Partecipante p where p.evento.id = :eventoId")
 	List<Utente> trovaUtentiPerEvento(UUID eventoId);
 
+	// ListaPartecipanti (sezione 7): i partecipanti per emesso_il.
+	@Query("select p.utente from Partecipante p where p.evento.id = :eventoId order by p.emessoIl")
+	List<Utente> trovaUtentiPerEventoInOrdine(UUID eventoId);
+
 	boolean existsByEventoIdAndUtenteId(UUID eventoId, UUID utenteId);
 
 	// VediMiaPartecipazione, CancellaPartecipazione (sezione 7).

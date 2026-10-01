@@ -11,4 +11,7 @@ public interface ArtistaEventoRepository extends JpaRepository<ArtistaEvento, Ar
 	// Artisti dell'evento, in ordine alfabetico (progettazione v4, sezione 3 "VediEvento").
 	@Query("select ae.artista from ArtistaEvento ae where ae.evento.id = :eventoId order by lower(ae.artista.nome)")
 	List<Artista> findArtistiOrdinatiByEventoId(UUID eventoId);
+
+	// AggiungiArtistaEvento, RimuoviArtistaEvento (sezione 6).
+	boolean existsByEventoIdAndArtistaId(UUID eventoId, UUID artistaId);
 }

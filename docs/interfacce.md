@@ -156,8 +156,7 @@ public enum StatoAmiciziaVista { NESSUNA, INVIATA, RICEVUTA, AMICI, NON_DISPONIB
   `altri`, chiave il suo id; senza riga della coppia: `NESSUNA`.
 - `amiciziaId` valorizzato con INVIATA, RICEVUTA e AMICI, altrimenti null (sezione 7).
 - `chatId`: la chat della coppia se esiste, solo quando c'e' `amiciziaId`; con AMICI e' sempre
-  valorizzato. Letta nella stessa query (left join), serve al pulsante "Chat" (punto aperto
-  sotto, decisione 15).
+  valorizzato. Letta nella stessa query (left join), serve al pulsante "Chat" (decisioni 15 e 20).
 - Si chiama dentro la transazione di ListaPartecipanti (o in una propria, readOnly).
 
 ```java
@@ -165,9 +164,20 @@ Map<UUID, RelazioneAmicizia> relazioni = amiciziaService.relazioni(utenteId, ute
 RelazioneAmicizia r = relazioni.get(utente.getId());   // r.stato(), r.amiciziaId(), r.chatId()
 ```
 
-## Ancora da fare (TEAM-02)
+## ListaPartecipanti (pacchetto `ticket`) — implementa BE1-17
 
-- Backend: controllo «ha il ticket o e' il proprietario» (lato social).
+`GET /api/events/{id}/participants` (progettazione v4, sezione 7; decisione 20 per `chatId`).
+
+```java
+public record PartecipanteResponse(UtentePubblicoResponse utente, boolean proprietario,
+        StatoAmiciziaVista statoAmicizia, UUID amiciziaId, UUID chatId) {}
+```
+
+- Accesso: chi ha un ticket per l'evento o il proprietario (D6), altrimenti 403 `NESSUN_TICKET`;
+  evento inesistente 404 `NON_TROVATO`. Lo stesso controllo vale in RichiediAmicizia.
+- Ordine: il proprietario in cima (anche se non iscritto), poi i partecipanti per `emesso_il`;
+  chi fa la richiesta non compare.
+- `statoAmicizia`, `amiciziaId`, `chatId` da `AmiciziaService.relazioni` (una sola query).
 
 ---
 
@@ -286,7 +296,7 @@ type PulsanteAmiciziaProps = {
 | `NESSUNA` | "Aggiungi" | RichiediAmicizia |
 | `INVIATA` | "In attesa" + "Ritira" | RitiraRichiesta |
 | `RICEVUTA` | "Accetta" / "Rifiuta" | AccettaAmicizia / RifiutaAmicizia |
-| `AMICI` | "Chat" | apre `/chat/:chatId` (vedi punto aperto) |
+| `AMICI` | "Chat" | apre `/chat/:chatId` (`chatId` di `PartecipanteResponse`, decisione 20) |
 | `NON_DISPONIBILE` | niente | — |
 
 Con `utente.attivo = false` nessun pulsante, tranne "Chat" per chi e' gia' amico (sola lettura).
@@ -306,10 +316,7 @@ type CardEventoProps = {
 **`BadgeStato`** (`@/components/eventi`): `{ stato: StatoEvento }`, pillola con il colore dello
 stato (stessi colori di `STILE_STATO` della mappa). Usato da card, dettaglio e ticket.
 
-## Punti aperti
+## Punti chiusi
 
-- **`chatId` in `PartecipanteResponse`**: con `statoAmicizia = AMICI` il pulsante "Chat" deve
-  aprire `/chat/:chatId`, ma la risposta ha solo `amiciziaId`. Proposta al backend: aggiungere
-  `chatId` (come in `AmiciziaResponse`). Altrimenti il frontend lo cerca in ListaAmici.
-  Lato amicizie il dato e' pronto (BE2-12): `RelazioneAmicizia.chatId()`. Resta da decidere
-  con BE1 e il team se aggiungerlo a `PartecipanteResponse` (sezione 7).
+- **`chatId` in `PartecipanteResponse`**: aggiunto in BE1-17 (decisione 20), con la stessa regola
+  di `amiciziaId`; con `statoAmicizia = AMICI` c'e' sempre.
