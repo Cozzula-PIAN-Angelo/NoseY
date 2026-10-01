@@ -2,17 +2,16 @@ import type { ReactNode } from 'react'
 import { Caricamento, Icon, MessaggioErrore } from '@/components/ui'
 import { FormCambioPassword } from '@/features/profilo/FormCambioPassword'
 import { FormDatiPersonali } from '@/features/profilo/FormDatiPersonali'
+import { ImmagineProfilo } from '@/features/profilo/ImmagineProfilo'
 import { useVediProfiloQuery } from '@/features/utenti/apiUtenti'
-import { urlImmagine } from '@/lib/api'
 import type { Ruolo, UtenteResponse } from '@/types/api'
 
-// Profilo (FE2-07), rotta /profile (solo con login): dati personali (ModificaProfilo) e cambio
-// password (CambioPassword). I dati arrivano da VediProfilo, cioe' dal server e non dalla copia
+// Profilo (FE2-07), rotta /profile (solo con login): immagine del profilo (FE2-08, nel riepilogo),
+// dati personali (ModificaProfilo) e cambio password (CambioPassword). I dati arrivano da VediProfilo, cioe' dal server e non dalla copia
 // della sessione, che VediProfilo intanto aggiorna (apiUtenti).
 // Non c'e' una schermata Stitch dedicata: la pagina segue "NoseY - Registrazione Account"
 // (docs/stitch/registrazione-account.png): pannello a sinistra, card dei form a destra con la
-// barra sfumata, stessi campi. Immagine del profilo (FE2-08) ed eliminazione dell'account vanno
-// aggiunte qui dalle loro card.
+// barra sfumata, stessi campi. L'eliminazione dell'account va aggiunta qui dalla sua card.
 
 const NOME_RUOLO: Record<Ruolo, string> = { USER: 'Utente', ADMIN: 'Admin', SUPERADMIN: 'Superadmin' }
 
@@ -29,7 +28,7 @@ export default function Profilo() {
       <header className="flex flex-col gap-space-xs">
         <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg">Il tuo profilo</h1>
         <p className="max-w-xl font-body-md text-body-md text-on-surface-variant">
-          Aggiorna i tuoi dati personali e la password dell’account.
+          Aggiorna immagine del profilo, dati personali e password dell’account.
         </p>
       </header>
 
@@ -80,9 +79,6 @@ export default function Profilo() {
 // ---------------------------------------------------------------- Riepilogo dell'account
 
 function Riepilogo({ utente }: { utente: UtenteResponse }) {
-  const avatar = urlImmagine(utente.immagineProfilo)
-  const iniziali = `${utente.nome.charAt(0)}${utente.cognome.charAt(0)}`.toUpperCase()
-
   return (
     <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-inverse-primary/50 via-surface-card to-surface-deep p-space-lg shadow-xl">
       <div className="flex flex-col gap-space-md">
@@ -93,17 +89,7 @@ function Riepilogo({ utente }: { utente: UtenteResponse }) {
           </span>
         </span>
 
-        <div className="flex items-center gap-space-md">
-          {avatar ? (
-            <img src={avatar} alt="" className="size-20 shrink-0 rounded-full object-cover ring-2 ring-primary-container" />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="flex size-20 shrink-0 items-center justify-center rounded-full bg-primary font-headline-md text-headline-md text-on-primary ring-2 ring-primary-container"
-            >
-              {iniziali}
-            </span>
-          )}
+        <ImmagineProfilo utente={utente}>
           <div className="flex min-w-0 flex-col gap-1">
             <p className="truncate font-headline-md text-headline-md text-on-surface">
               {utente.nome} {utente.cognome}
@@ -117,7 +103,7 @@ function Riepilogo({ utente }: { utente: UtenteResponse }) {
               {NOME_RUOLO[utente.ruolo]}
             </span>
           </div>
-        </div>
+        </ImmagineProfilo>
       </div>
     </div>
   )
