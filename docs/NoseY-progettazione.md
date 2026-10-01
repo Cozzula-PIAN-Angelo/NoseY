@@ -116,11 +116,9 @@ Documento unico di progettazione del backend: convenzioni, endpoint REST, WebSoc
 - Flusso:
     1. controlli: prima il file (presenza, dimensione, tipo: fanno parte della validazione),
        poi permessi, stato e limiti
-    2. upload su Cloudinary FUORI dalla transazione (una chiamata lenta non deve tenere occupata
-       una connessione al database)
-    3. transazione breve: lock sull'evento, si ricontrollano stato e limiti, si salva la riga
-    se il passo 3 fallisce, il file appena caricato si cancella
-- Nelle rimozioni il file si cancella dallo storage DOPO il commit
+    2. transazione breve: lock sull'evento, si ricontrollano stato e limiti, si salva la riga
+       con i byte dell'immagine (decisione 4: stanno nel database, nessun upload esterno)
+- Nelle rimozioni i byte spariscono con la riga, nella stessa transazione
 ```
 
 ### Stato dell'evento
@@ -155,7 +153,7 @@ Eccezione: RimuoviFotoModerazione vale anche su eventi conclusi o annullati
 409  conflitto con lo stato attuale (duplicato, evento concluso o annullato, limite raggiunto)
 429  troppe richieste (vedi Limiti)
 500  errore inatteso (codice ERRORE_INTERNO)
-502  servizio esterno non disponibile (Cloudinary, provider AI)
+502  servizio esterno non disponibile (provider AI)
 ```
 
 ### ErroreResponse
@@ -181,7 +179,7 @@ Catalogo completo dei codici:
 | | CONFLITTO | 409 | vincolo del database violato, senza un codice più preciso |
 | | TROPPE_RICHIESTE | 429 | superato un limite di frequenza (anche sul WebSocket) |
 | | ERRORE_INTERNO | 500 | errore inatteso |
-| | SERVIZIO_ESTERNO | 502 | Cloudinary o provider AI non disponibili |
+| | SERVIZIO_ESTERNO | 502 | Provider AI non disponibile |
 | Auth | EMAIL_GIA_REGISTRATA | 409 | registrazione con un'email già verificata, o di un account sospeso |
 | | GIA_VERIFICATO | 409 | verifica di un account già verificato |
 | | CODICE_NON_VALIDO | 400 | codice errato, o account o codice inesistente |
@@ -1619,7 +1617,7 @@ Render (piano gratuito)
     24 ore; un orario fisso (cron) potrebbe non capitare mai mentre il servizio è sveglio.
   - Le connessioni WebSocket cadono a ogni sospensione o deploy: il frontend si riconnette.
   - SMTP bloccato: in produzione solo Brevo.
-  - Filesystem effimero: i file vanno su Cloudinary.
+  - Filesystem effimero: le immagini stanno nel database (decisione 4), non su file.
 
 Schema
   - ddl-auto=update non cambia i tipi, non rinomina né toglie colonne e di norma non aggiunge valori
@@ -1640,6 +1638,7 @@ Frontend
   - controllo di tipo e dimensione dei file prima dell'upload
 
 Variabili d'ambiente (nomi indicativi, oltre a quelle del database già presenti nel template)
-  JWT_SECRET · JWT_DURATA · FRONTEND_URL · CLOUDINARY_URL · AI_API_KEY · BREVO_API_KEY · MAIL_FROM
-  SUPERADMIN_EMAIL · in locale anche MAIL_USERNAME e MAIL_PASSWORD (password per le app di Gmail)
+  JWT_SECRET · JWT_DURATA · ALLOWED_ORIGIN (CORS e handshake /ws) · GEMINI_API_KEY (decisione 18)
+  Previste ma non ancora implementate: BREVO_API_KEY · MAIL_FROM · SUPERADMIN_EMAIL
+  In locale anche MAIL_USERNAME e MAIL_PASSWORD (password per le app di Gmail)
 ```
