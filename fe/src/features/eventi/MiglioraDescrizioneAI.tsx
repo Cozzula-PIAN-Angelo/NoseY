@@ -3,7 +3,7 @@ import { Button, Icon, useAvviso } from '@/components/ui'
 import { urlImmagine } from '@/lib/api'
 import { cx } from '@/lib/cx'
 import type { FotoResponse, Uuid } from '@/types/api'
-import { useMiglioraDescrizioneMutation } from './apiEventi'
+import { useMiglioraDescrizioneMutation, useModificaEventoMutation } from './apiEventi'
 
 type MiglioraDescrizioneAIProps = {
   eventoId: Uuid
@@ -11,6 +11,8 @@ type MiglioraDescrizioneAIProps = {
   foto: FotoResponse[]
   /** Il testo del campo Descrizione, anche se non ancora salvato */
   descrizione: string
+  /** Sostituisce il testo del campo dopo che la proposta e' stata salvata */
+  onAccettata: (testo: string) => void
 }
 
 // Descrizione migliorata con l'AI (FE1-12), nella modifica dell'evento sotto il campo Descrizione.
@@ -18,11 +20,13 @@ type MiglioraDescrizioneAIProps = {
 // salva (progettazione v4, sezione 3). Passi:
 //   1. scelta della foto, di partenza la copertina
 //   2. invio del testo del campo, anche se non ancora salvato
-export function MiglioraDescrizioneAI({ eventoId, foto, descrizione }: MiglioraDescrizioneAIProps) {
+//   3. proposta accanto al testo inviato: "Usa questa" la salva subito (PATCH { descrizione }), "Scarta"
+export function MiglioraDescrizioneAI({ eventoId, foto, descrizione, onAccettata }: MiglioraDescrizioneAIProps) {
   const [fotoScelta, setFotoScelta] = useState<string>()
   // Testo inviato e proposta ricevuta: l'originale resta quello inviato anche se poi si modifica il campo
   const [proposta, setProposta] = useState<{ originale: string; testo: string } | null>(null)
   const [migliora, { isLoading: inAttesa }] = useMiglioraDescrizioneMutation()
+  const [modifica, { isLoading: salvataggio }] = useModificaEventoMutation()
   const avviso = useAvviso()
   const nomeGruppo = useId()
   const idTitolo = useId()
@@ -36,6 +40,18 @@ export function MiglioraDescrizioneAI({ eventoId, foto, descrizione }: MiglioraD
     try {
       const { descrizioneProposta } = await migliora({ id: eventoId, dati: { fotoId: scelta.id, descrizione: testo } }).unwrap()
       setProposta({ originale: testo, testo: descrizioneProposta })
+    } catch (err) {
+      avviso.erroreApi(err)
+    }
+  }
+
+  async function usaProposta() {
+    if (!proposta) return
+    try {
+      await modifica({ id: eventoId, dati: { descrizione: proposta.testo } }).unwrap()
+      onAccettata(proposta.testo)
+      setProposta(null)
+      avviso.successo('Descrizione aggiornata', 'La proposta è ora la descrizione dell’evento.')
     } catch (err) {
       avviso.erroreApi(err)
     }
@@ -58,7 +74,7 @@ export function MiglioraDescrizioneAI({ eventoId, foto, descrizione }: MiglioraD
         </p>
       ) : (
         <>
-          <fieldset className="flex flex-col gap-space-xs" disabled={inAttesa}>
+          <fieldset className="flex flex-col gap-space-xs" disabled={inAttesa || salvataggio}>
             <legend className="mb-space-xs font-body-sm text-body-sm text-on-surface-variant">
               Scegli la foto che l'AI guarderà insieme al testo:
             </legend>
@@ -100,7 +116,7 @@ export function MiglioraDescrizioneAI({ eventoId, foto, descrizione }: MiglioraD
               size="sm"
               icona="auto_awesome"
               onClick={chiediProposta}
-              disabled={!testo}
+              disabled={!testo || salvataggio}
               inCorso={inAttesa}
             >
               {proposta ? 'Chiedi un’altra proposta' : 'Proponi una descrizione'}
@@ -111,13 +127,32 @@ export function MiglioraDescrizioneAI({ eventoId, foto, descrizione }: MiglioraD
           </div>
 
           {proposta && (
-            <figure className="flex flex-col gap-1 rounded-lg bg-surface-container p-space-sm ring-1 ring-accent-gold-piercing/40">
-              <figcaption className="flex items-center gap-1 font-label-code-status text-label-code-status uppercase text-accent-gold-piercing">
-                <Icon nome="auto_awesome" size={14} />
-                Proposta dell'AI
-              </figcaption>
-              <p className="whitespace-pre-line font-body-sm text-body-sm text-on-surface">{proposta.testo}</p>
-            </figure>
+            <div className="flex flex-col gap-space-sm">
+              <div className="grid gap-space-sm md:grid-cols-2">
+                <figure className="flex flex-col gap-1 rounded-lg bg-surface-container p-space-sm">
+                  <figcaption className="font-label-code-status text-label-code-status uppercase text-outline">Il tuo testo</figcaption>
+                  <p className="whitespace-pre-line font-body-sm text-body-sm text-on-surface-variant">{proposta.originale}</p>
+                </figure>
+                <figure className="flex flex-col gap-1 rounded-lg bg-surface-container p-space-sm ring-1 ring-accent-gold-piercing/40">
+                  <figcaption className="flex items-center gap-1 font-label-code-status text-label-code-status uppercase text-accent-gold-piercing">
+                    <Icon nome="auto_awesome" size={14} />
+                    Proposta dell'AI
+                  </figcaption>
+                  <p className="whitespace-pre-line font-body-sm text-body-sm text-on-surface">{proposta.testo}</p>
+                </figure>
+              </div>
+              <p className="font-body-sm text-body-sm text-outline">
+                «Usa questa» salva subito la descrizione: i partecipanti ricevono la notifica della modifica.
+              </p>
+              <div className="flex flex-wrap gap-space-sm">
+                <Button size="sm" icona="check" onClick={usaProposta} inCorso={salvataggio}>
+                  Usa questa
+                </Button>
+                <Button variant="ghost" size="sm" icona="close" onClick={() => setProposta(null)} disabled={salvataggio}>
+                  Scarta
+                </Button>
+              </div>
+            </div>
           )}
         </>
       )}
