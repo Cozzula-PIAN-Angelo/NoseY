@@ -104,6 +104,38 @@ public enum ParteEvento { TITOLO, DESCRIZIONE, DATE, LUOGO, ARTISTI, MAPPA_INTER
   salvano ma non partono live.
 - Le notifiche delle chat (NOTIFICA_CHAT) non passano da qui: upsert nella card della chat.
 
+## WebSocket STOMP (`config`, `auth`, `common`) — implementa BE2-09
+
+Configurazione e sicurezza del WebSocket (progettazione v4, sezione 11). Decisione 11.
+
+- Connessione: `ws(s)://<backend>/ws`, WebSocket nativo (niente SockJS), header del CONNECT
+  `Authorization: Bearer <token>`. Origini ammesse = `app.cors.allowed-origins` (`ALLOWED_ORIGIN`).
+- CONNECT con token mancante, scaduto o revocato, o utente non ATTIVO → frame ERROR con
+  header `message` = `TOKEN_NON_VALIDO`, corpo `{ codice, messaggio }`, e connessione chiusa.
+- Ammessi solo SEND verso `/app/**` e SUBSCRIBE verso `/user/queue/messages`,
+  `/user/queue/notifications`, `/user/queue/errors`. Ogni altro SEND o SUBSCRIBE viene scartato,
+  con `{ codice: ACCESSO_NEGATO, messaggio }` su `/user/queue/errors`; la connessione resta aperta.
+
+Per chi scrive i `@MessageMapping` e i push (BE2-14):
+
+```java
+// Destinazione del SEND: /app/chats/{chatId}/send (prefisso /app tolto)
+@MessageMapping("/chats/{chatId}/send")
+public void invia(@DestinationVariable UUID chatId, @Valid @Payload InviaMessaggioRequest req, Principal principal) {
+    UtenteAutenticato utente = (UtenteAutenticato) principal; // id, ruolo, jti, scadenza del token
+    ...
+}
+
+// Push a un utente (dopo il commit): nome dell'utente = il suo id
+messagingTemplate.convertAndSendToUser(utenteId.toString(), "/queue/messages", messaggioResponse);
+```
+
+- Il Principal della sessione e' l'`UtenteAutenticato` del CONNECT: jti e scadenza per i
+  controlli a ogni SEND si leggono da li', non dagli attributi di sessione.
+- Errori dei `@MessageMapping`: basta lanciare un'`ApplicazioneException`. `GestoreErroriWebSocket`
+  la manda come `{ codice, messaggio }` su `/user/queue/errors` della sola sessione che ha fatto
+  il SEND; la validazione del payload diventa `VALIDAZIONE`, il resto `ERRORE_INTERNO`.
+
 ## Ancora da fare (TEAM-02)
 
 - Backend: controllo «ha il ticket o e' il proprietario» e calcolo di `statoAmicizia` (lato social).

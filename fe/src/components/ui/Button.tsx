@@ -28,6 +28,25 @@ const dimensioni: Record<ButtonSize, string> = {
   lg: 'px-space-lg py-3 gap-space-xs rounded-xl',
 }
 
+/**
+ * Classi del pulsante, da usare anche sui link che devono sembrare pulsanti:
+ *   <a href="/tickets" className={stilePulsante({ variant: 'secondary' })}>I miei ticket</a>
+ */
+export function stilePulsante({
+  variant = 'primary',
+  size = 'md',
+  pieno = false,
+}: { variant?: ButtonVariant; size?: ButtonSize; pieno?: boolean } = {}): string {
+  return cx(
+    'inline-flex items-center justify-center rounded-lg font-label-btn text-label-btn transition-all cursor-pointer',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas',
+    'active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
+    varianti[variant],
+    dimensioni[size],
+    pieno && 'w-full',
+  )
+}
+
 type ButtonProps = ComponentProps<'button'> & {
   variant?: ButtonVariant
   size?: ButtonSize
@@ -59,15 +78,7 @@ export function Button({
       type={type}
       disabled={disabled || inCorso}
       aria-busy={inCorso || undefined}
-      className={cx(
-        'inline-flex items-center justify-center rounded-lg font-label-btn text-label-btn transition-all cursor-pointer',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container focus-visible:ring-offset-2 focus-visible:ring-offset-surface-canvas',
-        'active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
-        varianti[variant],
-        dimensioni[size],
-        pieno && 'w-full',
-        className,
-      )}
+      className={cx(stilePulsante({ variant, size, pieno }), className)}
       {...props}
     >
       {inCorso ? (

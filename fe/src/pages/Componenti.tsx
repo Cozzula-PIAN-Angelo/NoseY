@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
+import DettaglioEvento from '@/pages/DettaglioEvento'
+import MappaEventi from '@/pages/MappaEventi'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
@@ -40,6 +42,18 @@ function markerDiProva(
   ]
 }
 
+
+// Eventi dei dati finti per l'anteprima del dettaglio: i tre stati del "Fatto quando" di FE1-05
+const eventiDiProva = [
+  { id: 'e-04', etichetta: 'Programmato' },
+  { id: 'e-02', etichetta: 'Programmato (sei iscritta)' },
+  { id: 'e-05', etichetta: 'Programmato (sei proprietaria, senza foto)' },
+  { id: 'e-01', etichetta: 'In corso (sei iscritta)' },
+  { id: 'e-03', etichetta: 'In corso (sei proprietaria)' },
+  { id: 'e-07', etichetta: 'Concluso' },
+  { id: 'e-08', etichetta: 'Annullato' },
+  { id: 'inesistente', etichetta: 'Inesistente (404)' },
+]
 
 const statiEvento = Object.keys(STILE_STATO) as StatoEvento[]
 const tipiPoiMappa = Object.keys(STILE_POI) as TipoPoi[]
@@ -133,6 +147,7 @@ export default function Componenti() {
   const [paginaEventi, setPaginaEventi] = useState(0)
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
   const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
+  const [eventoAnteprima, setEventoAnteprima] = useState('e-04')
   const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
   // Eventi da GET /api/events (FE1-03): in sviluppo rispondono i dati finti MSW
   const { data: eventiMappa = [], error: erroreEventi } = useListaEventiQuery()
@@ -162,6 +177,33 @@ export default function Componenti() {
         </p>
         <h1 className="font-headline-lg text-headline-lg">Catalogo componenti</h1>
       </header>
+
+      {/* Anteprima delle pagine FE1 finche' non c'e' il router (FE2-01) */}
+      <section className="rounded-xl border border-dashed border-outline-variant p-space-md">
+        <p className="mb-space-md font-label-code-status text-label-code-status uppercase text-outline">
+          Anteprima pagina /map (FE1-04)
+        </p>
+        <MappaEventi />
+      </section>
+
+      <section className="flex flex-col gap-space-md rounded-xl border border-dashed border-outline-variant p-space-md">
+        <p className="font-label-code-status text-label-code-status uppercase text-outline">
+          Anteprima pagina /events/:id (FE1-05)
+        </p>
+        <div className="flex flex-wrap gap-space-xs">
+          {eventiDiProva.map((e) => (
+            <Button
+              key={e.id}
+              size="sm"
+              variant={eventoAnteprima === e.id ? 'primary' : 'secondary'}
+              onClick={() => setEventoAnteprima(e.id)}
+            >
+              {e.etichetta}
+            </Button>
+          ))}
+        </div>
+        <DettaglioEvento id={eventoAnteprima} />
+      </section>
 
       <Sezione titolo="Pulsanti">
         <div className="flex flex-wrap items-center gap-space-sm">
