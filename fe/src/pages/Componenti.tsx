@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
-import { accesso, selezionaUtente, uscita } from '@/store/sessioneSlice'
+import { useLoginMutation } from '@/features/utenti/apiUtenti'
+import { selezionaUtente, uscita } from '@/store/sessioneSlice'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
@@ -116,30 +117,25 @@ const registrazioneRifiutata = erroreFinto('VALIDAZIONE', 400, {
   password: 'La lunghezza deve essere compresa tra 8 e 72',
 })
 
-// Solo in sviluppo: entra con l'utente "loggato" dei dati finti (mocks/dati.ts), per provare
-// le pagine protette (es. /events/new) finche' non c'e' la pagina di login (FE2-05).
-// Il token e' finto: con il backend vero (VITE_DATI_FINTI=false) le chiamate rispondono 401.
+// Solo in sviluppo: entra con l'account di prova dei dati finti (mocks/datiSocial.ts) facendo un
+// vero login (POST /api/auth/login), cosi' il token e' valido anche per il controllo del profilo
+// all'avvio (ControlloSessione, FE2-02). Serve a provare le pagine protette senza registrarsi.
+// Con il backend vero (VITE_DATI_FINTI=false) quell'account non esiste: si usa la pagina di login.
+const ACCOUNT_DI_PROVA = { email: 'valentina@nosey.it', password: 'password123' }
+
 function SessioneDiProva() {
   const dispatch = useAppDispatch()
   const utente = useAppSelector(selezionaUtente)
+  const [login, { isLoading }] = useLoginMutation()
+  const avviso = useAvviso()
 
-  function entra() {
-    dispatch(
-      accesso({
-        token: 'token-dei-dati-finti',
-        scadenza: new Date(Date.now() + 24 * 3_600_000).toISOString(),
-        utente: {
-          id: 'u-0000-valentina',
-          email: 'valentina@esempio.it',
-          nome: 'Valentina',
-          cognome: 'Ferro',
-          indirizzo: null,
-          dataNascita: null,
-          immagineProfilo: null,
-          ruolo: 'USER',
-        },
-      }),
-    )
+  async function entra() {
+    try {
+      // Il login salva gia' la sessione (apiUtenti di FE2-03)
+      await login(ACCOUNT_DI_PROVA).unwrap()
+    } catch (e) {
+      avviso.erroreApi(e)
+    }
   }
 
   return (
@@ -153,7 +149,7 @@ function SessioneDiProva() {
           Esci
         </Button>
       ) : (
-        <Button size="sm" variant="gold" icona="login" onClick={entra}>
+        <Button size="sm" variant="gold" icona="login" inCorso={isLoading} onClick={entra}>
           Accedi con l'utente finto
         </Button>
       )}
