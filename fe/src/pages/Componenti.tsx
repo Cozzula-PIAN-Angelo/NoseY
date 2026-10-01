@@ -162,11 +162,11 @@ function SessioneDiProva() {
 // (mocks/dati.ts, viste da Valentina). Evento in comune e-03: lo organizza Valentina e Dario ha il
 // ticket, quindi la richiesta a Dario si puo' inviare davvero
 const amicizieDiProva: Omit<PulsanteAmiciziaProps, 'eventoId'>[] = [
-  { utente: { id: 'u-0004-dario', nome: 'Dario', cognome: 'Lucidi', immagineProfilo: null, attivo: true }, statoAmicizia: 'NESSUNA', amiciziaId: null },
-  { utente: { id: 'u-0002-matteo', nome: 'Matteo', cognome: 'Valenti', immagineProfilo: null, attivo: true }, statoAmicizia: 'INVIATA', amiciziaId: 'am-02' },
-  { utente: { id: 'u-0003-elena', nome: 'Elena', cognome: 'Rostagno', immagineProfilo: null, attivo: true }, statoAmicizia: 'RICEVUTA', amiciziaId: 'am-03' },
-  { utente: { id: 'u-0001-sofia', nome: 'Sofia', cognome: 'Moretti', immagineProfilo: null, attivo: true }, statoAmicizia: 'AMICI', amiciziaId: 'am-01' },
-  { utente: { id: 'u-0007-sospeso', nome: 'Utente', cognome: 'Sospeso', immagineProfilo: null, attivo: false }, statoAmicizia: 'NON_DISPONIBILE', amiciziaId: null },
+  { utente: { id: 'u-0004-dario', nome: 'Dario', cognome: 'Lucidi', immagineProfilo: null, attivo: true }, statoAmicizia: 'NESSUNA', amiciziaId: null, chatId: null },
+  { utente: { id: 'u-0002-matteo', nome: 'Matteo', cognome: 'Valenti', immagineProfilo: null, attivo: true }, statoAmicizia: 'INVIATA', amiciziaId: 'am-02', chatId: null },
+  { utente: { id: 'u-0003-elena', nome: 'Elena', cognome: 'Rostagno', immagineProfilo: null, attivo: true }, statoAmicizia: 'RICEVUTA', amiciziaId: 'am-03', chatId: null },
+  { utente: { id: 'u-0001-sofia', nome: 'Sofia', cognome: 'Moretti', immagineProfilo: null, attivo: true }, statoAmicizia: 'AMICI', amiciziaId: 'am-01', chatId: 'c-01' },
+  { utente: { id: 'u-0007-sospeso', nome: 'Utente', cognome: 'Sospeso', immagineProfilo: null, attivo: false }, statoAmicizia: 'NON_DISPONIBILE', amiciziaId: null, chatId: null },
 ]
 
 function Sezione({ titolo, children }: { titolo: string; children: ReactNode }) {

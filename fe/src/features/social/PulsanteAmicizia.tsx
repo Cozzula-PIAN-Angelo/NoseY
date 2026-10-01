@@ -1,4 +1,5 @@
-import { Button, useAvviso } from '@/components/ui'
+import { Link } from 'react-router'
+import { Button, Icon, stilePulsante, useAvviso } from '@/components/ui'
 import type { StatoAmicizia, UtentePubblicoResponse, Uuid } from '@/types/api'
 import {
   useAccettaAmiciziaMutation,
@@ -16,6 +17,8 @@ export type PulsanteAmiciziaProps = {
   amiciziaId: Uuid | null
   /** Evento in comune: la richiesta parte sempre da un evento (RichiediAmicizia) */
   eventoId: Uuid
+  /** Chat della coppia (decisione 20): con AMICI c'e' sempre, apre /chat/:chatId */
+  chatId: Uuid | null
 }
 
 /** Stato scritto accanto al pulsante, come nella colonna "Partecipanti" di Stitch */
@@ -30,7 +33,7 @@ const ETICHETTE: Partial<Record<StatoAmicizia, { testo: string; colore: string }
 //   NESSUNA "aggiungi" · INVIATA "in attesa" + "ritira" · RICEVUTA "accetta" / "rifiuta"
 //   AMICI "chat" · NON_DISPONIBILE nessun pulsante
 // Dopo ogni azione apiSocial ricarica le liste dei partecipanti: lo stato nuovo arriva da li'.
-export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId }: PulsanteAmiciziaProps) {
+export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId, chatId }: PulsanteAmiciziaProps) {
   const [richiedi, { isLoading: richiesta }] = useRichiediAmiciziaMutation()
   const [ritira, { isLoading: ritiro }] = useRitiraRichiestaMutation()
   const [accetta, { isLoading: accettazione }] = useAccettaAmiciziaMutation()
@@ -85,6 +88,7 @@ export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId }
     )
   }
 
+  // NON_DISPONIBILE: nessun pulsante e nessuno stato scritto
   if (!etichetta) return null
 
   return (
@@ -125,6 +129,16 @@ export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId }
             Rifiuta
           </Button>
         </>
+      )}
+      {statoAmicizia === 'AMICI' && (
+        <Link
+          to={chatId ? `/chat/${chatId}` : '/chat'}
+          className={stilePulsante({ variant: 'secondary', size: 'sm' })}
+          aria-label={`Apri la chat con ${nome}`}
+        >
+          <Icon nome="chat" size={16} />
+          Chat
+        </Link>
       )}
     </div>
   )
