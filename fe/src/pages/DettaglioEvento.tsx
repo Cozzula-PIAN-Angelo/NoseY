@@ -1,14 +1,41 @@
+import { BadgeStato } from '@/components/eventi'
 import { Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { urlImmagine } from '@/lib/api'
 import { leggiErrore } from '@/lib/errori'
 import { intervallo } from '@/lib/formato'
-import type { UtentePubblicoResponse, Uuid } from '@/types/api'
+import type { StatoEvento, UtentePubblicoResponse, Uuid } from '@/types/api'
 
 // Pagina dell'evento (FE1-05), rotta /events/:id (docs/interfacce.md). Pubblica: con il login
 // il backend aggiunge sonoProprietario e sonoIscritto. Finche' non c'e' il router (FE2-01)
 // l'id arriva come prop; poi sara' useParams().
+
+/** Avviso in cima alla pagina per gli eventi annullati o conclusi */
+function AvvisoStato({ stato, motivo }: { stato: StatoEvento; motivo: string | null }) {
+  if (stato === 'ANNULLATO') {
+    return (
+      <div role="status" className="flex items-start gap-space-sm rounded-xl bg-status-annullato/10 p-space-md">
+        <Icon nome="event_busy" size={24} className="text-status-annullato" />
+        <div className="flex flex-col gap-0.5">
+          <p className="font-label-btn text-label-btn text-on-surface">Questo evento è stato annullato</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            {motivo ? `Motivo: ${motivo}` : "L'organizzatore non ha indicato un motivo."}
+          </p>
+        </div>
+      </div>
+    )
+  }
+  if (stato === 'CONCLUSO') {
+    return (
+      <p role="status" className="flex items-center gap-space-xs rounded-xl bg-surface-card p-space-md font-body-md text-body-md text-on-surface-variant">
+        <Icon nome="history" size={20} className="text-outline" />
+        Questo evento è concluso.
+      </p>
+    )
+  }
+  return null
+}
 
 function Proprietario({ utente }: { utente: UtentePubblicoResponse }) {
   const avatar = urlImmagine(utente.immagineProfilo)
@@ -51,32 +78,36 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
   if (!evento) return null
 
   return (
-    <article className="grid gap-space-lg lg:grid-cols-[1fr_22rem]">
-      <div className="flex min-w-0 flex-col gap-space-lg">
-        <GalleriaFoto key={evento.id} foto={evento.foto} titoloEvento={evento.titolo} />
+    <article className="flex flex-col gap-space-lg">
+      <AvvisoStato stato={evento.stato} motivo={evento.motivoAnnullamento} />
+      <div className="grid gap-space-lg lg:grid-cols-[1fr_22rem]">
+        <div className="flex min-w-0 flex-col gap-space-lg">
+          <GalleriaFoto key={evento.id} foto={evento.foto} titoloEvento={evento.titolo} />
 
-        <section aria-labelledby="titolo-descrizione" className="flex flex-col gap-space-sm">
-          <h2 id="titolo-descrizione" className="font-headline-sm text-headline-sm">
-            Descrizione
-          </h2>
-          {evento.descrizione ? (
-            <p className="whitespace-pre-line font-body-lg text-body-lg text-on-surface-variant">{evento.descrizione}</p>
-          ) : (
-            <p className="font-body-md text-body-md text-outline">L'organizzatore non ha ancora scritto una descrizione.</p>
-          )}
-        </section>
-      </div>
-
-      <aside className="flex flex-col gap-space-md lg:sticky lg:top-space-lg lg:self-start">
-        <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg">
-          <h1 className="font-headline-lg-mobile text-headline-lg-mobile">{evento.titolo}</h1>
-          <p className="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
-            <Icon nome="event" size={20} className="mt-0.5 text-secondary" />
-            {intervallo(evento.dataEvento, evento.dataFine)}
-          </p>
-          <Proprietario utente={evento.proprietario} />
+          <section aria-labelledby="titolo-descrizione" className="flex flex-col gap-space-sm">
+            <h2 id="titolo-descrizione" className="font-headline-sm text-headline-sm">
+              Descrizione
+            </h2>
+            {evento.descrizione ? (
+              <p className="whitespace-pre-line font-body-lg text-body-lg text-on-surface-variant">{evento.descrizione}</p>
+            ) : (
+              <p className="font-body-md text-body-md text-outline">L'organizzatore non ha ancora scritto una descrizione.</p>
+            )}
+          </section>
         </div>
-      </aside>
+
+        <aside className="flex flex-col gap-space-md lg:sticky lg:top-space-lg lg:self-start">
+          <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg">
+            <BadgeStato stato={evento.stato} className="self-start" />
+            <h1 className="font-headline-lg-mobile text-headline-lg-mobile">{evento.titolo}</h1>
+            <p className="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
+              <Icon nome="event" size={20} className="mt-0.5 text-secondary" />
+              {intervallo(evento.dataEvento, evento.dataFine)}
+            </p>
+            <Proprietario utente={evento.proprietario} />
+          </div>
+        </aside>
+      </div>
     </article>
   )
 }
