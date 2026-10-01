@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router'
 import { Avatar, Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useListaPartecipantiQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
+import { PulsanteAmicizia } from '@/features/social/PulsanteAmicizia'
 import { leggiErrore } from '@/lib/errori'
 import { cx } from '@/lib/cx'
 import type { PartecipanteResponse } from '@/types/api'
@@ -8,13 +9,14 @@ import type { PartecipanteResponse } from '@/types/api'
 // Lista dei partecipanti (FE1-14), rotta /events/:id/participants (solo con il login), come la
 // colonna "Partecipanti" della schermata Stitch "Community, Amicizie & Chat Live". La vede chi ha un
 // ticket o chi organizza l'evento. Il backend mette l'organizzatore in cima ed esclude chi guarda.
+// In ogni riga il pulsante amicizia di FE2-09: la richiesta parte da questo evento in comune.
 
-function RigaPartecipante({ partecipante }: { partecipante: PartecipanteResponse }) {
-  const { utente, proprietario } = partecipante
+function RigaPartecipante({ partecipante, eventoId }: { partecipante: PartecipanteResponse; eventoId: string }) {
+  const { utente, proprietario, statoAmicizia, amiciziaId, chatId } = partecipante
   return (
     <li
       className={cx(
-        'flex items-center justify-between gap-space-sm rounded-lg p-space-sm',
+        'flex flex-wrap items-center justify-between gap-space-sm rounded-lg p-space-sm',
         proprietario ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-surface-container-low',
       )}
     >
@@ -35,6 +37,7 @@ function RigaPartecipante({ partecipante }: { partecipante: PartecipanteResponse
           )}
         </div>
       </div>
+      <PulsanteAmicizia utente={utente} statoAmicizia={statoAmicizia} amiciziaId={amiciziaId} chatId={chatId} eventoId={eventoId} />
     </li>
   )
 }
@@ -66,7 +69,7 @@ export default function PartecipantiEvento() {
     contenuto = (
       <ul className="flex flex-col gap-space-sm">
         {partecipanti.map((p) => (
-          <RigaPartecipante key={p.utente.id} partecipante={p} />
+          <RigaPartecipante key={p.utente.id} partecipante={p} eventoId={id} />
         ))}
       </ul>
     )
