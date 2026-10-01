@@ -5,6 +5,7 @@ import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
 import { AzioniEvento } from '@/features/eventi/AzioniEvento'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { MappaInterna } from '@/features/eventi/MappaInterna'
+import { useIscrizione } from '@/features/eventi/useIscrizione'
 import { urlImmagine } from '@/lib/api'
 import { leggiErrore } from '@/lib/errori'
 import { intervallo } from '@/lib/formato'
@@ -65,6 +66,7 @@ function Proprietario({ utente }: { utente: UtentePubblicoResponse }) {
 export default function DettaglioEvento({ id }: { id: Uuid }) {
   // currentData (non data): passando a un altro evento non si vede, nemmeno per un attimo, quello di prima
   const { currentData: evento, isFetching, error, refetch } = useVediEventoQuery(id)
+  const iscrizione = useIscrizione(id)
 
   if (!evento && isFetching) return <Caricamento riquadro testo="Carico l'evento..." />
   if (error) {
@@ -124,7 +126,11 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
             <Proprietario utente={evento.proprietario} />
           </div>
           <div className="rounded-2xl bg-surface-card p-space-lg">
-            <AzioniEvento evento={evento} />
+            <AzioniEvento
+              evento={evento}
+              onIscriviti={iscrizione.iscrivi}
+              inCorso={iscrizione.inCorso ? 'iscrizione' : undefined}
+            />
           </div>
         </aside>
       </div>
