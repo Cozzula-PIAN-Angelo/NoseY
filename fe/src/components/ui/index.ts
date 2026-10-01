@@ -2,6 +2,7 @@
 // Import: import { Button, TextField } from '@/components/ui'
 export { Avvisi, useAvviso } from './Avvisi'
 export { Button, stilePulsante, type ButtonSize, type ButtonVariant } from './Button'
+export { CampoPassword } from './CampoPassword'
 export { Caricamento, Scheletro } from './Caricamento'
 export { ConfirmDialog } from './ConfirmDialog'
 export { DateTimeField, valoreDataOra } from './DateTimeField'
