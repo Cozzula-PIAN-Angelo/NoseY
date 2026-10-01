@@ -37,8 +37,8 @@ export const router = createBrowserRouter([
       { path: 'events/:id', element: <DettaglioEvento /> },
       { path: 'artists', element: <PaginaProvvisoria titolo="Catalogo artisti" card="FE1-11" /> },
       { path: 'artists/:artistaId', element: <PaginaProvvisoria titolo="Scheda artista" card="FE1-11" /> },
-      // Catalogo dei componenti comuni (FE1-01): non e' nella barra di navigazione
-      { path: 'componenti', element: <Componenti /> },
+      // Catalogo dei componenti comuni (FE1-01), con dati di prova: solo in sviluppo, non in produzione
+      ...(import.meta.env.DEV ? [{ path: 'componenti', element: <Componenti /> }] : []),
 
       // ---------- Login ----------
       {

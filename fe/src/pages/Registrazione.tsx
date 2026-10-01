@@ -79,7 +79,7 @@ export default function Registrazione() {
             <span className="flex w-max items-center gap-space-xs rounded-full bg-surface-glass px-space-sm py-1 backdrop-blur-md">
               <Icon nome="auto_awesome" size={16} className="text-accent-gold-piercing" />
               <span className="font-label-code-status text-label-code-status uppercase tracking-wider text-accent-gold-piercing">
-                Benvenuto su NoseY
+                Ti diamo il benvenuto
               </span>
             </span>
             <div className="flex flex-col gap-1">

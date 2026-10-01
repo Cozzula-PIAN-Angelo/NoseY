@@ -1,5 +1,6 @@
-// Footer di tutte le pagine, copiato dalle schermate Stitch (stesse classi e testi).
-// I link a privacy e termini non hanno ancora una pagina: restano testo finche' non ci sara'.
+// Footer di tutte le pagine, dalle schermate Stitch (stesse classi). Tolte le scritte tecniche di Stitch
+// («WebSocket STOMP Attivo» sempre verde, «AES-256 Passcode Pass» inventata) e «Radar Sicurezza»,
+// che non esiste (FE1-17): solo dati veri. Privacy e termini non hanno ancora una pagina: restano testo.
 export function PiePagina() {
   return (
     <footer className="mt-space-xl w-full bg-surface-container-lowest">
@@ -15,20 +16,6 @@ export function PiePagina() {
               radar-powered.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-space-lg">
-            <div className="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant">
-              <span className="h-2 w-2 rounded-full bg-status-in-corso" />
-              WebSocket STOMP Attivo
-            </div>
-            <div className="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant">
-              <span className="h-2 w-2 rounded-full bg-poi-uscita" />
-              Immagini nel database
-            </div>
-            <div className="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant">
-              <span className="h-2 w-2 rounded-full bg-status-programmato" />
-              AES-256 Passcode Pass
-            </div>
-          </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-space-md pt-space-lg sm:flex-row">
           <p className="font-body-sm text-body-sm text-on-surface-variant">
@@ -37,7 +24,6 @@ export function PiePagina() {
           <div className="flex items-center gap-space-md font-body-sm text-body-sm text-on-surface-variant">
             <span>Privacy Policy</span>
             <span>Termini</span>
-            <span>Radar Sicurezza</span>
           </div>
         </div>
       </div>
