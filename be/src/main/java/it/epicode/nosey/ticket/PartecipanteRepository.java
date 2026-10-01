@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PartecipanteRepository extends JpaRepository<Partecipante, UUID> {
@@ -22,4 +23,7 @@ public interface PartecipanteRepository extends JpaRepository<Partecipante, UUID
 	List<Utente> trovaUtentiPerEvento(UUID eventoId);
 
 	boolean existsByEventoIdAndUtenteId(UUID eventoId, UUID utenteId);
+
+	// VediMiaPartecipazione, CancellaPartecipazione (sezione 7).
+	Optional<Partecipante> findByEventoIdAndUtenteId(UUID eventoId, UUID utenteId);
 }
