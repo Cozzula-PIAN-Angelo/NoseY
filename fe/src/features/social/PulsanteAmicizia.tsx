@@ -1,4 +1,11 @@
+import { Button, useAvviso } from '@/components/ui'
 import type { StatoAmicizia, UtentePubblicoResponse, Uuid } from '@/types/api'
+import {
+  useAccettaAmiciziaMutation,
+  useRichiediAmiciziaMutation,
+  useRifiutaAmiciziaMutation,
+  useRitiraRichiestaMutation,
+} from './apiSocial'
 
 export type PulsanteAmiciziaProps = {
   /** L'altra persona (nome per le etichette accessibili, attivo per disattivare il pulsante) */
@@ -22,14 +29,103 @@ const ETICHETTE: Partial<Record<StatoAmicizia, { testo: string; colore: string }
 // giusta per statoAmicizia (progettazione v4, sezioni 7 e 8):
 //   NESSUNA "aggiungi" · INVIATA "in attesa" + "ritira" · RICEVUTA "accetta" / "rifiuta"
 //   AMICI "chat" · NON_DISPONIBILE nessun pulsante
-// Passo 1: il componente con i suoi dati e lo stato scritto; le azioni arrivano nei passi successivi.
-export function PulsanteAmicizia({ statoAmicizia }: PulsanteAmiciziaProps) {
+// Dopo ogni azione apiSocial ricarica le liste dei partecipanti: lo stato nuovo arriva da li'.
+export function PulsanteAmicizia({ utente, statoAmicizia, amiciziaId, eventoId }: PulsanteAmiciziaProps) {
+  const [richiedi, { isLoading: richiesta }] = useRichiediAmiciziaMutation()
+  const [ritira, { isLoading: ritiro }] = useRitiraRichiestaMutation()
+  const [accetta, { isLoading: accettazione }] = useAccettaAmiciziaMutation()
+  const [rifiuta, { isLoading: rifiuto }] = useRifiutaAmiciziaMutation()
+  const avviso = useAvviso()
+  const nome = `${utente.nome} ${utente.cognome}`
+  const occupato = richiesta || ritiro || accettazione || rifiuto
   const etichetta = ETICHETTE[statoAmicizia]
+
+  async function esegui(azione: () => Promise<unknown>, riuscita: () => void) {
+    try {
+      await azione()
+      riuscita()
+    } catch (err) {
+      avviso.erroreApi(err)
+    }
+  }
+
+  const aggiungi = () =>
+    esegui(
+      () => richiedi({ riceventeId: utente.id, eventoId }).unwrap(),
+      () => avviso.successo('Richiesta inviata', `Se ${nome} accetta, potrete scrivervi in chat.`),
+    )
+
+  const ritiraRichiesta = () =>
+    amiciziaId &&
+    esegui(
+      () => ritira(amiciziaId).unwrap(),
+      () => avviso.info('Richiesta ritirata', `Potrai chiedere di nuovo l’amicizia a ${nome}.`),
+    )
+
+  const accettaRichiesta = () =>
+    amiciziaId &&
+    esegui(
+      () => accetta(amiciziaId).unwrap(),
+      () => avviso.successo('Ora siete amici', `Puoi scrivere a ${nome} in chat.`),
+    )
+
+  const rifiutaRichiesta = () =>
+    amiciziaId &&
+    esegui(
+      () => rifiuta(amiciziaId).unwrap(),
+      // Chi l'ha chiesta non lo scopre: per chi l'ha inviata resta "in attesa"
+      () => avviso.info('Richiesta rifiutata', `${nome} non riceve nessun avviso.`),
+    )
+
+  if (statoAmicizia === 'NESSUNA') {
+    return (
+      <Button size="sm" icona="person_add" onClick={aggiungi} inCorso={richiesta} aria-label={`Aggiungi ${nome} agli amici`}>
+        Aggiungi
+      </Button>
+    )
+  }
+
   if (!etichetta) return null
 
   return (
-    <div className="flex shrink-0 items-center gap-space-xs">
+    <div className="flex shrink-0 flex-wrap items-center justify-end gap-space-xs">
       <span className={`font-label-code-status text-label-code-status uppercase ${etichetta.colore}`}>{etichetta.testo}</span>
+      {statoAmicizia === 'INVIATA' && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={ritiraRichiesta}
+          inCorso={ritiro}
+          disabled={!amiciziaId}
+          aria-label={`Ritira la richiesta di amicizia a ${nome}`}
+        >
+          Ritira
+        </Button>
+      )}
+      {statoAmicizia === 'RICEVUTA' && (
+        <>
+          <Button
+            size="sm"
+            icona="check"
+            onClick={accettaRichiesta}
+            inCorso={accettazione}
+            disabled={!amiciziaId || (occupato && !accettazione)}
+            aria-label={`Accetta la richiesta di amicizia di ${nome}`}
+          >
+            Accetta
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={rifiutaRichiesta}
+            inCorso={rifiuto}
+            disabled={!amiciziaId || (occupato && !rifiuto)}
+            aria-label={`Rifiuta la richiesta di amicizia di ${nome}`}
+          >
+            Rifiuta
+          </Button>
+        </>
+      )}
     </div>
   )
 }
