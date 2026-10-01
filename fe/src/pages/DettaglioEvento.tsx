@@ -127,8 +127,10 @@ function SchedaEvento({ id }: { id: Uuid }) {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-space-md">
-          <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg">
+        {/* Da telefono (sotto lg) la colonna si "scioglie" nella griglia: titolo, azioni e ticket vanno
+            in cima, prima delle foto; gli altri riquadri restano dopo il contenuto */}
+        <aside className="flex flex-col gap-space-md max-lg:contents">
+          <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg max-lg:order-first">
             <BadgeStato stato={evento.stato} className="self-start" />
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile">{evento.titolo}</h1>
             <p className="flex items-start gap-space-xs font-body-md text-body-md text-on-surface">
@@ -137,7 +139,7 @@ function SchedaEvento({ id }: { id: Uuid }) {
             </p>
             <Proprietario utente={evento.proprietario} />
           </div>
-          <div className="rounded-2xl bg-surface-card p-space-lg">
+          <div className="rounded-2xl bg-surface-card p-space-lg max-lg:order-first">
             <AzioniEvento
               evento={evento}
               onIscriviti={iscrizione.iscrivi}
@@ -150,7 +152,7 @@ function SchedaEvento({ id }: { id: Uuid }) {
             <NotificaPartecipanti key={evento.id} evento={evento} />
           )}
           {evento.sonoIscritto && ticket && (
-            <div id="ticket" className="scroll-mt-space-lg">
+            <div id="ticket" className="scroll-mt-space-lg max-lg:order-first">
               <TicketEvento ticket={ticket} />
             </div>
           )}
