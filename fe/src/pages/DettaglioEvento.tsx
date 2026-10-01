@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { BadgeStato } from '@/components/eventi'
-import { Avatar, Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { Avatar, Caricamento, ConfirmDialog, Icon, MessaggioErrore, Scheletro, StatoVuoto } from '@/components/ui'
 import { ModerazioneEvento } from '@/features/admin/ModerazioneEvento'
 import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
@@ -78,7 +78,12 @@ function SchedaEvento({ id }: { id: Uuid }) {
   const [confermaAnnullamento, setConfermaAnnullamento] = useState(false)
   const [annullaEventoAperta, setAnnullaEventoAperta] = useState(false)
   // Il ticket si chiede solo se sono iscritto: altrimenti il backend risponderebbe 404
-  const { currentData: ticket } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
+  const {
+    currentData: ticket,
+    isFetching: ticketInCaricamento,
+    error: erroreTicket,
+    refetch: ricaricaTicket,
+  } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
 
   if (!evento && isFetching) return <Caricamento riquadro testo="Carico l'evento..." />
   if (error) {
@@ -151,9 +156,21 @@ function SchedaEvento({ id }: { id: Uuid }) {
           {evento.sonoProprietario && (evento.stato === 'PROGRAMMATO' || evento.stato === 'IN_CORSO') && (
             <NotificaPartecipanti key={evento.id} evento={evento} />
           )}
-          {evento.sonoIscritto && ticket && (
+          {/* Il riquadro c'e' sempre per chi e' iscritto: «Il mio ticket» porta qui anche mentre carica */}
+          {evento.sonoIscritto && (
             <div id="ticket" className="scroll-mt-space-lg max-lg:order-first">
-              <TicketEvento ticket={ticket} />
+              {ticket ? (
+                <TicketEvento ticket={ticket} />
+              ) : erroreTicket ? (
+                <MessaggioErrore errore={erroreTicket} onRiprova={ricaricaTicket} />
+              ) : (
+                ticketInCaricamento && (
+                  <div role="status" aria-label="Caricamento del ticket" className="flex flex-col items-center gap-space-sm rounded-2xl bg-surface-card p-space-lg">
+                    <Scheletro className="size-40" />
+                    <Scheletro className="h-4 w-3/4" />
+                  </div>
+                )
+              )}
             </div>
           )}
           {/* Moderazione (FE1-16): per gli admin, non sui propri eventi */}
