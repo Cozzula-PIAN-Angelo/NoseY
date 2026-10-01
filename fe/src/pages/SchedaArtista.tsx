@@ -61,7 +61,8 @@ export default function SchedaArtista() {
     <Contenitore>
       {indietro}
       <article className="grid gap-space-lg overflow-hidden rounded-2xl bg-surface-card shadow-xl md:grid-cols-[18rem_1fr]">
-        <div className="aspect-square bg-surface-container md:aspect-auto md:min-h-72">
+        {/* Da telefono 4:3, cosi' nome e stato restano nel primo schermo */}
+        <div className="aspect-[4/3] bg-surface-container md:aspect-auto md:min-h-72">
           {immagine ? (
             <img src={immagine} alt={`Foto di ${artista.nome}`} className="size-full object-cover" />
           ) : (

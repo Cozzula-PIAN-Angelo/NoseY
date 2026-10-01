@@ -26,7 +26,7 @@ import SchedaArtista from '@/pages/SchedaArtista'
 import VerificaEmail from '@/pages/VerificaEmail'
 
 // Rotte concordate in docs/interfacce.md (TEAM-02). Percorsi in inglese, parametri con gli
-// stessi nomi dell'API. Ogni card sostituisce la PaginaProvvisoria della propria pagina.
+// stessi nomi dell'API. Tutte le rotte hanno la loro pagina (le ultime provvisorie le ha sostituite FE1-19).
 // L'accesso (login, ospite, ADMIN) lo decidono le rotte contenitore di components/layout/Protezioni.
 export const router = createBrowserRouter([
   {
