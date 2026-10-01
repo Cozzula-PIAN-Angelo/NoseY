@@ -64,12 +64,48 @@ void cancellaIscrizioniFuture(UUID utenteId);  // le sue iscrizioni a eventi PRO
 ```
 
 - Implementazione reale (non finta): usa `EventoRepository`/`PartecipanteRepository` gia' pronti.
-- La notifica `NOTIFICA_EVENTO ANNULLAMENTO` ai partecipanti resta un TODO nel codice: serve
-  `NotificheService`, non ancora fatto.
+- Manda anche la notifica `ANNULLAMENTO` ai partecipanti di ogni evento annullato
+  (`NotificheService.notificaAnnullamento`).
+
+## NotificheService (pacchetto `notification`) — implementa BE2-08
+
+Creazione delle notifiche (progettazione v4, sezione 10 e D10).
+
+```java
+void notificaModifica(Evento evento, Set<ParteEvento> parti); // partecipanti, accorpata
+void notificaIscrizione(Evento evento);                      // proprietario, accorpata
+int  notificaManuale(Evento evento, String testo);           // partecipanti, restituisce { inviate }
+void notificaAnnullamento(Evento evento);                    // partecipanti, con motivoAnnullamento
+void notificaFotoRimossa(Evento evento);                     // proprietario, MODERAZIONE
+void notificaAnnullataDaModerazione(Evento evento);          // proprietario, MODERAZIONE con motivo
+void notificaRichiestaAmicizia(Amicizia amicizia);           // ricevente, RICHIESTA
+void notificaAmiciziaAccettata(Amicizia amicizia);           // richiedente, ACCETTATA
+
+public enum ParteEvento { TITOLO, DESCRIZIONE, DATE, LUOGO, ARTISTI, MAPPA_INTERNA }
+```
+
+- Si chiama DENTRO la transazione di chi modifica i dati, dopo aver salvato la modifica:
+  `notificaIscrizione` conta i partecipanti (il nuovo compreso), `notificaAnnullamento` legge il
+  motivo dall'evento. Chi chiama ha gia' letto l'evento con lock (sezione 0), che serializza
+  anche l'accorpamento.
+- `notificaModifica` con `parti` vuote non fa nulla: si passano solo le parti cambiate davvero.
+  Le foto non notificano i partecipanti (D10).
+- Annullamento da un admin: `notificaAnnullataDaModerazione` (proprietario) +
+  `notificaAnnullamento` (partecipanti).
+- Richiesta di amicizia mascherata (sezione 8): non chiamare `notificaRichiestaAmicizia`.
+  Segnare lette le RICHIESTA quando si accetta o si rifiuta resta a carico dell'area amicizie.
+- Testi salvati senza nomi di persone. Per le amicizie il testo si genera alla lettura in
+  `NotificaResponse.da(...)` con il nome attuale dell'altro utente: RICHIESTA "Mario Rossi ti ha
+  chiesto l'amicizia", ACCETTATA "Mario Rossi ha accettato la tua richiesta di amicizia" (il
+  testo di ACCETTATA non e' nella progettazione: scelto in BE2-08).
+- Live: per ogni notifica creata o accorpata viene pubblicato un `NotificaLiveEvent(destinatarioId,
+  NotificaResponse)` dentro la transazione. Il listener AFTER_COMMIT che lo invia su
+  `/user/queue/notifications` arriva con il WebSocket (BE2-14): fino ad allora le notifiche si
+  salvano ma non partono live.
+- Le notifiche delle chat (NOTIFICA_CHAT) non passano da qui: upsert nella card della chat.
 
 ## Ancora da fare (TEAM-02)
 
-- `NotificheService`: non ancora fatto.
 - Backend: controllo «ha il ticket o e' il proprietario» e calcolo di `statoAmicizia` (lato social).
 
 ---
