@@ -4,9 +4,10 @@ import { useAppDispatch } from '@/hooks/redux'
 import { useSessione } from '@/hooks/useSessione'
 import { cx } from '@/lib/cx'
 import type { ErroreWebSocket } from '@/lib/errori'
-import { invia, iscriviti, useStatoConnessione, type StatoConnessione } from '@/lib/websocket'
+import { invia, iscriviti, useStatoConnessione } from '@/lib/websocket'
 import { CODE_WEBSOCKET, destinazioneInvio, LIMITI_SOCIAL, type MessaggioResponse, type Uuid } from '@/types/api'
 import { apiSocial } from './apiSocial'
+import { STATO_CONNESSIONE } from './statoConnessione'
 
 // Campo di scrittura della chat (FE2-12), come il fondo della colonna centrale della schermata Stitch
 // "Community, Amicizie & Chat Live": stato della connessione e contatore "0 / 2000" sopra, campo e
@@ -15,13 +16,6 @@ import { apiSocial } from './apiSocial'
 // conversazione quando il backend lo rimanda su /user/queue/messages. Fino ad allora il testo resta
 // "in attesa": se invece arriva un errore su /user/queue/errors (sola lettura, troppi messaggi...)
 // torna nel campo, cosi' non si perde.
-
-const STATO: Record<StatoConnessione, { testo: string; colore: string }> = {
-  connesso: { testo: 'In linea', colore: 'bg-poi-ingresso' },
-  connessione: { testo: 'Connessione...', colore: 'bg-accent-gold-piercing animate-pulse' },
-  riconnessione: { testo: 'Riconnessione...', colore: 'bg-accent-gold-piercing animate-pulse' },
-  assente: { testo: 'Non connesso', colore: 'bg-status-annullato' },
-}
 
 /** Altezza massima del campo, poi scorre */
 const ALTEZZA_MAX = 160
@@ -93,7 +87,7 @@ export function FormMessaggio({ chatId, nome }: FormMessaggioProps) {
     if (connesso) inviaMessaggio()
   }
 
-  const { testo: testoStato, colore } = STATO[stato]
+  const { testo: testoStato, colore } = STATO_CONNESSIONE[stato]
   return (
     <form onSubmit={inviaMessaggio} className="flex shrink-0 flex-col gap-space-xs bg-surface-container-low p-space-md shadow-lg">
       <div className="flex items-center justify-between gap-space-sm">
