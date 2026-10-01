@@ -466,3 +466,29 @@ sostituisce con la pagina vera.
   ListaAmici solo per trovare la chat.
 - **`chatId` sempre, se la chat esiste** (come in `AmiciziaResponse`): con NON_DISPONIBILE
   darebbe un id della coppia mentre `amiciziaId` e' null.
+
+---
+
+## Decisione 16: ordine di ListaChat per ultima attivita'
+
+### Scelta
+
+- ListaChat (sezione 9, "per ultimo messaggio dal piu' recente, quelle senza messaggi per
+  creata_il"): un solo ordinamento decrescente sull'ultima attivita' della chat, cioe'
+  `ultimoMessaggio.inviatoIl`, oppure `creataIl` se la chat non ha messaggi. A parita' di istante
+  decide l'id della chat, per avere lo stesso ordine a ogni chiamata.
+- L'ordine si fa in Java, dopo le query (chat, ultimi messaggi, non letti).
+
+### Motivazione
+
+- Una chat appena aperta (amicizia appena accettata) compare in cima, accanto alle conversazioni
+  recenti, invece di finire in fondo sotto chat ferme da mesi.
+- Ultimo messaggio e non letti arrivano da query separate (una ciascuna per tutta la lista):
+  ordinare in Java evita una query unica con subquery correlate solo per l'ORDER BY.
+
+### Alternative scartate
+
+- **Prima le chat con messaggi, poi quelle vuote per creata_il**: una chat nuova resterebbe in
+  fondo alla lista finche' nessuno scrive.
+- **ORDER BY nella query** con `coalesce` sull'ultimo messaggio: serve una subquery correlata per
+  ogni chat, e l'ultimo messaggio va letto comunque per la risposta.

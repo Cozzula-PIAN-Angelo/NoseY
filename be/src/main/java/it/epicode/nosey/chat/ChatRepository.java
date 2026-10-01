@@ -16,4 +16,11 @@ public interface ChatRepository extends JpaRepository<Chat, UUID> {
 
 	// chatId delle liste di amicizie: una query per tutta la lista.
 	List<Chat> findByAmiciziaIdIn(Collection<UUID> amicizieId);
+
+	// ListaChat (sezione 9): tutte le chat dell'utente, in qualsiasi stato dell'amicizia,
+	// con i due utenti della coppia gia' caricati.
+	@Query("""
+			select c from Chat c join fetch c.amicizia a join fetch a.richiedente join fetch a.ricevente
+			where a.richiedente.id = :utenteId or a.ricevente.id = :utenteId""")
+	List<Chat> trovaPerMembro(UUID utenteId);
 }
