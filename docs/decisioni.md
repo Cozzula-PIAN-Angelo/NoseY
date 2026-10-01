@@ -317,3 +317,30 @@ altrimenti si leggerebbero lo stesso.
 - **Testcontainers**: database pulito a ogni esecuzione, ma richiede Docker su ogni PC del team
   e altre dipendenze.
 - **Solo unit test con Mockito**: piu' veloci, ma l'accorpamento verificato solo su mock.
+
+## Decisione 11: React Router per la navigazione del frontend
+
+### Scelta
+
+**React Router** (`react-router`, versione 8) in modalita' "data router": le rotte stanno in
+un unico file, `fe/src/router.tsx`, creato con `createBrowserRouter` e passato a
+`<RouterProvider>` in `main.tsx`. `App.tsx` e' la radice di tutte le rotte e contiene il
+layout comune (`<Outlet />` per la pagina). L'elenco delle rotte e' quello di
+`docs/interfacce.md`; le pagine non ancora fatte usano `PaginaProvvisoria`, che ogni card
+sostituisce con la pagina vera.
+
+### Motivazione
+
+- E' il router piu' diffuso per React: documentazione ed esempi abbondanti.
+- Un solo file con tutte le rotte: chi apre il progetto vede subito pagine, percorsi e accessi.
+- Rotte annidate: il layout (barra di navigazione, footer) e i controlli di accesso (login,
+  ospite, ruolo) si scrivono una volta sola come rotte "padre".
+- Il sito statico su Render rimanda gia' ogni percorso a `index.html` (`render.yaml`), quindi
+  gli URL "veri" (`/events/123`) funzionano anche ricaricando la pagina.
+
+### Alternative scartate
+
+- **TanStack Router**: tipi piu' rigorosi sui parametri, ma meno conosciuto dal team e con
+  piu' configurazione.
+- **Navigazione a mano con lo stato di React**: niente URL condivisibili, niente tasto
+  "indietro" del browser.
