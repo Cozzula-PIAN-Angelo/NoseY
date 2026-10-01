@@ -1,5 +1,11 @@
-import { Icon } from '@/components/ui'
+import { useState } from 'react'
+import { useNavigate } from 'react-router'
+import { Icon, useAvviso } from '@/components/ui'
 import { FormRegistrazione, type ValoriRegistrazione } from '@/features/accesso/FormRegistrazione'
+import { ricordaPassword } from '@/features/accesso/registrazioneInCorso'
+import type { ErroriRegistrazione } from '@/features/accesso/validaRegistrazione'
+import { useRegistrazioneMutation } from '@/features/utenti/apiUtenti'
+import { leggiErrore } from '@/lib/errori'
 
 // Registrazione (FE1-18), rotta /register (solo per ospiti), come la schermata Stitch
 // "NoseY - Registrazione Account" (docs/stitch/registrazione-account.png): a sinistra cosa offre
@@ -11,9 +17,53 @@ const FUNZIONI = [
   { icona: 'forum', titolo: 'Amici e chat', testo: 'Conosci chi partecipa ai tuoi stessi eventi e scrivigli.' },
 ]
 
+// Campi del backend (RegisterRequest) → campi del form, per gli errori di VALIDAZIONE
+const CAMPI_BACKEND: Record<string, keyof ErroriRegistrazione> = {
+  nome: 'nome',
+  cognome: 'cognome',
+  email: 'email',
+  password: 'password',
+  dataNascita: 'dataNascita',
+  indirizzo: 'indirizzo',
+}
+
 export default function Registrazione() {
-  function invia(_valori: ValoriRegistrazione) {
-    // Collegamento a POST /api/auth/register nel passo 4 di FE1-18
+  const [registra, { isLoading }] = useRegistrazioneMutation()
+  const [erroriServer, setErroriServer] = useState<ErroriRegistrazione>({})
+  const avviso = useAvviso()
+  const navigate = useNavigate()
+
+  async function invia(v: ValoriRegistrazione) {
+    try {
+      const { email } = await registra({
+        nome: v.nome.trim(),
+        cognome: v.cognome.trim(),
+        email: v.email.trim(),
+        password: v.password,
+        dataNascita: v.dataNascita,
+        indirizzo: v.indirizzo.trim() || undefined,
+      }).unwrap()
+      // Fase 2: verifica del codice. La password resta solo in memoria per precompilarla
+      ricordaPassword(email, v.password)
+      avviso.successo('Account creato', `Ti abbiamo inviato il codice di verifica a ${email}.`)
+      navigate(`/verify?email=${encodeURIComponent(email)}`)
+    } catch (errore) {
+      const { codice, campi } = leggiErrore(errore)
+      if (codice === 'EMAIL_GIA_REGISTRATA') {
+        setErroriServer({ email: 'Esiste già un account con questa email: accedi, oppure usa un altro indirizzo.' })
+      } else if (codice === 'TROPPE_RICHIESTE') {
+        avviso.attenzione('Troppe richieste', 'Hai chiesto troppi codici in poco tempo: aspetta un minuto e riprova.')
+      } else if (codice === 'VALIDAZIONE' && Object.keys(campi).length) {
+        const errori: ErroriRegistrazione = {}
+        for (const [nome, messaggio] of Object.entries(campi)) {
+          const campo = CAMPI_BACKEND[nome]
+          if (campo) errori[campo] = messaggio
+        }
+        setErroriServer(errori)
+      } else {
+        avviso.erroreApi(errore)
+      }
+    }
   }
 
   return (
@@ -69,7 +119,7 @@ export default function Registrazione() {
               Completa i dati richiesti: ti invieremo un codice di verifica a 6 cifre via email.
             </p>
           </header>
-          <FormRegistrazione onInvia={invia} />
+          <FormRegistrazione inCorso={isLoading} erroriServer={erroriServer} onInvia={invia} />
         </div>
       </section>
     </div>

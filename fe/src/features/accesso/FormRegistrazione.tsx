@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { Button, CampoPassword, DateTimeField, TextField } from '@/components/ui'
 import { cx } from '@/lib/cx'
@@ -36,12 +36,24 @@ const COLORI_ROBUSTEZZA = ['', 'bg-status-annullato', 'bg-accent-gold-piercing',
 
 type FormRegistrazioneProps = {
   inCorso?: boolean
+  /** Errori arrivati dal backend, da mostrare sui campi */
+  erroriServer?: ErroriRegistrazione
   onInvia: (valori: ValoriRegistrazione) => void
 }
 
-export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazioneProps) {
+const NESSUN_ERRORE: ErroriRegistrazione = {}
+
+export function FormRegistrazione({ inCorso = false, erroriServer = NESSUN_ERRORE, onInvia }: FormRegistrazioneProps) {
   const [v, setV] = useState<ValoriRegistrazione>(REGISTRAZIONE_VUOTA)
   const [errori, setErrori] = useState<ErroriRegistrazione>({})
+
+  // Gli errori del backend vanno sui campi e il cursore sul primo, come quelli del form
+  useEffect(() => {
+    if (!Object.keys(erroriServer).length) return
+    setErrori((e) => ({ ...e, ...erroriServer }))
+    const primo = ORDINE_CAMPI.find((c) => erroriServer[c])
+    if (primo) document.getElementById(`reg-${primo}`)?.focus()
+  }, [erroriServer])
   // L'errore di un campo sparisce appena lo si cambia (la conferma anche quando cambia la password)
   const cambia = <K extends keyof ValoriRegistrazione>(campo: K, valore: ValoriRegistrazione[K]) => {
     setV((attuali) => ({ ...attuali, [campo]: valore }))
