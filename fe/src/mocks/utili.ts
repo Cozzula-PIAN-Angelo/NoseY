@@ -1,5 +1,6 @@
-// Funzioni comuni ai dati finti: errori come il backend, stato dell'evento, distanze.
+// Funzioni comuni ai dati finti: errori come il backend, stato dell'evento, distanze, pagine.
 import { HttpResponse } from 'msw'
+import { DIMENSIONE_MASSIMA, DIMENSIONE_PAGINA, type PaginaResponse } from '@/lib/pagine'
 import type { CodiceErrore } from '@/lib/codiciErrore'
 import type { ErroreResponse } from '@/lib/errori'
 import type { IstanteIso, StatoEvento } from '@/types/api'
@@ -9,6 +10,7 @@ const STATUS: Partial<Record<CodiceErrore, number>> = {
   VALIDAZIONE: 400,
   RICHIESTA_VUOTA: 400,
   FILE_NON_VALIDO: 400,
+  ACCESSO_NEGATO: 403,
   DATA_NON_FUTURA: 400,
   DATE_NON_VALIDE: 400,
   DESCRIZIONE_MANCANTE: 400,
@@ -115,4 +117,18 @@ export function immagineFinta(testo: string, tinta: number): string {
 <rect width="800" height="500" fill="url(#g)"/>
 <text x="40" y="450" font-family="sans-serif" font-size="36" font-weight="700" fill="#dfe2f1">${testo}</text></svg>`
   return svg
+}
+
+/** Pagina di una lista gia' ordinata, con ?page=&size= come il backend (size massimo 100); null se non validi */
+export function pagina<T>(lista: T[], url: URL): PaginaResponse<T> | null {
+  const page = Number(url.searchParams.get('page') ?? 0)
+  const size = Number(url.searchParams.get('size') ?? DIMENSIONE_PAGINA)
+  if (!Number.isInteger(page) || page < 0 || !Number.isInteger(size) || size < 1 || size > DIMENSIONE_MASSIMA) return null
+  return {
+    contenuto: lista.slice(page * size, page * size + size),
+    pagina: page,
+    dimensione: size,
+    totaleElementi: lista.length,
+    totalePagine: Math.ceil(lista.length / size),
+  }
 }
