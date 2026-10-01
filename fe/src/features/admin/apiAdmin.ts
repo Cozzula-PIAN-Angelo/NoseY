@@ -3,7 +3,14 @@
 // (/api/admin/** → ADMIN, /api/superadmin/** → SUPERADMIN); le pagine sono gia' protette da SoloRuolo.
 import { DIMENSIONE_PAGINA } from '@/lib/pagine'
 import { apiSlice } from '@/store/apiSlice'
-import type { AdminUtenteResponse, CambiaStatoUtenteRequest, PaginaResponse, ParametriListaUtenti, Uuid } from '@/types/api'
+import type {
+  AdminUtenteResponse,
+  CambiaRuoloRequest,
+  CambiaStatoUtenteRequest,
+  PaginaResponse,
+  ParametriListaUtenti,
+  Uuid,
+} from '@/types/api'
 
 const apiConEtichette = apiSlice.enhanceEndpoints({ addTagTypes: ['AdminUtente'] })
 
@@ -23,7 +30,13 @@ export const apiAdmin = apiConEtichette.injectEndpoints({
       query: ({ utenteId, dati }) => ({ url: `/api/admin/users/${utenteId}/status`, method: 'PATCH', body: dati }),
       invalidatesTags: ['AdminUtente'],
     }),
+
+    /** CambiaRuolo (solo SUPERADMIN): USER o ADMIN; l'utente deve accedere di nuovo (il ruolo e' nel token) */
+    cambiaRuolo: build.mutation<AdminUtenteResponse, { utenteId: Uuid; dati: CambiaRuoloRequest }>({
+      query: ({ utenteId, dati }) => ({ url: `/api/superadmin/users/${utenteId}/role`, method: 'PATCH', body: dati }),
+      invalidatesTags: ['AdminUtente'],
+    }),
   }),
 })
 
-export const { useListaUtentiQuery, useCambiaStatoUtenteMutation } = apiAdmin
+export const { useListaUtentiQuery, useCambiaStatoUtenteMutation, useCambiaRuoloMutation } = apiAdmin

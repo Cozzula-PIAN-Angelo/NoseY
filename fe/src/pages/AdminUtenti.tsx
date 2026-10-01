@@ -12,7 +12,7 @@ import {
   useAvviso,
   type Opzione,
 } from '@/components/ui'
-import { useCambiaStatoUtenteMutation, useListaUtentiQuery } from '@/features/admin/apiAdmin'
+import { useCambiaRuoloMutation, useCambiaStatoUtenteMutation, useListaUtentiQuery } from '@/features/admin/apiAdmin'
 import { useAppSelector } from '@/hooks/redux'
 import { useValoreRitardato } from '@/hooks/useValoreRitardato'
 import { cx } from '@/lib/cx'
@@ -23,6 +23,7 @@ import type { AdminUtenteResponse, Ruolo, StatoUtente, UtenteResponse } from '@/
 // Pannello admin: utenti e ruoli (FE1-15), rotta /admin/users (solo ADMIN e SUPERADMIN).
 // Passo 1: tabella con ricerca (email, nome, cognome), filtro per stato e paginazione.
 // Passo 2: sospensione (con conferma: chiude le sessioni aperte) e riattivazione.
+// Passo 3: cambio di ruolo USER ↔ ADMIN, solo per il SUPERADMIN (con conferma: l'utente deve rientrare).
 
 const OPZIONI_STATO: Opzione<StatoUtente | ''>[] = [
   { valore: '', etichetta: 'Tutti gli stati' },
@@ -42,12 +43,27 @@ const LIVELLO: Record<Ruolo, number> = { USER: 1, ADMIN: 2, SUPERADMIN: 3 }
 const puoGestire = (io: UtenteResponse | null, altro: AdminUtenteResponse) =>
   !!io && io.id !== altro.id && LIVELLO[altro.ruolo] < LIVELLO[io.ruolo]
 
+/** Il ruolo lo cambia solo il SUPERADMIN, mai il proprio e mai quello di un altro SUPERADMIN */
+const puoCambiareRuolo = (io: UtenteResponse | null, altro: AdminUtenteResponse) =>
+  io?.ruolo === 'SUPERADMIN' && io.id !== altro.id && altro.ruolo !== 'SUPERADMIN' && altro.stato !== 'ANONIMIZZATO'
+
+/** Perche' il cambio di ruolo non e' possibile adesso (il backend risponderebbe 409), o undefined */
+function bloccoRuolo(u: AdminUtenteResponse): string | undefined {
+  if (!u.verificato) return 'L’email di questo account non è ancora verificata'
+  if (u.stato !== 'ATTIVO') return 'Riattiva l’account prima di cambiarne il ruolo'
+}
+
 type AzioniRiga = {
   gestibile: boolean
+  ruoloModificabile: boolean
   inCorso: boolean
   onSospendi: () => void
   onRiattiva: () => void
+  onCambiaRuolo: () => void
 }
+
+/** Azione che chiede conferma */
+type Conferma = { tipo: 'sospendi' | 'ruolo'; utente: AdminUtenteResponse }
 
 const STATI: Record<StatoUtente, { etichetta: string; colore: string }> = {
   ATTIVO: { etichetta: 'Attivo', colore: 'bg-status-in-corso' },
@@ -93,25 +109,40 @@ function RigaUtente({ utente, azioni }: { utente: AdminUtenteResponse; azioni: A
       <td className="whitespace-nowrap px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant">
         {giorno(utente.creatoIl)}
       </td>
-      <td className="px-space-sm py-space-sm text-right">
+      <td className="px-space-sm py-space-sm">
         {/* Un account anonimizzato non si tocca piu'; righe del proprio ruolo o superiore: niente azioni */}
-        {azioni.gestibile && utente.stato === 'ATTIVO' && (
-          <Button variant="danger" size="sm" icona="block" onClick={azioni.onSospendi} aria-label={`Sospendi ${nome}`}>
-            Sospendi
-          </Button>
-        )}
-        {azioni.gestibile && utente.stato === 'SOSPESO' && (
-          <Button
-            variant="secondary"
-            size="sm"
-            icona="lock_open"
-            onClick={azioni.onRiattiva}
-            inCorso={azioni.inCorso}
-            aria-label={`Riattiva ${nome}`}
-          >
-            Riattiva
-          </Button>
-        )}
+        <div className="flex items-center justify-end gap-space-xs">
+          {azioni.ruoloModificabile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icona={utente.ruolo === 'ADMIN' ? 'remove_moderator' : 'add_moderator'}
+              onClick={azioni.onCambiaRuolo}
+              disabled={bloccoRuolo(utente) !== undefined}
+              title={bloccoRuolo(utente)}
+              aria-label={utente.ruolo === 'ADMIN' ? `Togli il ruolo admin a ${nome}` : `Rendi admin ${nome}`}
+            >
+              {utente.ruolo === 'ADMIN' ? 'Togli admin' : 'Rendi admin'}
+            </Button>
+          )}
+          {azioni.gestibile && utente.stato === 'ATTIVO' && (
+            <Button variant="danger" size="sm" icona="block" onClick={azioni.onSospendi} aria-label={`Sospendi ${nome}`}>
+              Sospendi
+            </Button>
+          )}
+          {azioni.gestibile && utente.stato === 'SOSPESO' && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icona="lock_open"
+              onClick={azioni.onRiattiva}
+              inCorso={azioni.inCorso}
+              aria-label={`Riattiva ${nome}`}
+            >
+              Riattiva
+            </Button>
+          )}
+        </div>
       </td>
     </tr>
   )
@@ -128,8 +159,23 @@ export default function AdminUtenti() {
 
   const io = useAppSelector(selezionaUtente)
   const [cambiaStato, { isLoading: cambioInCorso, originalArgs }] = useCambiaStatoUtenteMutation()
-  const [daSospendere, setDaSospendere] = useState<AdminUtenteResponse | null>(null)
+  const [cambiaRuolo, { isLoading: cambioRuoloInCorso }] = useCambiaRuoloMutation()
+  const [conferma, setConferma] = useState<Conferma | null>(null)
   const avviso = useAvviso()
+
+  async function invertiRuolo(utente: AdminUtenteResponse) {
+    const nome = `${utente.nome} ${utente.cognome}`
+    const ruolo = utente.ruolo === 'ADMIN' ? 'USER' : 'ADMIN'
+    try {
+      await cambiaRuolo({ utenteId: utente.id, dati: { ruolo } }).unwrap()
+      avviso.successo(
+        ruolo === 'ADMIN' ? 'Ruolo admin assegnato' : 'Ruolo admin tolto',
+        `${nome} vedrà il nuovo ruolo al prossimo accesso.`,
+      )
+    } catch (err) {
+      avviso.erroreApi(err)
+    }
+  }
 
   async function impostaStato(utente: AdminUtenteResponse, stato: 'ATTIVO' | 'SOSPESO') {
     const nome = `${utente.nome} ${utente.cognome}`
@@ -165,7 +211,7 @@ export default function AdminUtenti() {
     contenuto = (
       <div className="flex flex-col gap-space-md">
         <div className={cx('overflow-x-auto rounded-xl bg-surface-card transition-opacity', isFetching && 'opacity-60')}>
-          <table className="w-full min-w-[46rem] text-left">
+          <table className="w-full min-w-[52rem] text-left">
             <caption className="sr-only">Account registrati, dal più recente</caption>
             <thead>
               <tr className="font-label-code-status text-label-code-status uppercase text-outline">
@@ -186,9 +232,11 @@ export default function AdminUtenti() {
                   utente={u}
                   azioni={{
                     gestibile: puoGestire(io, u),
+                    ruoloModificabile: puoCambiareRuolo(io, u),
                     inCorso: cambioInCorso && originalArgs?.utenteId === u.id,
-                    onSospendi: () => setDaSospendere(u),
+                    onSospendi: () => setConferma({ tipo: 'sospendi', utente: u }),
                     onRiattiva: () => impostaStato(u, 'ATTIVO'),
+                    onCambiaRuolo: () => setConferma({ tipo: 'ruolo', utente: u }),
                   }}
                 />
               ))}
@@ -223,23 +271,34 @@ export default function AdminUtenti() {
       {contenuto}
 
       <ConfirmDialog
-        aperta={daSospendere !== null}
-        titolo="Sospendere l'account?"
-        icona="block"
-        variante="danger"
-        testoConferma="Sospendi"
+        aperta={conferma !== null}
+        titolo={
+          conferma?.tipo === 'sospendi'
+            ? 'Sospendere l’account?'
+            : conferma?.utente.ruolo === 'ADMIN'
+              ? 'Togliere il ruolo admin?'
+              : 'Assegnare il ruolo admin?'
+        }
+        icona={conferma?.tipo === 'sospendi' ? 'block' : 'shield_person'}
+        variante={conferma?.tipo === 'sospendi' ? 'danger' : 'primary'}
+        testoConferma={conferma?.tipo === 'sospendi' ? 'Sospendi' : conferma?.utente.ruolo === 'ADMIN' ? 'Togli admin' : 'Rendi admin'}
         testoAnnulla="Annulla"
-        inCorso={cambioInCorso}
+        inCorso={cambioInCorso || cambioRuoloInCorso}
         onConferma={async () => {
-          if (daSospendere) await impostaStato(daSospendere, 'SOSPESO')
-          setDaSospendere(null)
+          if (conferma?.tipo === 'sospendi') await impostaStato(conferma.utente, 'SOSPESO')
+          else if (conferma) await invertiRuolo(conferma.utente)
+          setConferma(null)
         }}
-        onAnnulla={() => setDaSospendere(null)}
+        onAnnulla={() => setConferma(null)}
       >
-        {daSospendere && (
+        {conferma && (
           <p className="font-body-md text-body-md">
-            {daSospendere.nome} {daSospendere.cognome} ({daSospendere.email}) non potrà più accedere e le sessioni aperte
-            verranno chiuse subito. I suoi eventi restano. Potrai riattivare l'account quando vuoi.
+            {conferma.utente.nome} {conferma.utente.cognome} ({conferma.utente.email}){' '}
+            {conferma.tipo === 'sospendi'
+              ? 'non potrà più accedere e le sessioni aperte verranno chiuse subito. I suoi eventi restano. Potrai riattivare l’account quando vuoi.'
+              : conferma.utente.ruolo === 'ADMIN'
+                ? 'tornerà al ruolo Utente: non potrà più gestire gli account né il catalogo degli artisti. Dovrà accedere di nuovo.'
+                : 'potrà gestire gli account con ruolo Utente, il catalogo degli artisti e la moderazione degli eventi. Dovrà accedere di nuovo.'}
           </p>
         )}
       </ConfirmDialog>

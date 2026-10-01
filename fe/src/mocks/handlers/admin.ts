@@ -1,6 +1,7 @@
 // Endpoint finti del pannello admin (progettazione v4, sezioni 12 e 13): utenti e ruoli.
 // Gli account sono quelli di datiSocial.ts (nome e cognome in dati.ts); serve un token di un
-// ADMIN o SUPERADMIN, per esempio sofia@nosey.it (ADMIN) o elena@nosey.it (SUPERADMIN).
+// ADMIN o SUPERADMIN, per esempio sofia@nosey.it (ADMIN) o elena@nosey.it (SUPERADMIN, l'unica che
+// puo' cambiare i ruoli).
 import { delay, http, HttpResponse } from 'msw'
 import type { AdminUtenteResponse, Ruolo, StatoUtente } from '@/types/api'
 import { trovaUtente } from '../dati'
@@ -72,6 +73,25 @@ export const handlerAdmin = [
     if (a.stato === 'ANONIMIZZATO') return errore('UTENTE_ANONIMIZZATO')
     a.stato = b.stato
     trovaUtente(a.id).attivo = a.stato === 'ATTIVO'
+    return HttpResponse.json(inAdminUtente(a))
+  }),
+
+  // CambiaRuolo: solo SUPERADMIN; solo USER o ADMIN, mai su se stessi o su un SUPERADMIN, solo account
+  // verificati e attivi. Il backend revoca anche i token dell'utente: qui restano validi fino alla scadenza
+  http.patch(api('/superadmin/users/:utenteId/role'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { account: io, risposta } = conLogin(request)
+    if (risposta) return risposta
+    if (io.ruolo !== 'SUPERADMIN') return errore('ACCESSO_NEGATO')
+    const b = await leggiJson(request)
+    if (b.ruolo === 'SUPERADMIN') return errore('RUOLO_NON_AMMESSO')
+    if (b.ruolo !== 'USER' && b.ruolo !== 'ADMIN') return errore('VALIDAZIONE', { ruolo: 'Ruolo non valido' })
+    const a = account.find((x) => x.id === params.utenteId)
+    if (!a) return errore('NON_TROVATO')
+    if (a.id === io.id || a.ruolo === 'SUPERADMIN') return errore('RUOLO_INSUFFICIENTE')
+    if (!a.verificato) return errore('UTENTE_NON_VERIFICATO')
+    if (a.stato !== 'ATTIVO') return errore('UTENTE_NON_ATTIVO')
+    a.ruolo = b.ruolo
     return HttpResponse.json(inAdminUtente(a))
   }),
 ]
