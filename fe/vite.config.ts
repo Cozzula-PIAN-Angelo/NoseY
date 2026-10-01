@@ -15,6 +15,8 @@ export default defineConfig({
     // dominio, ed e' li' che serve VITE_API_URL.
     proxy: {
       '/api': { target: 'http://localhost:8080' },
+      // WebSocket STOMP (FE2-11): ws: true inoltra anche l'upgrade della connessione
+      '/ws': { target: 'ws://localhost:8080', ws: true },
     },
   },
 })
