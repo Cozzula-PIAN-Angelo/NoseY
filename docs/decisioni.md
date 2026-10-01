@@ -638,3 +638,45 @@ Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
   regole di merito.
 - **409 su stato o ruolo invariati**: il frontend dovrebbe gestire un errore per un'operazione gia'
   riuscita.
+
+## Decisione 22: connessione WebSocket del frontend e riconnessione
+
+### Scelta
+
+- Una sola connessione STOMP per tutta l'app (`fe/src/lib/websocket.ts`, `@stomp/stompjs`),
+  aperta da `ConnessioneLive` finche' c'e' una sessione e chiusa all'uscita o quando il token
+  cambia. Le pagine non la aprono: usano `iscriviti`, `invia` e `useStatoConnessione`.
+- Indirizzo: in sviluppo `ws://<host della pagina>/ws` attraverso il proxy di Vite (`ws: true`),
+  in produzione `VITE_API_URL` con `https` → `wss`. Nessuna variabile nuova.
+- Riconnessione automatica con attesa crescente: 1 secondo, poi il doppio a ogni tentativo
+  fallito fino a 30 secondi; dopo una connessione riuscita si riparte da 1.
+- Dopo una riconnessione (non alla prima connessione) si invalidano le etichette `NonLette`,
+  `Chat`, `Messaggi` e `Notifica`: si ricaricano ContaNonLette e la chat aperta (sezione 11).
+- `TOKEN_NON_VALIDO` (frame ERROR del CONNECT o errore su `/user/queue/errors` dopo un SEND): la
+  connessione si ferma e si richiama `GET /api/users/me`. Un 401 chiude la sessione come ogni
+  altro 401; se il profilo risponde, o il backend non risponde, si riprova dopo 30 secondi.
+- Con i dati finti risponde un finto server STOMP di MSW (`mocks/handlers/websocket.ts`), con le
+  stesse regole della sezione 11 su CONNECT, SEND e SUBSCRIBE.
+
+### Motivazione
+
+- Su Render gratuito il backend sospeso impiega circa un minuto a ripartire: un'attesa fissa
+  breve farebbe decine di tentativi inutili, una fissa lunga ritarderebbe la riconnessione
+  dopo un deploy. 30 secondi come massimo tengono basso il ritardo nel caso peggiore.
+- Mentre la connessione e' giu' i messaggi e le notifiche non arrivano live e non vengono
+  rimandati: l'unico modo di recuperarli e' ricaricarli dalle API REST.
+- Con un token revocato o scaduto ogni nuovo CONNECT verrebbe rifiutato: riprovare non serve.
+  Il 401 delle API e' gia' il punto unico in cui la sessione si chiude (avviso, login).
+- Senza il finto server, con i dati finti il token finto verrebbe rifiutato dal backend vero
+  e la chat non si potrebbe sviluppare senza backend.
+
+### Alternative scartate
+
+- **Una connessione per pagina (chat, notifiche)**: piu' connessioni allo stesso backend e una
+  riconnessione da gestire in ogni pagina.
+- **Attesa fissa di 5 secondi (default di `@stomp/stompjs`)**: circa 12 tentativi mentre Render
+  riavvia il servizio.
+- **Chiudere la sessione direttamente su `TOKEN_NON_VALIDO`**: due punti diversi in cui la
+  sessione si chiude; con il controllo sulle API la regola per l'uscita resta una sola (il 401).
+- **Stato della connessione in una slice Redux**: e' solo un indicatore, non dati dell'utente;
+  `useSyncExternalStore` evita di toccare lo store per ogni cambio.

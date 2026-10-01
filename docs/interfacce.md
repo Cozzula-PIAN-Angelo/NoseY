@@ -274,6 +274,23 @@ Funzioni e tipi: `leggiErrore()` (`@/lib/errori`), `PaginaResponse` e `DIMENSION
   `SoloRuolo minimo="ADMIN"` in `src/router.tsx` (`@/components/layout`); dopo il login si
   torna al `?redirect=` (`urlLogin()`, `percorsoDopoLogin()` in `@/lib/dopoLogin`).
 
+### WebSocket (FE2-11)
+
+- **Connessione**: una sola per tutta l'app, la apre `ConnessioneLive` (in `App.tsx`) finche'
+  c'e' una sessione, con il token nel CONNECT; si riconnette da sola e dopo una riconnessione
+  ricarica ContaNonLette, chat e notifiche (decisione 22). Le pagine non la aprono.
+- **Ricevere**: `iscriviti<T>(coda, callback)` da `@/lib/websocket`, dentro un `useEffect`; la
+  funzione restituita annulla l'iscrizione. Il corpo arriva gia' convertito dal JSON e
+  l'iscrizione resta valida anche dopo una riconnessione.
+  `useEffect(() => iscriviti<MessaggioResponse>('/user/queue/messages', (m) => ...), [])`
+- **Inviare**: `invia('/app/chats/{chatId}/send', { testo })` → `false` se in quel momento non
+  c'e' connessione (il messaggio non parte). Gli errori arrivano su `/user/queue/errors`
+  (`ErroreWebSocket`); `TOKEN_NON_VALIDO` lo gestisce gia' `ConnessioneLive`.
+- **Stato**: `useStatoConnessione()` → `assente` · `connessione` · `connesso` · `riconnessione`,
+  per l'indicatore della schermata Community & Chat.
+- **Dati finti**: `mocks/handlers/websocket.ts` fa da server STOMP; per simulare un arrivo live
+  `pubblicaFinto(utenteId, 'messages' | 'notifications' | 'errors', corpo)`.
+
 ### Da realizzare (nomi e props concordati qui)
 
 **`PulsanteAmicizia`** (`@/components/amicizia`): un utente e la relazione con lui, come

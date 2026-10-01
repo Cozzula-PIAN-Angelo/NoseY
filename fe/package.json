@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
+    "@stomp/stompjs": "^7.3.0",
     "maplibre-gl": "^6.11.2",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
