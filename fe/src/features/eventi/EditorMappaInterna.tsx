@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { IconaPoi, Mappa, STILE_POI, type Coordinate, type MarkerMappa } from '@/components/mappa'
 import { Button, ConfirmDialog, Icon, Select, TextField, useAvviso, type Opzione } from '@/components/ui'
 import { cx } from '@/lib/cx'
+import { leggiErrore } from '@/lib/errori'
+import { distanzaKm } from '@/lib/geo'
 import { LIMITI_EVENTI, type EventoDettaglioResponse, type PoiResponse, type TipoPoi } from '@/types/api'
 import { useCancellaPoiMutation, useCreaPoiMutation, useModificaPoiMutation } from './apiEventi'
 
@@ -25,12 +27,36 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
   const [daCancellare, setDaCancellare] = useState<PoiResponse | null>(null)
   const avviso = useAvviso()
 
+  const pieno = evento.poi.length >= LIMITI_EVENTI.poiPerEvento
+  const centroEvento = { lat: evento.lat, lng: evento.lng }
+  // Distanza del punto scelto: oltre i 2 km non si invia nemmeno (il backend direbbe POI_TROPPO_LONTANO)
+  const kmPunto = punto ? distanzaKm(centroEvento, punto) : 0
+  const troppoLontano = kmPunto > LIMITI_EVENTI.raggioPoiKm
+
+  /** Errori del backend con un messaggio pensato per la mappa interna; gli altri generici */
+  function mostraErrore(err: unknown, dopoTrascinamento = false) {
+    const { codice } = leggiErrore(err)
+    if (codice === 'POI_TROPPO_LONTANO') {
+      avviso.attenzione(
+        'Punto troppo lontano',
+        `Deve stare entro ${LIMITI_EVENTI.raggioPoiKm} km dall'evento, dentro il cerchio.${dopoTrascinamento ? ' È tornato al suo posto.' : ''}`,
+      )
+    } else if (codice === 'LIMITE_POI') {
+      avviso.attenzione(
+        'Limite di punti raggiunto',
+        `Un evento può avere al massimo ${LIMITI_EVENTI.poiPerEvento} punti: eliminane uno per aggiungerne un altro.`,
+      )
+    } else {
+      avviso.erroreApi(err)
+    }
+  }
+
   /** Spostamento trascinando il marker: subito sulla mappa, annullato se il backend rifiuta (apiEventi) */
   async function sposta(poi: PoiResponse, punto: Coordinate) {
     try {
       await modificaPoi({ id: evento.id, poiId: poi.id, dati: punto }).unwrap()
     } catch (err) {
-      avviso.erroreApi(err)
+      mostraErrore(err, true)
     }
   }
 
@@ -66,18 +92,26 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
 
   async function aggiungi(e: FormEvent) {
     e.preventDefault()
-    if (!punto) return
+    if (!punto || troppoLontano || pieno) return
     try {
       await crea({ id: evento.id, dati: { tipo, lat: punto.lat, lng: punto.lng, etichetta: etichetta.trim() || undefined } }).unwrap()
       avviso.successo(`${STILE_POI[tipo].etichetta} aggiunto`, 'I partecipanti riceveranno una notifica sulla mappa interna.')
       annulla()
     } catch (err) {
-      avviso.erroreApi(err)
+      mostraErrore(err)
+      // Con LIMITE_POI la lista si aggiorna da sola (POI aggiunti altrove): si toglie il punto scelto
+      if (leggiErrore(err).codice === 'LIMITE_POI') annulla()
     }
   }
 
   return (
     <div className="flex flex-col gap-space-md">
+      <p className="flex items-center justify-between font-label-code-status text-label-code-status uppercase text-outline">
+        <span>Punti della mappa interna</span>
+        <span className={pieno ? 'text-accent-gold-piercing' : 'text-secondary'}>
+          {evento.poi.length} / {LIMITI_EVENTI.poiPerEvento}
+        </span>
+      </p>
       <p className="font-body-md text-body-md text-on-surface-variant">
         Clicca sulla mappa nel punto di un ingresso, di un'uscita o di un punto di emergenza,
         dentro il cerchio di {LIMITI_EVENTI.raggioPoiKm} km attorno all'evento. Avvicinati con la rotellina per più precisione.
@@ -92,11 +126,20 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
         marker={marker}
         cerchio={{ centro: { lat: evento.lat, lng: evento.lng }, raggioKm: LIMITI_EVENTI.raggioPoiKm }}
         puntoScelto={punto}
-        onScegliPunto={setPunto}
+        // A 15 punti il clic non aggiunge piu' nulla
+        onScegliPunto={pieno ? undefined : setPunto}
         className="h-96"
       />
 
-      {punto && (
+      {pieno && (
+        <p className="flex items-start gap-space-xs rounded-lg bg-accent-gold-glow p-space-sm font-body-md text-body-md text-on-surface">
+          <Icon nome="wrong_location" size={20} className="mt-0.5 text-accent-gold-piercing" />
+          Hai raggiunto il massimo di {LIMITI_EVENTI.poiPerEvento} punti: eliminane uno per aggiungerne un altro.
+          Puoi ancora spostare quelli che ci sono.
+        </p>
+      )}
+
+      {punto && !pieno && (
         <form
           onSubmit={aggiungi}
           aria-label="Nuovo punto della mappa interna"
@@ -111,13 +154,20 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
             placeholder="Es. Ingresso nord"
           />
           <div className="flex gap-space-xs">
-            <Button type="submit" icona="add_location_alt" inCorso={isLoading}>
+            <Button type="submit" icona="add_location_alt" inCorso={isLoading} disabled={troppoLontano}>
               Aggiungi
             </Button>
             <Button variant="ghost" onClick={annulla} disabled={isLoading}>
               Annulla
             </Button>
           </div>
+          {troppoLontano && (
+            <p role="alert" className="flex items-center gap-1 font-body-sm text-body-sm text-status-annullato sm:col-span-3">
+              <Icon nome="error" size={16} />
+              Il punto è a {kmPunto.toLocaleString('it-IT', { maximumFractionDigits: 1 })} km dall'evento: deve stare entro{' '}
+              {LIMITI_EVENTI.raggioPoiKm} km, dentro il cerchio. Clicca più vicino o trascina il segnaposto.
+            </p>
+          )}
         </form>
       )}
 
