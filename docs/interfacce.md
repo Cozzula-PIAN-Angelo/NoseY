@@ -136,9 +136,38 @@ messagingTemplate.convertAndSendToUser(utenteId.toString(), "/queue/messages", m
   la manda come `{ codice, messaggio }` su `/user/queue/errors` della sola sessione che ha fatto
   il SEND; la validazione del payload diventa `VALIDAZIONE`, il resto `ERRORE_INTERNO`.
 
+## Calcolo di statoAmicizia (pacchetto `friendship`) — implementa BE2-12
+
+`statoAmicizia` e `amiciziaId` di `PartecipanteResponse` in ListaPartecipanti (progettazione v4,
+sezioni 7, 8 e 18).
+
+```java
+// AmiciziaService
+Map<UUID, RelazioneAmicizia> relazioni(UUID utenteId, Collection<Utente> altri);
+
+public record RelazioneAmicizia(StatoAmiciziaVista stato, UUID amiciziaId, UUID chatId) {}
+public enum StatoAmiciziaVista { NESSUNA, INVIATA, RICEVUTA, AMICI, NON_DISPONIBILE }
+```
+
+- `utenteId` = chi fa la richiesta; `altri` = gli utenti della lista (proprietario compreso), gia'
+  caricati: si usa il loro `stato` per la regola "Y non ATTIVO → NON_DISPONIBILE, tranne AMICI".
+  Chi fa la richiesta non va messo fra gli altri.
+- Una sola query sulle amicizie, per tutta la lista. La mappa ha una voce per ogni utente di
+  `altri`, chiave il suo id; senza riga della coppia: `NESSUNA`.
+- `amiciziaId` valorizzato con INVIATA, RICEVUTA e AMICI, altrimenti null (sezione 7).
+- `chatId`: la chat della coppia se esiste, solo quando c'e' `amiciziaId`; con AMICI e' sempre
+  valorizzato. Letta nella stessa query (left join), serve al pulsante "Chat" (punto aperto
+  sotto, decisione 15).
+- Si chiama dentro la transazione di ListaPartecipanti (o in una propria, readOnly).
+
+```java
+Map<UUID, RelazioneAmicizia> relazioni = amiciziaService.relazioni(utenteId, utentiDellaLista);
+RelazioneAmicizia r = relazioni.get(utente.getId());   // r.stato(), r.amiciziaId(), r.chatId()
+```
+
 ## Ancora da fare (TEAM-02)
 
-- Backend: controllo «ha il ticket o e' il proprietario» e calcolo di `statoAmicizia` (lato social).
+- Backend: controllo «ha il ticket o e' il proprietario» (lato social).
 
 ---
 
@@ -264,3 +293,5 @@ stato (stessi colori di `STILE_STATO` della mappa). Usato da card, dettaglio e t
 - **`chatId` in `PartecipanteResponse`**: con `statoAmicizia = AMICI` il pulsante "Chat" deve
   aprire `/chat/:chatId`, ma la risposta ha solo `amiciziaId`. Proposta al backend: aggiungere
   `chatId` (come in `AmiciziaResponse`). Altrimenti il frontend lo cerca in ListaAmici.
+  Lato amicizie il dato e' pronto (BE2-12): `RelazioneAmicizia.chatId()`. Resta da decidere
+  con BE1 e il team se aggiungerlo a `PartecipanteResponse` (sezione 7).

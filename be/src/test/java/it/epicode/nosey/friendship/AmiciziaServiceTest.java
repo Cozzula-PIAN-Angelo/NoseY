@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Amicizie (progettazione v4, sezione 8): ogni controllo e ogni caso della riga della coppia in
- * RichiediAmicizia, poi errori ed effetti di accetta, rifiuta, ritira e rimuovi.
+ * RichiediAmicizia, poi errori ed effetti di accetta, rifiuta, ritira e rimuovi, le tre liste e
+ * ogni riga della tabella di statoAmicizia.
  * Test di integrazione sul database locale (decisione 10): ogni test viene annullato alla fine.
  */
 @SpringBootTest
@@ -374,6 +376,182 @@ class AmiciziaServiceTest {
 		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.rimuovi(UUID.randomUUID(), mario.getId()));
 		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.rimuovi(riga.getId(), estraneo.getId()));
 		assertErrore(CodiceErrore.NON_AMICI, () -> amiciziaService.rimuovi(riga.getId(), mario.getId()));
+	}
+
+	// --- ListaAmici, ListaRichiesteRicevute, ListaRichiesteInviate ---
+
+	@Test
+	void amici_perNomeConLaChat() {
+		Utente bruno = utente("bruno", "Gialli");
+		Utente paolo = utente("Paolo", "Neri");
+		Amicizia conLuigi = riga(mario, luigi, StatoAmicizia.ACCETTATA, null, false);
+		Amicizia conAnna = riga(proprietario, mario, StatoAmicizia.ACCETTATA, null, false);
+		Amicizia conBruno = riga(bruno, mario, StatoAmicizia.ACCETTATA, null, false);
+		riga(mario, paolo, StatoAmicizia.PENDENTE, null, false);
+		Chat chatLuigi = chat(conLuigi);
+		Chat chatAnna = chat(conAnna);
+		Chat chatBruno = chat(conBruno);
+
+		List<AmiciziaResponse> amici = amiciziaService.amici(mario.getId());
+
+		// Per nome senza distinguere le maiuscole: Anna, bruno, Luigi. Paolo e' solo in attesa.
+		assertThat(amici).extracting(r -> r.altroUtente().id())
+				.containsExactly(proprietario.getId(), bruno.getId(), luigi.getId());
+		assertThat(amici).extracting(AmiciziaResponse::chatId)
+				.containsExactly(chatAnna.getId(), chatBruno.getId(), chatLuigi.getId());
+		assertThat(amici).extracting(AmiciziaResponse::stato).containsOnly(StatoAmiciziaVista.AMICI);
+		assertThat(amici.getFirst().id()).isEqualTo(conAnna.getId());
+		assertThat(amici.getFirst().eventoId()).isEqualTo(evento.getId());
+
+		// Dal punto di vista dell'altro: Luigi ha un solo amico, Mario.
+		assertThat(amiciziaService.amici(luigi.getId())).extracting(r -> r.altroUtente().id())
+				.containsExactly(mario.getId());
+	}
+
+	@Test
+	void richiesteRicevute_soloPendentiPerDataDecrescente() {
+		Utente paolo = utente("Paolo", "Neri");
+		Utente bruno = utente("Bruno", "Gialli");
+		Amicizia daMario = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		Amicizia daPaolo = riga(paolo, luigi, StatoAmicizia.PENDENTE, null, false);
+		daPaolo.setAggiornataIl(Instant.now());
+		// Rifiutata da Luigi (mascherata per Bruno) e richiesta inviata da Luigi: non sono "ricevute".
+		riga(bruno, luigi, StatoAmicizia.RIFIUTATA, luigi, true);
+		riga(luigi, proprietario, StatoAmicizia.PENDENTE, null, false);
+
+		List<AmiciziaResponse> ricevute = amiciziaService.richiesteRicevute(luigi.getId());
+
+		assertThat(ricevute).extracting(AmiciziaResponse::id).containsExactly(daPaolo.getId(), daMario.getId());
+		assertThat(ricevute).extracting(r -> r.altroUtente().id()).containsExactly(paolo.getId(), mario.getId());
+		assertThat(ricevute).extracting(AmiciziaResponse::stato).containsOnly(StatoAmiciziaVista.RICEVUTA);
+		assertThat(ricevute).extracting(AmiciziaResponse::chatId).containsOnlyNulls();
+	}
+
+	@Test
+	void richiesteInviate_pendentiEMascheratePerDataDecrescente() {
+		Utente paolo = utente("Paolo", "Neri");
+		Utente bruno = utente("Bruno", "Gialli");
+		Utente carla = utente("Carla", "Blu");
+		Amicizia aLuigi = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		Amicizia aPaolo = riga(mario, paolo, StatoAmicizia.RIFIUTATA, paolo, true);
+		aPaolo.setAggiornataIl(Instant.now());
+		// Rifiuto gia' ritirato, richiesta ritirata e richiesta ricevuta: non sono "inviate".
+		riga(mario, bruno, StatoAmicizia.RIFIUTATA, bruno, false);
+		riga(mario, carla, StatoAmicizia.RITIRATA, null, false);
+		riga(proprietario, mario, StatoAmicizia.PENDENTE, null, false);
+
+		List<AmiciziaResponse> inviate = amiciziaService.richiesteInviate(mario.getId());
+
+		assertThat(inviate).extracting(AmiciziaResponse::id).containsExactly(aPaolo.getId(), aLuigi.getId());
+		assertThat(inviate).extracting(r -> r.altroUtente().id()).containsExactly(paolo.getId(), luigi.getId());
+		assertThat(inviate).extracting(AmiciziaResponse::stato).containsOnly(StatoAmiciziaVista.INVIATA);
+
+		// Chi ha rifiutato non vede la richiesta da nessuna parte (D7).
+		assertThat(amiciziaService.richiesteRicevute(paolo.getId())).isEmpty();
+		assertThat(amiciziaService.richiesteInviate(paolo.getId())).isEmpty();
+	}
+
+	@Test
+	void liste_conLaChatDellaCoppia() {
+		// Luigi aveva rimosso Mario e ha chiesto di nuovo: la chat c'e' gia' (sola lettura).
+		Amicizia riga = riga(luigi, mario, StatoAmicizia.PENDENTE, null, false);
+		Chat chat = chat(riga);
+
+		assertThat(amiciziaService.richiesteInviate(luigi.getId())).extracting(AmiciziaResponse::chatId)
+				.containsExactly(chat.getId());
+		assertThat(amiciziaService.richiesteRicevute(mario.getId())).extracting(AmiciziaResponse::chatId)
+				.containsExactly(chat.getId());
+	}
+
+	@Test
+	void liste_vuote() {
+		assertThat(amiciziaService.amici(mario.getId())).isEmpty();
+		assertThat(amiciziaService.richiesteRicevute(mario.getId())).isEmpty();
+		assertThat(amiciziaService.richiesteInviate(mario.getId())).isEmpty();
+	}
+
+	// --- statoAmicizia (relazioni, per ListaPartecipanti) ---
+
+	@Test
+	void relazioni_ogniRigaDellaTabella() {
+		Utente senzaRiga = utente("Nessuna", "Riga");
+		Utente inviata = utente("Pendente", "DaMe");
+		Utente ricevuta = utente("Pendente", "DaLui");
+		Utente amico = utente("Accettata", "Amico");
+		Utente ritirata = utente("Ritirata", "Neutra");
+		Utente rifiutataDaMe = utente("Rifiutata", "DaMe");
+		Utente mascherata = utente("Rifiutata", "Mascherata");
+		Utente rifiutoRitirato = utente("Rifiutata", "Ritirata");
+		Utente rimossaDaMe = utente("Rimossa", "DaMe");
+		Utente rimossaDaLui = utente("Rimossa", "DaLui");
+
+		Amicizia rigaInviata = riga(mario, inviata, StatoAmicizia.PENDENTE, null, false);
+		Amicizia rigaRicevuta = riga(ricevuta, mario, StatoAmicizia.PENDENTE, null, false);
+		Amicizia rigaAmico = riga(amico, mario, StatoAmicizia.ACCETTATA, null, false);
+		riga(mario, ritirata, StatoAmicizia.RITIRATA, null, false);
+		riga(rifiutataDaMe, mario, StatoAmicizia.RIFIUTATA, mario, true);
+		Amicizia rigaMascherata = riga(mario, mascherata, StatoAmicizia.RIFIUTATA, mascherata, true);
+		riga(mario, rifiutoRitirato, StatoAmicizia.RIFIUTATA, rifiutoRitirato, false);
+		riga(rimossaDaMe, mario, StatoAmicizia.RIMOSSA, mario, false);
+		Amicizia rigaRimossaDaLui = riga(mario, rimossaDaLui, StatoAmicizia.RIMOSSA, rimossaDaLui, false);
+		// Chat: amici, richiesta riaperta dopo una rimozione, rimossa dall'altro (resta nascosta).
+		Chat chatAmico = chat(rigaAmico);
+		Chat chatInviata = chat(rigaInviata);
+		chat(rigaRimossaDaLui);
+
+		Map<UUID, RelazioneAmicizia> relazioni = amiciziaService.relazioni(mario.getId(), List.of(senzaRiga,
+				inviata, ricevuta, amico, ritirata, rifiutataDaMe, mascherata, rifiutoRitirato, rimossaDaMe,
+				rimossaDaLui));
+
+		assertThat(relazioni).hasSize(10);
+		assertThat(relazioni.get(senzaRiga.getId())).isEqualTo(RelazioneAmicizia.NESSUNA);
+		assertThat(relazioni.get(inviata.getId()))
+				.isEqualTo(new RelazioneAmicizia(StatoAmiciziaVista.INVIATA, rigaInviata.getId(), chatInviata.getId()));
+		assertThat(relazioni.get(ricevuta.getId()))
+				.isEqualTo(new RelazioneAmicizia(StatoAmiciziaVista.RICEVUTA, rigaRicevuta.getId(), null));
+		assertThat(relazioni.get(amico.getId()))
+				.isEqualTo(new RelazioneAmicizia(StatoAmiciziaVista.AMICI, rigaAmico.getId(), chatAmico.getId()));
+		assertThat(relazioni.get(ritirata.getId())).isEqualTo(RelazioneAmicizia.NESSUNA);
+		assertThat(relazioni.get(rifiutataDaMe.getId())).isEqualTo(RelazioneAmicizia.NESSUNA);
+		assertThat(relazioni.get(mascherata.getId()))
+				.isEqualTo(new RelazioneAmicizia(StatoAmiciziaVista.INVIATA, rigaMascherata.getId(), null));
+		assertThat(relazioni.get(rifiutoRitirato.getId())).isEqualTo(RelazioneAmicizia.NESSUNA);
+		assertThat(relazioni.get(rimossaDaMe.getId())).isEqualTo(RelazioneAmicizia.NESSUNA);
+		assertThat(relazioni.get(rimossaDaLui.getId())).isEqualTo(RelazioneAmicizia.NON_DISPONIBILE);
+	}
+
+	@Test
+	void relazioni_altroNonAttivo_tuttoTranneAmiciNonDisponibile() {
+		Utente sospesoAmico = utente("Sospeso", "Amico");
+		Utente sospesoInAttesa = utente("Sospeso", "InAttesa");
+		Utente anonimizzato = utente("Utente", "Anonimo");
+		Amicizia rigaAmico = riga(mario, sospesoAmico, StatoAmicizia.ACCETTATA, null, false);
+		Chat chatAmico = chat(rigaAmico);
+		riga(sospesoInAttesa, mario, StatoAmicizia.PENDENTE, null, false);
+		sospesoAmico.setStato(StatoUtente.SOSPESO);
+		sospesoInAttesa.setStato(StatoUtente.SOSPESO);
+		anonimizzato.setStato(StatoUtente.ANONIMIZZATO);
+
+		Map<UUID, RelazioneAmicizia> relazioni = amiciziaService.relazioni(mario.getId(),
+				List.of(sospesoAmico, sospesoInAttesa, anonimizzato));
+
+		assertThat(relazioni.get(sospesoAmico.getId()))
+				.isEqualTo(new RelazioneAmicizia(StatoAmiciziaVista.AMICI, rigaAmico.getId(), chatAmico.getId()));
+		assertThat(relazioni.get(sospesoInAttesa.getId())).isEqualTo(RelazioneAmicizia.NON_DISPONIBILE);
+		assertThat(relazioni.get(anonimizzato.getId())).isEqualTo(RelazioneAmicizia.NON_DISPONIBILE);
+	}
+
+	@Test
+	void relazioni_soloLeRigheDiChiChiede() {
+		// La riga fra Luigi e il proprietario non riguarda Mario: per lui restano NESSUNA.
+		riga(luigi, proprietario, StatoAmicizia.ACCETTATA, null, false);
+
+		Map<UUID, RelazioneAmicizia> relazioni =
+				amiciziaService.relazioni(mario.getId(), List.of(luigi, proprietario));
+
+		assertThat(relazioni.get(luigi.getId())).isEqualTo(RelazioneAmicizia.NESSUNA);
+		assertThat(relazioni.get(proprietario.getId())).isEqualTo(RelazioneAmicizia.NESSUNA);
+		assertThat(amiciziaService.relazioni(mario.getId(), List.of())).isEmpty();
 	}
 
 	// --- Supporto ---
