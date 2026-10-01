@@ -161,7 +161,7 @@ function SessioneDiProva() {
 // Pulsante amicizia (FE2-09) in tutti gli stati, con persone e amicizie dei dati finti
 // (mocks/dati.ts, viste da Valentina). Evento in comune e-03: lo organizza Valentina e Dario ha il
 // ticket, quindi la richiesta a Dario si puo' inviare davvero
-const amicizieDiProva: Omit<PulsanteAmiciziaProps, 'eventoId'>[] = [
+const amicizieDiProva: (Omit<PulsanteAmiciziaProps, 'eventoId'> & { eventoId?: string })[] = [
   { utente: { id: 'u-0004-dario', nome: 'Dario', cognome: 'Lucidi', immagineProfilo: null, attivo: true }, statoAmicizia: 'NESSUNA', amiciziaId: null, chatId: null },
   { utente: { id: 'u-0002-matteo', nome: 'Matteo', cognome: 'Valenti', immagineProfilo: null, attivo: true }, statoAmicizia: 'INVIATA', amiciziaId: 'am-02', chatId: null },
   { utente: { id: 'u-0003-elena', nome: 'Elena', cognome: 'Rostagno', immagineProfilo: null, attivo: true }, statoAmicizia: 'RICEVUTA', amiciziaId: 'am-03', chatId: null },
@@ -169,6 +169,9 @@ const amicizieDiProva: Omit<PulsanteAmiciziaProps, 'eventoId'>[] = [
   { utente: { id: 'u-0007-sospeso', nome: 'Utente', cognome: 'Sospeso', immagineProfilo: null, attivo: false }, statoAmicizia: 'NON_DISPONIBILE', amiciziaId: null, chatId: null },
   // Amica poi anonimizzata: resta AMICI e la chat si apre in sola lettura
   { utente: { id: 'u-0005-anonimo', nome: 'Utente', cognome: 'anonimo', immagineProfilo: null, attivo: false }, statoAmicizia: 'AMICI', amiciziaId: 'am-04', chatId: 'c-02' },
+  // Stato non aggiornato: Elena ha gia' chiesto l'amicizia (am-03, dall'evento e-07, dove hanno tutte e due il
+  // ticket). "Aggiungi" riceve 409 RICHIESTA_GIA_RICEVUTA e propone di accettare
+  { utente: { id: 'u-0003-elena', nome: 'Elena', cognome: 'Rostagno', immagineProfilo: null, attivo: true }, statoAmicizia: 'NESSUNA', amiciziaId: null, chatId: null, eventoId: 'e-07' },
   // Non arriva dal backend (un account non attivo e' NON_DISPONIBILE), solo per vedere il pulsante disattivato
   { utente: { id: 'u-demo-inattivo', nome: 'Account', cognome: 'disattivato', immagineProfilo: null, attivo: false }, statoAmicizia: 'NESSUNA', amiciziaId: null, chatId: null },
 ]
@@ -479,14 +482,14 @@ export default function Componenti() {
       <Sezione titolo="Pulsante amicizia (FE2-09)">
         <ul className="flex max-w-md flex-col gap-space-sm">
           {amicizieDiProva.map((p) => (
-            <li key={p.utente.id} className="flex items-center justify-between gap-space-sm rounded-lg bg-surface-container-low p-space-sm">
+            <li key={`${p.utente.id}-${p.statoAmicizia}`} className="flex items-center justify-between gap-space-sm rounded-lg bg-surface-container-low p-space-sm">
               <div className="flex min-w-0 flex-col">
                 <span className="truncate font-label-btn text-label-btn">
                   {p.utente.nome} {p.utente.cognome}
                 </span>
                 <span className="font-label-code-status text-label-code-status text-outline">{p.statoAmicizia}</span>
               </div>
-              <PulsanteAmicizia {...p} eventoId="e-03" />
+              <PulsanteAmicizia {...p} eventoId={p.eventoId ?? 'e-03'} />
             </li>
           ))}
         </ul>
