@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { Mappa, type MarkerMappa } from '@/components/mappa'
-import { Button, CampoPassword, Icon, TextField } from '@/components/ui'
+import { Button, CampoPassword, Icon, TextField, useAvviso } from '@/components/ui'
 import { CampoCodiceOtp } from '@/features/accesso/CampoCodiceOtp'
-import { passwordRicordata } from '@/features/accesso/registrazioneInCorso'
+import { dimenticaPassword, passwordRicordata } from '@/features/accesso/registrazioneInCorso'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
+import { useVerificaMutation } from '@/features/utenti/apiUtenti'
+import { leggiErrore } from '@/lib/errori'
 import { LIMITI_UTENTI } from '@/types/api'
 
 // Verifica dell'email (FE1-18), rotta /verify?email= (solo per ospiti), come la schermata Stitch
@@ -15,7 +17,7 @@ import { LIMITI_UTENTI } from '@/types/api'
 const CENTRO = { lat: 41.8967, lng: 12.4822 }
 
 export default function VerificaEmail() {
-  const [parametri] = useSearchParams()
+  const [parametri, setParametri] = useSearchParams()
   const emailDaIndirizzo = parametri.get('email') ?? ''
   const [email, setEmail] = useState(emailDaIndirizzo)
   const [codice, setCodice] = useState('')
@@ -24,10 +26,55 @@ export default function VerificaEmail() {
   const precompilata = password !== '' && password === passwordRicordata(email)
 
   const pronto = LIMITI_UTENTI.codice.test(codice) && password !== '' && email.trim() !== ''
+  const [errori, setErrori] = useState<{ codice?: string; password?: string; email?: string }>({})
+  const [verifica, { isLoading }] = useVerificaMutation()
+  const avviso = useAvviso()
+  const navigate = useNavigate()
 
-  function invia(e: FormEvent) {
+  async function invia(e: FormEvent) {
     e.preventDefault()
-    // Collegamento a POST /api/auth/verify nel passo 6 di FE1-18
+    if (!pronto) return
+    setErrori({})
+    // La verifica salva la sessione (apiUtenti) e questa rotta per ospiti (SoloOspiti) porta subito
+    // a ?redirect=: se manca si mette la mappa, cosi' l'utente arriva li' gia' con l'accesso fatto
+    if (!parametri.get('redirect')) {
+      setParametri((p) => {
+        p.set('redirect', '/map')
+        return p
+      }, { replace: true })
+    }
+    try {
+      const { utente } = await verifica({ email: email.trim(), codice, password }).unwrap()
+      dimenticaPassword()
+      avviso.successo(`Ti diamo il benvenuto, ${utente.nome}!`, 'Il tuo account è attivo: ecco gli eventi sulla mappa.')
+    } catch (err) {
+      const { codice: errore, campi } = leggiErrore(err)
+      switch (errore) {
+        case 'CODICE_NON_VALIDO':
+          setErrori({ codice: 'Codice non corretto: controlla l’email e riprova.' })
+          setCodice('')
+          break
+        case 'CODICE_SCADUTO':
+          setErrori({ codice: 'Il codice è scaduto o hai fatto troppi tentativi: richiedine uno nuovo qui sotto.' })
+          setCodice('')
+          break
+        case 'PASSWORD_ERRATA':
+          setErrori({
+            password:
+              'Non è la password scelta alla registrazione. Se non la ricordi, registrati di nuovo con la stessa email: i dati vengono aggiornati.',
+          })
+          break
+        case 'GIA_VERIFICATO':
+          avviso.info('Account già verificato', 'Puoi accedere con email e password.')
+          navigate('/login', { replace: true })
+          break
+        case 'VALIDAZIONE':
+          setErrori({ codice: campi.codice, password: campi.password, email: campi.email })
+          break
+        default:
+          avviso.erroreApi(err)
+      }
+    }
   }
 
   // Anteprima: gli eventi veri sulla mappa, con il cerchio "radar" del design
@@ -70,22 +117,36 @@ export default function VerificaEmail() {
                 obbligatorio
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                errore={errori.email}
                 placeholder="utente@dominio.it"
               />
             )}
 
-            <CampoCodiceOtp valore={codice} onChange={setCodice} autoFocus />
+            <CampoCodiceOtp
+              valore={codice}
+              onChange={(c) => {
+                setCodice(c)
+                setErrori((e) => ({ ...e, codice: undefined }))
+              }}
+              errore={errori.codice}
+              disabled={isLoading}
+              autoFocus
+            />
 
             <CampoPassword
               etichetta="Password dell'account"
               obbligatorio
               autoComplete="current-password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                setErrori((er) => ({ ...er, password: undefined }))
+              }}
+              errore={errori.password}
               aiuto={precompilata ? 'Precompilata con quella scelta alla registrazione.' : 'La stessa scelta alla registrazione.'}
             />
 
-            <Button type="submit" variant="gradient" size="lg" pieno icona="how_to_reg" disabled={!pronto}>
+            <Button type="submit" variant="gradient" size="lg" pieno icona="how_to_reg" disabled={!pronto} inCorso={isLoading}>
               Verifica il codice e accedi
             </Button>
           </form>

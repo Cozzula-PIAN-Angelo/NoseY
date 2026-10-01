@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { Icon, useAvviso } from '@/components/ui'
 import { FormRegistrazione, type ValoriRegistrazione } from '@/features/accesso/FormRegistrazione'
 import { ricordaPassword } from '@/features/accesso/registrazioneInCorso'
@@ -32,6 +32,9 @@ export default function Registrazione() {
   const [erroriServer, setErroriServer] = useState<ErroriRegistrazione>({})
   const avviso = useAvviso()
   const navigate = useNavigate()
+  // Dopo la verifica si va alla mappa, o alla pagina da cui si veniva (?redirect=)
+  const [parametri] = useSearchParams()
+  const redirect = parametri.get('redirect') || '/map'
 
   async function invia(v: ValoriRegistrazione) {
     try {
@@ -46,7 +49,7 @@ export default function Registrazione() {
       // Fase 2: verifica del codice. La password resta solo in memoria per precompilarla
       ricordaPassword(email, v.password)
       avviso.successo('Account creato', `Ti abbiamo inviato il codice di verifica a ${email}.`)
-      navigate(`/verify?email=${encodeURIComponent(email)}`)
+      navigate(`/verify?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(redirect)}`)
     } catch (errore) {
       const { codice, campi } = leggiErrore(errore)
       if (codice === 'EMAIL_GIA_REGISTRATA') {
