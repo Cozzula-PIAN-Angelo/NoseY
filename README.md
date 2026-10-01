@@ -36,14 +36,36 @@ Tutti gli endpoint REST stanno sotto `/api`.
 
 1. Repository Git con `be/`, `fe/`, `render.yaml` nella radice.
 2. **New > Blueprint**, si sceglie la repo: nascono `nosey-db`, `nosey-be`, `nosey-fe`.
-3. Dopo la prima build si impostano le due variabili `sync: false`, senza `/` finale:
+3. Nel form del Blueprint (o dopo, in **Environment**) si impostano le tre variabili `sync: false`.
+   Gli URL senza `/` finale e identici a quelli che Render assegna ai servizi:
 
    | Servizio | Variabile | Valore |
    |---|---|---|
-   | `nosey-be` | `ALLOWED_ORIGIN` | `https://nosey-fe.onrender.com` |
+   | `nosey-be` | `ALLOWED_ORIGIN` | `https://nosey-fe.onrender.com` (vale per CORS e per il WebSocket `/ws`) |
+   | `nosey-be` | `GEMINI_API_KEY` | chiave da https://aistudio.google.com/apikey (solo per la descrizione con l'AI) |
    | `nosey-fe` | `VITE_API_URL` | `https://nosey-be.onrender.com` |
 
-4. **Manual Deploy** di entrambi (`VITE_API_URL` e' letta in fase di build).
+4. **Manual Deploy** di `nosey-fe` dopo aver cambiato `VITE_API_URL`: si legge in fase di build, quindi
+   serve **Clear build cache & deploy**.
+
+### Cose da sapere
+
+- **Il deploy non parte dai push.** Render non ha l'app GitHub installata sulla repo: dopo un merge in
+  `main` si fa **Manual Deploy** a mano, e anche le modifiche a `render.yaml` non si sincronizzano da sole.
+- **Avvio lento.** Sul piano gratuito il backend si sospende senza traffico e riparte in circa 3 minuti
+  (`Started NoseyApplication in 174 seconds`). Il primo accesso dopo una pausa puo' non rispondere.
+- **Email.** Senza il profilo `smtp` gira `LogEmailService`: i codici di verifica e di reset si leggono
+  nei log di `nosey-be` (Logs, cerca `[EMAIL FINTA]`). `BrevoEmailService` non esiste ancora.
+- **WebSocket.** Il backend non imposta heartbeat STOMP: se una connessione ferma a lungo cade, il client
+  si riconnette da solo.
+
+### Prova online (TEAM-03)
+
+1. `https://nosey-be.onrender.com/api/stato` risponde `{"servizio":"attivo","database":"nosey"}`.
+2. Nei log di `nosey-be` compaiono `Successfully applied 3 migrations` (Flyway) e `Started NoseyApplication`.
+3. Su `https://nosey-fe.onrender.com`: registrazione, poi il codice a 6 cifre dai log (`[EMAIL FINTA]`), poi login.
+4. Creare un evento e caricare una foto: l'immagine sta nel database (decisione 4), non su file.
+5. Con due utenti amici, un messaggio di chat: passa dal WebSocket (`/user/queue/messages`).
 
 ## Documentazione
 
