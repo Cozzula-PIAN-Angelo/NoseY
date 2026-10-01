@@ -3,6 +3,8 @@ package it.epicode.nosey.event;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
 import it.epicode.nosey.common.ImmagineContenuto;
+import it.epicode.nosey.notification.NotificheService;
+import it.epicode.nosey.notification.ParteEvento;
 import it.epicode.nosey.ticket.PartecipanteRepository;
 import it.epicode.nosey.user.Utente;
 import it.epicode.nosey.user.UtentePubblicoResponse;
@@ -14,8 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -36,7 +41,10 @@ public class EventoService {
 	private final ArtistaEventoRepository artistaEventoRepository;
 	private final PoiRepository poiRepository;
 	private final PartecipanteRepository partecipanteRepository;
+	private final NotificheService notificheService;
 	private final Clock clock;
+
+	private static final double RAGGIO_POI_KM = 2.0;
 
 	@Transactional(readOnly = true)
 	public List<EventoMappaResponse> listaMappa(Double lat, Double lng) {
@@ -117,6 +125,111 @@ public class EventoService {
 		eventoRepository.save(evento);
 
 		return dettaglio(evento, proprietarioId, false);
+	}
+
+	@Transactional
+	public EventoDettaglioResponse modifica(UUID id, UUID proprietarioId, ModificaEventoRequest richiesta) {
+		if (richiesta.vuota()) {
+			throw new ApplicazioneException(CodiceErrore.RICHIESTA_VUOTA, "Nessun campo da modificare");
+		}
+		Evento evento = eventoRepository.findConLockById(id)
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Evento non trovato"));
+		if (!evento.getProprietario().getId().equals(proprietarioId)) {
+			throw new ApplicazioneException(CodiceErrore.NON_PROPRIETARIO, "Non sei il proprietario dell'evento");
+		}
+		Instant adesso = clock.instant();
+		StatoEvento statoAttuale = controllaScrivibile(evento, adesso);
+
+		boolean dataEventoCambiata = richiesta.dataEvento() != null && !richiesta.dataEvento().equals(evento.getDataEvento());
+		boolean dataFineCambiata = richiesta.dataFine() != null && !richiesta.dataFine().equals(evento.getDataFine());
+
+		if (dataEventoCambiata && statoAttuale == StatoEvento.IN_CORSO) {
+			throw new ApplicazioneException(CodiceErrore.EVENTO_GIA_INIZIATO, "L'evento e' gia' iniziato");
+		}
+		if ((dataEventoCambiata && !richiesta.dataEvento().isAfter(adesso))
+				|| (dataFineCambiata && !richiesta.dataFine().isAfter(adesso))) {
+			throw new ApplicazioneException(CodiceErrore.DATA_NON_FUTURA, "La data deve essere futura");
+		}
+		Instant nuovaDataEvento = dataEventoCambiata ? richiesta.dataEvento() : evento.getDataEvento();
+		Instant nuovaDataFine = dataFineCambiata ? richiesta.dataFine() : evento.getDataFine();
+		if (!nuovaDataFine.isAfter(nuovaDataEvento)) {
+			throw new ApplicazioneException(CodiceErrore.DATE_NON_VALIDE,
+					"La data di fine deve essere successiva alla data dell'evento");
+		}
+
+		boolean latCambiata = richiesta.lat() != null && !richiesta.lat().equals(evento.getLat());
+		boolean lngCambiata = richiesta.lng() != null && !richiesta.lng().equals(evento.getLng());
+		if (latCambiata || lngCambiata) {
+			double nuovaLat = latCambiata ? richiesta.lat() : evento.getLat();
+			double nuovaLng = lngCambiata ? richiesta.lng() : evento.getLng();
+			boolean poiFuoriRaggio = poiRepository.findByEventoId(evento.getId()).stream()
+					.anyMatch(poi -> distanzaKm(nuovaLat, nuovaLng, poi.getLat(), poi.getLng()) > RAGGIO_POI_KM);
+			if (poiFuoriRaggio) {
+				throw new ApplicazioneException(CodiceErrore.POI_FUORI_RAGGIO,
+						"Un POI resterebbe a piu' di 2 km dall'evento");
+			}
+		}
+
+		Set<ParteEvento> parti = new LinkedHashSet<>();
+		if (richiesta.titolo() != null && !richiesta.titolo().equals(evento.getTitolo())) {
+			evento.setTitolo(richiesta.titolo());
+			parti.add(ParteEvento.TITOLO);
+		}
+		if (richiesta.descrizione() != null) {
+			String nuovaDescrizione = richiesta.descrizione().isEmpty() ? null : richiesta.descrizione();
+			if (!Objects.equals(nuovaDescrizione, evento.getDescrizione())) {
+				evento.setDescrizione(nuovaDescrizione);
+				parti.add(ParteEvento.DESCRIZIONE);
+			}
+		}
+		if (dataEventoCambiata) {
+			evento.setDataEvento(richiesta.dataEvento());
+			parti.add(ParteEvento.DATE);
+		}
+		if (dataFineCambiata) {
+			evento.setDataFine(richiesta.dataFine());
+			parti.add(ParteEvento.DATE);
+		}
+		if (latCambiata) {
+			evento.setLat(richiesta.lat());
+			parti.add(ParteEvento.LUOGO);
+		}
+		if (lngCambiata) {
+			evento.setLng(richiesta.lng());
+			parti.add(ParteEvento.LUOGO);
+		}
+
+		if (!parti.isEmpty()) {
+			notificheService.notificaModifica(evento, parti);
+		}
+		// Il proprietario non puo' essere iscritto al proprio evento (PROPRIETARIO_NON_ISCRIVIBILE).
+		return dettaglio(evento, proprietarioId, false);
+	}
+
+	@Transactional
+	public void annulla(UUID id, UUID proprietarioId, String motivo) {
+		Evento evento = eventoRepository.findConLockById(id)
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Evento non trovato"));
+		if (!evento.getProprietario().getId().equals(proprietarioId)) {
+			throw new ApplicazioneException(CodiceErrore.NON_PROPRIETARIO, "Non sei il proprietario dell'evento");
+		}
+		controllaScrivibile(evento, clock.instant());
+
+		evento.setStato(StatoEventoDb.ANNULLATO);
+		evento.setMotivoAnnullamento(motivo == null || motivo.isBlank() ? null : motivo.strip());
+		notificheService.notificaAnnullamento(evento);
+	}
+
+	// Evento concluso o annullato: niente scritture (progettazione v4, sezione 0 "Stato dell'evento").
+	private StatoEvento controllaScrivibile(Evento evento, Instant adesso) {
+		StatoEvento stato = StatoEvento.calcola(evento, adesso);
+		if (stato == StatoEvento.CONCLUSO) {
+			throw new ApplicazioneException(CodiceErrore.EVENTO_CONCLUSO, "L'evento e' concluso");
+		}
+		if (stato == StatoEvento.ANNULLATO) {
+			throw new ApplicazioneException(CodiceErrore.EVENTO_ANNULLATO, "L'evento e' annullato");
+		}
+		return stato;
 	}
 
 	@Transactional(readOnly = true)
