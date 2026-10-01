@@ -33,7 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * RichiediAmicizia (progettazione v4, sezione 8): ogni controllo e ogni caso della riga della coppia.
+ * Amicizie (progettazione v4, sezione 8): ogni controllo e ogni caso della riga della coppia in
+ * RichiediAmicizia, poi errori ed effetti di accetta, rifiuta, ritira e rimuovi.
  * Test di integrazione sul database locale (decisione 10): ogni test viene annullato alla fine.
  */
 @SpringBootTest
@@ -204,10 +205,7 @@ class AmiciziaServiceTest {
 	@Test
 	void rimossaDaMe_riapertaConLaStessaChat() {
 		Amicizia riga = riga(luigi, mario, StatoAmicizia.RIMOSSA, mario, false);
-		Chat chat = new Chat();
-		chat.setAmicizia(riga);
-		chat.setCreataIl(Instant.now());
-		chat = chatRepository.save(chat);
+		Chat chat = chat(riga);
 
 		AmiciziaResponse risposta = richiedi(mario, luigi);
 
@@ -222,7 +220,179 @@ class AmiciziaServiceTest {
 		assertErrore(CodiceErrore.AMICIZIA_NON_DISPONIBILE, () -> richiedi(mario, luigi));
 	}
 
+	// --- AccettaAmicizia ---
+
+	@Test
+	void accetta_amiciConChatNuova() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		NotificaAmicizia richiesta = notifica(riga, luigi, TipoNotificaAmicizia.RICHIESTA);
+		Instant prima = riga.getAggiornataIl();
+
+		AmiciziaResponse risposta = amiciziaService.accetta(riga.getId(), luigi.getId());
+
+		assertThat(risposta.id()).isEqualTo(riga.getId());
+		assertThat(risposta.stato()).isEqualTo(StatoAmiciziaVista.AMICI);
+		assertThat(risposta.altroUtente().id()).isEqualTo(mario.getId());
+		assertThat(risposta.chatId()).isNotNull()
+				.isEqualTo(chatRepository.trovaIdPerAmicizia(riga.getId()).orElseThrow());
+		assertThat(riga.getStato()).isEqualTo(StatoAmicizia.ACCETTATA);
+		assertThat(riga.getAggiornataIl()).isAfter(prima);
+		assertThat(richiesta.isLetta()).isTrue();
+		assertThat(notifiche(mario)).singleElement()
+				.satisfies(n -> assertThat(n.getTipo()).isEqualTo(TipoNotificaAmicizia.ACCETTATA));
+	}
+
+	@Test
+	void accetta_riusaLaChatDellaCoppia() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		Chat chat = chat(riga);
+
+		AmiciziaResponse risposta = amiciziaService.accetta(riga.getId(), luigi.getId());
+
+		assertThat(risposta.chatId()).isEqualTo(chat.getId());
+		assertThat(chatRepository.findAll()).filteredOn(c -> c.getAmicizia().getId().equals(riga.getId()))
+				.hasSize(1);
+	}
+
+	@Test
+	void accetta_errori() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		Utente estraneo = utente("Paolo", "Neri");
+
+		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.accetta(UUID.randomUUID(), luigi.getId()));
+		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.accetta(riga.getId(), estraneo.getId()));
+		assertErrore(CodiceErrore.NON_RICEVENTE, () -> amiciziaService.accetta(riga.getId(), mario.getId()));
+
+		mario.setStato(StatoUtente.SOSPESO);
+		assertErrore(CodiceErrore.UTENTE_NON_ATTIVO, () -> amiciziaService.accetta(riga.getId(), luigi.getId()));
+
+		riga.setStato(StatoAmicizia.RITIRATA);
+		assertErrore(CodiceErrore.NON_IN_ATTESA, () -> amiciziaService.accetta(riga.getId(), luigi.getId()));
+	}
+
+	// --- RifiutaAmicizia ---
+
+	@Test
+	void rifiuta_mascherataSenzaNotifica() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		NotificaAmicizia richiesta = notifica(riga, luigi, TipoNotificaAmicizia.RICHIESTA);
+
+		amiciziaService.rifiuta(riga.getId(), luigi.getId());
+
+		assertThat(riga.getStato()).isEqualTo(StatoAmicizia.RIFIUTATA);
+		assertThat(riga.getChiusaDa()).isEqualTo(luigi);
+		assertThat(riga.isRichiestaMascherata()).isTrue();
+		assertThat(richiesta.isLetta()).isTrue();
+		assertThat(notifiche(mario)).isEmpty();
+		// Per Mario la richiesta resta inviata (D7).
+		assertErrore(CodiceErrore.RICHIESTA_GIA_INVIATA, () -> richiedi(mario, luigi));
+	}
+
+	@Test
+	void rifiuta_errori() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		Utente estraneo = utente("Paolo", "Neri");
+
+		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.rifiuta(riga.getId(), estraneo.getId()));
+		assertErrore(CodiceErrore.NON_RICEVENTE, () -> amiciziaService.rifiuta(riga.getId(), mario.getId()));
+
+		riga.setStato(StatoAmicizia.ACCETTATA);
+		assertErrore(CodiceErrore.NON_IN_ATTESA, () -> amiciziaService.rifiuta(riga.getId(), luigi.getId()));
+	}
+
+	// --- RitiraRichiesta ---
+
+	@Test
+	void ritira_pendente_coppiaNeutra() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		notifica(riga, luigi, TipoNotificaAmicizia.RICHIESTA);
+
+		amiciziaService.ritira(riga.getId(), mario.getId());
+
+		assertThat(riga.getStato()).isEqualTo(StatoAmicizia.RITIRATA);
+		assertThat(notifiche(luigi)).isEmpty();
+		// Coppia neutra: anche l'altro puo' chiedere.
+		assertThat(richiedi(luigi, mario).stato()).isEqualTo(StatoAmiciziaVista.INVIATA);
+	}
+
+	@Test
+	void ritira_rifiutataMascherata_ilRifiutoResta() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.RIFIUTATA, luigi, true);
+
+		amiciziaService.ritira(riga.getId(), mario.getId());
+
+		assertThat(riga.getStato()).isEqualTo(StatoAmicizia.RIFIUTATA);
+		assertThat(riga.getChiusaDa()).isEqualTo(luigi);
+		assertThat(riga.isRichiestaMascherata()).isFalse();
+	}
+
+	@Test
+	void ritira_errori() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		Utente estraneo = utente("Paolo", "Neri");
+
+		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.ritira(riga.getId(), estraneo.getId()));
+		assertErrore(CodiceErrore.NON_RICHIEDENTE, () -> amiciziaService.ritira(riga.getId(), luigi.getId()));
+
+		riga.setStato(StatoAmicizia.RIFIUTATA);
+		riga.setChiusaDa(luigi);
+		riga.setRichiestaMascherata(false);
+		assertErrore(CodiceErrore.NON_IN_ATTESA, () -> amiciziaService.ritira(riga.getId(), mario.getId()));
+
+		riga.setStato(StatoAmicizia.ACCETTATA);
+		riga.setChiusaDa(null);
+		assertErrore(CodiceErrore.NON_IN_ATTESA, () -> amiciziaService.ritira(riga.getId(), mario.getId()));
+	}
+
+	// --- RimuoviAmicizia ---
+
+	@Test
+	void rimuovi_soloChiHaRimossoPuoRichiedereDiNuovo() {
+		// Mario aveva chiesto, Luigi aveva accettato: ora Luigi rimuove.
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.ACCETTATA, null, false);
+		Chat chat = chat(riga);
+
+		amiciziaService.rimuovi(riga.getId(), luigi.getId());
+
+		assertThat(riga.getStato()).isEqualTo(StatoAmicizia.RIMOSSA);
+		assertThat(riga.getChiusaDa().getId()).isEqualTo(luigi.getId());
+		assertThat(chatRepository.trovaIdPerAmicizia(riga.getId())).contains(chat.getId());
+		assertThat(notifiche(mario)).isEmpty();
+
+		assertErrore(CodiceErrore.AMICIZIA_NON_DISPONIBILE, () -> richiedi(mario, luigi));
+		AmiciziaResponse risposta = richiedi(luigi, mario);
+		assertThat(risposta.stato()).isEqualTo(StatoAmiciziaVista.INVIATA);
+		assertThat(risposta.id()).isEqualTo(riga.getId());
+		assertThat(risposta.chatId()).isEqualTo(chat.getId());
+	}
+
+	@Test
+	void rimuovi_errori() {
+		Amicizia riga = riga(mario, luigi, StatoAmicizia.PENDENTE, null, false);
+		Utente estraneo = utente("Paolo", "Neri");
+
+		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.rimuovi(UUID.randomUUID(), mario.getId()));
+		assertErrore(CodiceErrore.NON_TROVATO, () -> amiciziaService.rimuovi(riga.getId(), estraneo.getId()));
+		assertErrore(CodiceErrore.NON_AMICI, () -> amiciziaService.rimuovi(riga.getId(), mario.getId()));
+	}
+
 	// --- Supporto ---
+
+	private Chat chat(Amicizia amicizia) {
+		Chat chat = new Chat();
+		chat.setAmicizia(amicizia);
+		chat.setCreataIl(Instant.now());
+		return chatRepository.save(chat);
+	}
+
+	private NotificaAmicizia notifica(Amicizia amicizia, Utente destinatario, TipoNotificaAmicizia tipo) {
+		NotificaAmicizia notifica = new NotificaAmicizia();
+		notifica.setDestinatario(destinatario);
+		notifica.setAmicizia(amicizia);
+		notifica.setTipo(tipo);
+		notifica.setCreataIl(Instant.now());
+		return notificaAmiciziaRepository.save(notifica);
+	}
 
 	private AmiciziaResponse richiedi(Utente da, Utente a) {
 		return amiciziaService.richiedi(new RichiediAmiciziaRequest(a.getId(), evento.getId()), da.getId());
