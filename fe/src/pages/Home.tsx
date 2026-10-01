@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Icon, stilePulsante } from '@/components/ui'
+import { Icon, Scheletro, stilePulsante } from '@/components/ui'
 import { useListaArtistiQuery, useListaEventiQuery } from '@/features/eventi/apiEventi'
+import { CaroselloEventi } from '@/features/eventi/CaroselloEventi'
 import { cx } from '@/lib/cx'
 
 // Home (FE1-19), rotta / (pubblica), come la schermata Stitch "Hero Live (Cylindrical 3D Carousel)".
 // Passo 3: hero con titolo, contatori veri (eventi attivi, artisti nel catalogo), ricerca che porta a
-// Esplora eventi e pulsanti verso eventi e mappa; sotto, le funzioni di NoseY. Il carosello e' il passo 4.
+// Esplora eventi e pulsanti verso eventi e mappa; sotto, le funzioni di NoseY.
+// Passo 4: a destra il carosello degli eventi in programma e in corso.
 // Tolte le scritte finte di Stitch ("Live Orbital Engine", "Radar 2km", "Latenza 14ms", "crittografico").
 
 /** Le funzioni vere di NoseY, al posto della striscia tecnica di Stitch */
@@ -31,7 +33,7 @@ function Contatore({ etichetta, valore, icona, colore }: { etichetta: string; va
 }
 
 export default function Home() {
-  const { data: eventi } = useListaEventiQuery()
+  const { data: eventi, isLoading: eventiInCaricamento } = useListaEventiQuery()
   const { data: artisti } = useListaArtistiQuery()
   const [cerca, setCerca] = useState('')
   const navigate = useNavigate()
@@ -118,7 +120,22 @@ export default function Home() {
             </div>
           </form>
         </div>
-        {/* Passo 4: qui il carosello degli eventi */}
+        <div className="min-w-0">
+          {eventiInCaricamento ? (
+            <div role="status" aria-label="Caricamento degli eventi" className="flex justify-center">
+              <Scheletro className="h-[26rem] w-60" />
+            </div>
+          ) : eventi && eventi.length > 0 ? (
+            <CaroselloEventi eventi={eventi} />
+          ) : (
+            eventi && (
+              <p className="flex items-center justify-center gap-space-xs rounded-2xl bg-surface-card p-space-xl text-center font-body-md text-body-md text-on-surface-variant">
+                <Icon nome="event_busy" size={22} className="text-outline" />
+                Nessun evento in programma in questo momento.
+              </p>
+            )
+          )}
+        </div>
       </section>
 
       <section aria-label="Cosa puoi fare con NoseY" className="w-full bg-surface-container-lowest">
