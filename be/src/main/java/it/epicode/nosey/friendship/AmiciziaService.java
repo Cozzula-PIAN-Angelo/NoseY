@@ -1,5 +1,6 @@
 package it.epicode.nosey.friendship;
 
+import it.epicode.nosey.chat.Chat;
 import it.epicode.nosey.chat.ChatRepository;
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
@@ -7,7 +8,9 @@ import it.epicode.nosey.common.Limite;
 import it.epicode.nosey.common.LimitiService;
 import it.epicode.nosey.event.Evento;
 import it.epicode.nosey.event.EventoRepository;
+import it.epicode.nosey.notification.NotificaAmiciziaRepository;
 import it.epicode.nosey.notification.NotificheService;
+import it.epicode.nosey.notification.TipoNotificaAmicizia;
 import it.epicode.nosey.ticket.PartecipanteRepository;
 import it.epicode.nosey.user.StatoUtente;
 import it.epicode.nosey.user.Utente;
@@ -21,7 +24,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * RichiediAmicizia (progettazione v4, sezione 8).
+ * RichiediAmicizia, AccettaAmicizia, RifiutaAmicizia, RitiraRichiesta e RimuoviAmicizia
+ * (progettazione v4, sezione 8).
  */
 @Service
 @RequiredArgsConstructor
@@ -32,6 +36,7 @@ public class AmiciziaService {
 	private final UtenteRepository utenteRepository;
 	private final EventoRepository eventoRepository;
 	private final PartecipanteRepository partecipanteRepository;
+	private final NotificaAmiciziaRepository notificaAmiciziaRepository;
 	private final NotificheService notificheService;
 	private final LimitiService limitiService;
 	private final Clock clock;
@@ -107,6 +112,113 @@ public class AmiciziaService {
 			case RITIRATA -> riapri(amicizia, utenteId, ricevente, evento, adesso);
 		}
 		return risposta(amicizia, ricevente);
+	}
+
+	@Transactional
+	public AmiciziaResponse accetta(UUID amiciziaId, UUID utenteId) {
+		Amicizia amicizia = caricaConLock(amiciziaId, utenteId);
+		if (!amicizia.getRicevente().getId().equals(utenteId)) {
+			throw new ApplicazioneException(CodiceErrore.NON_RICEVENTE,
+					"Solo chi ha ricevuto la richiesta puo' accettarla");
+		}
+		richiediPendente(amicizia);
+		Utente richiedente = amicizia.getRichiedente();
+		if (richiedente.getStato() != StatoUtente.ATTIVO) {
+			throw new ApplicazioneException(CodiceErrore.UTENTE_NON_ATTIVO, "L'utente non e' piu' attivo");
+		}
+
+		amicizia.setStato(StatoAmicizia.ACCETTATA);
+		amicizia.setAggiornataIl(clock.instant());
+		// La chat della coppia si riusa, con lo storico, se esiste gia' (es. dopo una rimozione).
+		UUID chatId = chatRepository.trovaIdPerAmicizia(amicizia.getId())
+				.orElseGet(() -> creaChat(amicizia));
+		segnaLetteRichieste(amicizia);
+		notificheService.notificaAmiciziaAccettata(amicizia);
+		return AmiciziaResponse.da(amicizia, richiedente, StatoAmiciziaVista.AMICI, chatId);
+	}
+
+	@Transactional
+	public void rifiuta(UUID amiciziaId, UUID utenteId) {
+		Amicizia amicizia = caricaConLock(amiciziaId, utenteId);
+		if (!amicizia.getRicevente().getId().equals(utenteId)) {
+			throw new ApplicazioneException(CodiceErrore.NON_RICEVENTE,
+					"Solo chi ha ricevuto la richiesta puo' rifiutarla");
+		}
+		richiediPendente(amicizia);
+
+		// Rifiuto silenzioso (D7): il richiedente continua a vedere la richiesta come inviata.
+		amicizia.setStato(StatoAmicizia.RIFIUTATA);
+		amicizia.setChiusaDa(amicizia.getRicevente());
+		amicizia.setRichiestaMascherata(true);
+		amicizia.setAggiornataIl(clock.instant());
+		segnaLetteRichieste(amicizia);
+	}
+
+	@Transactional
+	public void ritira(UUID amiciziaId, UUID utenteId) {
+		Amicizia amicizia = caricaConLock(amiciziaId, utenteId);
+		if (!amicizia.getRichiedente().getId().equals(utenteId)) {
+			throw new ApplicazioneException(CodiceErrore.NON_RICHIEDENTE,
+					"Solo chi ha inviato la richiesta puo' ritirarla");
+		}
+
+		if (amicizia.getStato() == StatoAmicizia.PENDENTE) {
+			// La coppia torna neutra: tutti e due possono chiedere di nuovo.
+			amicizia.setStato(StatoAmicizia.RITIRATA);
+			notificaAmiciziaRepository.deleteByAmiciziaIdAndDestinatarioIdAndTipo(amicizia.getId(),
+					amicizia.getRicevente().getId(), TipoNotificaAmicizia.RICHIESTA);
+		} else if (amicizia.getStato() == StatoAmicizia.RIFIUTATA && amicizia.isRichiestaMascherata()) {
+			// Per chi ritira la richiesta e' ritirata, il rifiuto resta.
+			amicizia.setRichiestaMascherata(false);
+		} else {
+			throw nonInAttesa();
+		}
+		amicizia.setAggiornataIl(clock.instant());
+	}
+
+	@Transactional
+	public void rimuovi(UUID amiciziaId, UUID utenteId) {
+		Amicizia amicizia = caricaConLock(amiciziaId, utenteId);
+		if (amicizia.getStato() != StatoAmicizia.ACCETTATA) {
+			throw new ApplicazioneException(CodiceErrore.NON_AMICI, "Non siete amici");
+		}
+
+		// La chat resta, in sola lettura; solo chi rimuove puo' chiedere di nuovo l'amicizia (D8).
+		amicizia.setStato(StatoAmicizia.RIMOSSA);
+		amicizia.setChiusaDa(utenteRepository.getReferenceById(utenteId));
+		amicizia.setAggiornataIl(clock.instant());
+	}
+
+	// 404 anche se l'amicizia esiste ma non riguarda chi chiede (sezione 8).
+	private Amicizia caricaConLock(UUID amiciziaId, UUID utenteId) {
+		return amiciziaRepository.findConLockById(amiciziaId)
+				.filter(a -> a.getRichiedente().getId().equals(utenteId)
+						|| a.getRicevente().getId().equals(utenteId))
+				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Amicizia non trovata"));
+	}
+
+	private void richiediPendente(Amicizia amicizia) {
+		if (amicizia.getStato() != StatoAmicizia.PENDENTE) {
+			throw nonInAttesa();
+		}
+	}
+
+	private ApplicazioneException nonInAttesa() {
+		return new ApplicazioneException(CodiceErrore.NON_IN_ATTESA, "La richiesta non e' piu' in attesa");
+	}
+
+	private UUID creaChat(Amicizia amicizia) {
+		Chat chat = new Chat();
+		chat.setAmicizia(amicizia);
+		chat.setCreataIl(clock.instant());
+		return chatRepository.save(chat).getId();
+	}
+
+	// Segnare lette le RICHIESTA quando si accetta o si rifiuta e' a carico delle amicizie (TEAM-02).
+	private void segnaLetteRichieste(Amicizia amicizia) {
+		notificaAmiciziaRepository
+				.findByAmiciziaIdAndTipoAndLettaFalse(amicizia.getId(), TipoNotificaAmicizia.RICHIESTA)
+				.forEach(n -> n.setLetta(true));
 	}
 
 	// Il proprietario dell'evento conta come se avesse il ticket (D6).
