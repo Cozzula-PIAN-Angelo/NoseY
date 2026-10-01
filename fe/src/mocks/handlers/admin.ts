@@ -1,12 +1,13 @@
-// Endpoint finti del pannello admin (progettazione v4, sezioni 12 e 13): utenti e ruoli.
+// Endpoint finti del pannello admin (progettazione v4, sezioni 12 e 13): utenti, ruoli, catalogo artisti
+// e moderazione degli eventi.
 // Gli account sono quelli di datiSocial.ts (nome e cognome in dati.ts); serve un token di un
 // ADMIN o SUPERADMIN, per esempio sofia@nosey.it (ADMIN) o elena@nosey.it (SUPERADMIN, l'unica che
 // puo' cambiare i ruoli).
 import { delay, http, HttpResponse } from 'msw'
-import type { AdminUtenteResponse, Ruolo, StatoUtente } from '@/types/api'
-import { trovaUtente } from '../dati'
-import { account, type AccountFinto } from '../datiSocial'
-import { errore, leggiJson, pagina } from '../utili'
+import { LIMITI_EVENTI, type AdminUtenteResponse, type Ruolo, type StatoUtente } from '@/types/api'
+import { artisti, cancellaImmagine, eventi, nuovoId, salvaImmagine, trovaEvento, trovaUtente, type EventoFinto } from '../dati'
+import { account, notificheEventi, type AccountFinto } from '../datiSocial'
+import { errore, leggiJson, nessunContenuto, nonVuoto, pagina, statoDa } from '../utili'
 import { conLogin } from './auth'
 import { api, RITARDO } from './comuni'
 
@@ -19,6 +20,35 @@ function soloAdmin(request: Request) {
   if (esito.risposta) return esito
   if (esito.account.ruolo === 'USER') return { risposta: errore('ACCESSO_NEGATO') }
   return esito
+}
+
+/** Immagine dell'artista dal campo "file": undefined se manca, null se non e' valida (come CreaFoto) */
+function immagineArtista(dati: FormData | null): File | null | undefined {
+  const file = dati?.get('file')
+  if (!(file instanceof File) || file.size === 0) return undefined
+  const tipi: readonly string[] = LIMITI_EVENTI.tipiFoto
+  return file.size <= LIMITI_EVENTI.byteFoto && tipi.includes(file.type) ? file : null
+}
+
+const nomeUsato = (nome: string, tranneId?: string) =>
+  artisti.some((x) => x.id !== tranneId && x.nome.toLowerCase() === nome.toLowerCase())
+
+/**
+ * Evento da moderare: 404 se non esiste, 403 RUOLO_INSUFFICIENTE se e' di chi modera o di un ruolo
+ * uguale o superiore (gli account anonimizzati sono USER: i loro eventi li modera qualunque admin)
+ */
+function eventoDaModerare(id: unknown, io: AccountFinto): { evento: EventoFinto; risposta?: undefined } | { evento?: undefined; risposta: Response } {
+  const e = typeof id === 'string' ? trovaEvento(id) : undefined
+  if (!e) return { risposta: errore('NON_TROVATO') }
+  const proprietario = account.find((x) => x.id === e.proprietarioId)
+  if (e.proprietarioId === io.id || (proprietario && LIVELLO[proprietario.ruolo] >= LIVELLO[io.ruolo]))
+    return { risposta: errore('RUOLO_INSUFFICIENTE') }
+  return { evento: e }
+}
+
+/** Notifica di un evento, come NOTIFICA_EVENTO del backend */
+function notifica(destinatarioId: string, tipo: 'MODERAZIONE' | 'ANNULLAMENTO', e: EventoFinto, testo: string) {
+  notificheEventi.unshift({ id: nuovoId('ne'), destinatarioId, tipo, testo, eventoId: e.id, letta: false, creataIl: new Date().toISOString() })
 }
 
 /** Data di registrazione: gli account non la salvano, si ricava dall'ordine (gli ultimi sono i piu' recenti) */
@@ -93,5 +123,117 @@ export const handlerAdmin = [
     if (a.stato !== 'ATTIVO') return errore('UTENTE_NON_ATTIVO')
     a.ruolo = b.ruolo
     return HttpResponse.json(inAdminUtente(a))
+  }),
+
+  // ---------------------------------------------------------------- Artisti (BE1-19)
+
+  // PROPOSTA (il backend non ce l'ha ancora): catalogo per l'admin, anche i disattivati, alfabetico
+  http.get(api('/admin/artists'), async ({ request }) => {
+    await delay(RITARDO)
+    const { risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const cerca = (new URL(request.url).searchParams.get('search') ?? '').trim().toLowerCase()
+    const lista = artisti.filter((x) => x.nome.toLowerCase().includes(cerca)).sort((x, y) => x.nome.localeCompare(y.nome, 'it'))
+    return HttpResponse.json(lista)
+  }),
+
+  // CreaArtista: multipart con "nome" (obbligatorio) e "file" (facoltativo)
+  http.post(api('/admin/artists'), async ({ request }) => {
+    await delay(RITARDO)
+    const { risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const dati = await request.formData().catch(() => null)
+    const nome = dati?.get('nome')
+    if (typeof nome !== 'string' || !nome.trim() || nome.length > LIMITI_EVENTI.nomeArtista)
+      return errore('VALIDAZIONE', { nome: 'Obbligatorio, massimo 100 caratteri' })
+    const file = immagineArtista(dati)
+    if (file === null) return errore('FILE_NON_VALIDO')
+    if (nomeUsato(nome.trim())) return errore('ARTISTA_NOME_GIA_USATO')
+    const id = nuovoId('a')
+    const artista = { id, nome: nome.trim(), immagineUrl: file ? salvaImmagine(`/api/artists/${id}/image`, file, file.type) : null, attivo: true }
+    artisti.push(artista)
+    return HttpResponse.json(artista, { status: 201 })
+  }),
+
+  // ModificaArtista: multipart con i soli campi da cambiare ("nome", "attivo", "file", "rimuoviImmagine")
+  http.patch(api('/admin/artists/:artistaId'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const dati = await request.formData().catch(() => null)
+    const nome = dati?.get('nome')
+    const attivo = dati?.get('attivo')
+    const rimuovi = dati?.get('rimuoviImmagine') === 'true'
+    const file = immagineArtista(dati)
+    if (typeof nome !== 'string' && attivo == null && file === undefined && !rimuovi) return errore('RICHIESTA_VUOTA')
+    if (typeof nome === 'string' && (!nome.trim() || nome.length > LIMITI_EVENTI.nomeArtista))
+      return errore('VALIDAZIONE', { nome: 'Non vuoto, massimo 100 caratteri' })
+    if (attivo != null && attivo !== 'true' && attivo !== 'false') return errore('VALIDAZIONE', { attivo: 'true o false' })
+    if (rimuovi && file !== undefined) return errore('VALIDAZIONE', { rimuoviImmagine: 'Incompatibile con file' })
+    if (file === null) return errore('FILE_NON_VALIDO')
+    const artista = artisti.find((x) => x.id === params.artistaId)
+    if (!artista) return errore('NON_TROVATO')
+    if (typeof nome === 'string' && nomeUsato(nome.trim(), artista.id)) return errore('ARTISTA_NOME_GIA_USATO')
+
+    if (typeof nome === 'string') artista.nome = nome.trim()
+    if (attivo != null) artista.attivo = attivo === 'true'
+    if (rimuovi && artista.immagineUrl) {
+      cancellaImmagine(artista.immagineUrl)
+      artista.immagineUrl = null
+    }
+    if (file) artista.immagineUrl = salvaImmagine(`/api/artists/${artista.id}/image`, file, file.type)
+    return HttpResponse.json(artista)
+  }),
+
+  // ---------------------------------------------------------------- Moderazione degli eventi
+
+  // RimuoviFotoModerazione: come CancellaFoto (la copertina passa alla foto piu' vecchia rimasta),
+  // anche su eventi conclusi o annullati, piu' la notifica MODERAZIONE a chi organizza
+  http.delete(api('/admin/events/:id/photos/:fotoId'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { account: io, risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const { evento: e, risposta: rifiuto } = eventoDaModerare(params.id, io)
+    if (rifiuto) return rifiuto
+    const indice = e.foto.findIndex((f) => f.id === params.fotoId)
+    if (indice < 0) return errore('NON_TROVATO')
+    const [tolta] = e.foto.splice(indice, 1)
+    cancellaImmagine(tolta.url)
+    if (tolta.copertina && e.foto.length) e.foto[0].copertina = true
+    notifica(e.proprietarioId, 'MODERAZIONE', e, `Una foto del tuo evento «${e.titolo}» è stata rimossa dalla moderazione`)
+    return nessunContenuto()
+  }),
+
+  // AnnullaEventoModerazione: motivo obbligatorio; MODERAZIONE a chi organizza, ANNULLAMENTO a chi partecipa
+  http.post(api('/admin/events/:id/cancel'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { account: io, risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const b = await leggiJson(request)
+    if (!nonVuoto(b.motivo) || b.motivo.length > LIMITI_EVENTI.motivoAnnullamento)
+      return errore('VALIDAZIONE', { motivo: 'Obbligatorio, massimo 500 caratteri' })
+    const { evento: e, risposta: rifiuto } = eventoDaModerare(params.id, io)
+    if (rifiuto) return rifiuto
+    const stato = statoDa(e)
+    if (stato === 'CONCLUSO') return errore('EVENTO_CONCLUSO')
+    if (stato === 'ANNULLATO') return errore('EVENTO_ANNULLATO')
+    e.annullato = true
+    e.motivoAnnullamento = b.motivo.trim()
+    notifica(e.proprietarioId, 'MODERAZIONE', e, `Il tuo evento «${e.titolo}» è stato annullato dalla moderazione: ${e.motivoAnnullamento}`)
+    for (const p of e.partecipanti) notifica(p.utenteId, 'ANNULLAMENTO', e, `L'evento «${e.titolo}» è stato annullato: ${e.motivoAnnullamento}`)
+    return nessunContenuto()
+  }),
+
+  // EliminaArtista: solo se non e' in nessun evento, altrimenti 409 ARTISTA_IN_USO (va disattivato)
+  http.delete(api('/admin/artists/:artistaId'), async ({ request, params }) => {
+    await delay(RITARDO)
+    const { risposta } = soloAdmin(request)
+    if (risposta) return risposta
+    const indice = artisti.findIndex((x) => x.id === params.artistaId)
+    if (indice < 0) return errore('NON_TROVATO')
+    if (eventi.some((e) => e.artistiIds.includes(artisti[indice].id))) return errore('ARTISTA_IN_USO')
+    const [tolto] = artisti.splice(indice, 1)
+    if (tolto.immagineUrl) cancellaImmagine(tolto.immagineUrl)
+    return nessunContenuto()
   }),
 ]
