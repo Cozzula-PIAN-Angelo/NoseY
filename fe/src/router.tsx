@@ -5,6 +5,7 @@ import AdminArtisti from '@/pages/AdminArtisti'
 import AdminUtenti from '@/pages/AdminUtenti'
 import Amici from '@/pages/Amici'
 import Accesso from '@/pages/Accesso'
+import Chat from '@/pages/Chat'
 import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
@@ -48,8 +49,8 @@ export const router = createBrowserRouter([
           { path: 'my-events', element: <MieiEventi /> },
           { path: 'tickets', element: <MieiTicket /> },
           { path: 'friends', element: <Amici /> },
-          { path: 'chat', element: <PaginaProvvisoria titolo="Chat" card="FE2-12" /> },
-          { path: 'chat/:chatId', element: <PaginaProvvisoria titolo="Conversazione" card="FE2-12" /> },
+          { path: 'chat', element: <Chat /> },
+          { path: 'chat/:chatId', element: <Chat /> },
           { path: 'notifications', element: <PaginaProvvisoria titolo="Notifiche" card="FE2-13" /> },
           { path: 'profile', element: <Profilo /> },
         ],

@@ -1,6 +1,6 @@
 // Endpoint finti di amicizie, chat e notifiche (progettazione v4, sezioni 8, 9 e 10), con i
 // controlli nell'ordine del backend. Dati in datiSocial.ts; chi chiede si ricava dal token.
-// L'invio dei messaggi passa dal WebSocket (FE2-11): qui non c'e'.
+// L'invio dei messaggi passa dal WebSocket: e' nel finto server STOMP (websocket.ts).
 import { delay, http, HttpResponse } from 'msw'
 import { LIMITI_SOCIAL, type AmiciziaResponse, type CategoriaNotifica, type ConteggiNonLette, type MessaggiResponse } from '@/types/api'
 import { nuovoId, trovaEvento, utenti } from '../dati'
