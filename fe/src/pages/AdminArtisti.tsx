@@ -15,6 +15,7 @@ import type { ArtistaResponse, Uuid } from '@/types/api'
 
 // Pannello admin: catalogo degli artisti (FE1-16), rotta /admin/artists (solo ADMIN e SUPERADMIN).
 // Passo 1: crea, modifica (nome e immagine), disattiva / riattiva, elimina con conferma.
+// Passo 2: con ARTISTA_IN_USO (nella line-up di almeno un evento) si propone la disattivazione.
 // Disattivato (attivo = false) sparisce dal catalogo pubblico ma resta negli eventi dove c'e' gia'.
 
 /** Errori del backend da mostrare sui campi del form; null per quelli da mostrare come avviso */
@@ -93,6 +94,8 @@ export default function AdminArtisti() {
   const [erroriNuovo, setErroriNuovo] = useState<{ nome?: string; file?: string }>({})
   const [erroriModifica, setErroriModifica] = useState<{ nome?: string; file?: string }>({})
   const [daEliminare, setDaEliminare] = useState<ArtistaResponse | null>(null)
+  // Eliminazione rifiutata con ARTISTA_IN_USO: si propone di mettere l'artista (ancora attivo) fuori catalogo
+  const [inUso, setInUso] = useState<ArtistaResponse | null>(null)
 
   async function creaArtista(dati: DatiArtista) {
     setErroriNuovo({})
@@ -135,7 +138,13 @@ export default function AdminArtisti() {
       await elimina(artista.id).unwrap()
       avviso.info('Eliminazione completata', `${artista.nome} non è più nel catalogo.`)
     } catch (err) {
-      avviso.erroreApi(err)
+      // Lo stato piu' recente della lista: l'artista puo' essere stato riattivato dopo aver aperto la conferma
+      const attuale = artisti?.find((a) => a.id === artista.id) ?? artista
+      if (leggiErrore(err).codice !== 'ARTISTA_IN_USO') avviso.erroreApi(err)
+      // Gia' fuori catalogo: non c'e' altro da proporre
+      else if (!attuale.attivo)
+        avviso.info('Eliminazione non possibile', `«${attuale.nome}» è nella line-up di almeno un evento: resta fuori catalogo, solo negli eventi dove c’è già.`)
+      else setInUso(attuale)
     }
   }
 
@@ -246,6 +255,27 @@ export default function AdminArtisti() {
           <p className="font-body-md text-body-md">
             «{daEliminare.nome}» uscirà dal catalogo per sempre. Si può eliminare solo chi non è nella line-up di nessun
             evento: in quel caso usa «Disattiva».
+          </p>
+        )}
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        aperta={inUso !== null}
+        titolo="Eliminazione non possibile"
+        icona="queue_music"
+        testoConferma="Metti fuori catalogo"
+        testoAnnulla="Lascia com’è"
+        inCorso={modificaInCorso}
+        onConferma={async () => {
+          if (inUso) await cambiaAttivo(inUso)
+          setInUso(null)
+        }}
+        onAnnulla={() => setInUso(null)}
+      >
+        {inUso && (
+          <p className="font-body-md text-body-md">
+            «{inUso.nome}» è nella line-up di almeno un evento, quindi non si può eliminare. Si può però spostare fuori
+            catalogo: non si potrà più aggiungere ad altri eventi, ma resterà in quelli dove c’è già.
           </p>
         )}
       </ConfirmDialog>
