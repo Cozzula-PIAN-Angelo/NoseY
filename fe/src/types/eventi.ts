@@ -22,7 +22,7 @@ export type EventoMappaResponse = {
   stato: StatoEvento
   lat: number
   lng: number
-  /** URL della foto di copertina, null se l'evento non ha foto */
+  /** Percorso relativo della copertina (decisione 9), null se l'evento non ha foto: usare urlImmagine() */
   copertinaUrl: string | null
   /** Distanza dall'utente, null se la posizione non e' stata passata (?lat=&lng=) */
   distanzaKm: number | null
@@ -31,6 +31,7 @@ export type EventoMappaResponse = {
 /** Foto di un evento; al massimo 10, una sola e' la copertina */
 export type FotoResponse = {
   id: Uuid
+  /** Percorso relativo "/api/events/{id}/photos/{fotoId}/image?v=..." (decisione 9): usare urlImmagine() */
   url: string
   /** Testo alternativo, max 150 caratteri */
   didascalia: string | null
@@ -51,6 +52,7 @@ export type PoiResponse = {
 export type ArtistaResponse = {
   id: Uuid
   nome: string
+  /** Percorso relativo "/api/artists/{artistaId}/image?v=..." (decisione 9), null se manca: usare urlImmagine() */
   immagineUrl: string | null
   /** false = disattivato: non si puo' piu' aggiungere agli eventi, ma resta in quelli dove c'e' */
   attivo: boolean
