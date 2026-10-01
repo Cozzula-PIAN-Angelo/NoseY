@@ -59,6 +59,68 @@ class AdminArtistaTest {
 		assertThat(risposta.immagineUrl()).isNotNull().contains(risposta.id().toString());
 	}
 
+	// --- ModificaArtista ---
+
+	@Test
+	void modificaSenzaCampiRichiestaVuota() {
+		ArtistaResponse artista = adminArtistaService.crea("Zucchero " + UUID.randomUUID(), null);
+
+		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
+				() -> adminArtistaService.modifica(artista.id(), null, null, null));
+
+		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.RICHIESTA_VUOTA);
+	}
+
+	@Test
+	void modificaArtistaInesistente404() {
+		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
+				() -> adminArtistaService.modifica(UUID.randomUUID(), "Nuovo nome", null, null));
+
+		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.NON_TROVATO);
+	}
+
+	@Test
+	void modificaNomeConDuplicatoGiaUsato409() {
+		String nomeEsistente = "Jovanotti " + UUID.randomUUID();
+		adminArtistaService.crea(nomeEsistente, null);
+		ArtistaResponse daModificare = adminArtistaService.crea("Elisa " + UUID.randomUUID(), null);
+
+		ApplicazioneException eccezione = assertThrows(ApplicazioneException.class,
+				() -> adminArtistaService.modifica(daModificare.id(), nomeEsistente.toUpperCase(), null, null));
+
+		assertThat(eccezione.getCodiceErrore()).isEqualTo(CodiceErrore.ARTISTA_NOME_GIA_USATO);
+	}
+
+	@Test
+	void modificaNomeConLoStessoNomeNonDaErrore() {
+		String nome = "Negramaro " + UUID.randomUUID();
+		ArtistaResponse artista = adminArtistaService.crea(nome, null);
+
+		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), nome, null, null);
+
+		assertThat(risposta.nome()).isEqualTo(nome);
+	}
+
+	@Test
+	void modificaDisattivaConAttivoFalse() {
+		ArtistaResponse artista = adminArtistaService.crea("Max Pezzali " + UUID.randomUUID(), null);
+
+		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), null, false, null);
+
+		assertThat(risposta.attivo()).isFalse();
+		assertThat(artistaRepository.findById(artista.id())).get().extracting(Artista::isAttivo).isEqualTo(false);
+	}
+
+	@Test
+	void modificaImmagineLaSostituisce() {
+		ArtistaResponse artista = adminArtistaService.crea("Baustelle " + UUID.randomUUID(), null);
+		MockMultipartFile file = new MockMultipartFile("file", "logo.png", "image/png", pngMinimo());
+
+		ArtistaResponse risposta = adminArtistaService.modifica(artista.id(), null, null, file);
+
+		assertThat(risposta.immagineUrl()).isNotNull().contains(artista.id().toString());
+	}
+
 	// Primi byte di firma PNG: bastano a StorageService per riconoscere il tipo (sniffing sui magic byte).
 	private static byte[] pngMinimo() {
 		return new byte[] { (byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A };
