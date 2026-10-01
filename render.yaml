@@ -36,6 +36,9 @@ services:
       # Chiave di firma dei JWT: Render la genera casuale al primo deploy.
       - key: JWT_SECRET
         generateValue: true
+      # Chiave di Google Gemini per il miglioramento della descrizione (decisione 18).
+      - key: GEMINI_API_KEY
+        sync: false
 
   # ---------- Frontend: build Vite statica ----------
   - type: web

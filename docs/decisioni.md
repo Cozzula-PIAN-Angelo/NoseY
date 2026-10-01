@@ -519,3 +519,42 @@ sostituisce con la pagina vera.
 - **Token e limite nel `JwtChannelInterceptor`**: il limite riguarda solo i messaggi di chat, non
   ogni SEND, e gli errori dell'interceptor non passano da `GestoreErroriWebSocket`.
 - **Controllo a mano del testo** (`isBlank`, lunghezza): duplicherebbe le annotazioni del record.
+
+---
+
+## Decisione 18: Google Gemini per il miglioramento della descrizione
+
+### Scelta
+
+- MiglioraDescrizioneAI (BE1-15) usa Google Gemini, modello `gemini-3.5-flash`, tramite l'API REST
+  `generateContent`, chiamata con `RestClient`: nessuna dipendenza nuova nel `pom.xml`.
+- Nella stessa richiesta vanno la foto, in base64, e la descrizione. Le regole del testo (lingua,
+  niente dati inventati, niente Markdown) stanno nelle istruzioni di sistema.
+- Chiave in `GEMINI_API_KEY` (la sezione 18 della progettazione indica `AI_API_KEY`, nome
+  indicativo: si usa quello del provider), modello sovrascrivibile con `AI_MODELLO`, timeout di 30 secondi. Senza
+  chiave, o con qualsiasi errore del servizio, la risposta e' 502 `SERVIZIO_ESTERNO`: nessuna
+  implementazione finta.
+- Il database si legge in una transazione di sola lettura che si chiude prima della chiamata a
+  Gemini.
+
+### Motivazione
+
+- Piano gratuito con la sola chiave API, senza carta di credito, come per le altre scelte del team
+  (decisioni 4 e 8). Italia tra i Paesi in cui l'API e' disponibile.
+- Accetta JPEG, PNG e WEBP, gli stessi formati delle foto degli eventi; il limite di 20 MB per
+  richiesta e' molto sopra le nostre foto da 5 MB.
+- Provato con una chiamata reale: `gemini-3.5-flash` risponde in circa 10 secondi e usa davvero il
+  contenuto della foto. `gemini-2.5-flash` risponde 404 anche se compare nell'elenco dei modelli.
+- I nomi dei modelli cambiano spesso: il modello sta nella configurazione, non nel codice.
+- Una chiamata esterna lunga dentro una transazione terrebbe occupata una connessione del pool.
+
+### Alternative scartate
+
+- **OpenAI, Anthropic Claude**: a pagamento, serve credito o carta di credito.
+- **Groq (Llama vision)**: gratuito, ma con limiti piu' stretti e modelli con immagini che cambiano spesso.
+- **Implementazione finta senza chiave** (come `LogEmailService`): una proposta finta in locale
+  nasconderebbe una chiave mancante; con il 502 il frontend prova anche il caso di errore.
+- **SDK di Google** (`google-genai`): una dipendenza in piu' per una sola chiamata HTTP.
+
+Nota: sul piano gratuito Google puo' usare i contenuti inviati per migliorare i suoi prodotti.
+Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
