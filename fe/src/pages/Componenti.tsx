@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
+import { PulsanteAmicizia, type PulsanteAmiciziaProps } from '@/features/social/PulsanteAmicizia'
 import { useLoginMutation } from '@/features/utenti/apiUtenti'
 import { selezionaUtente, uscita } from '@/store/sessioneSlice'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
@@ -156,6 +157,17 @@ function SessioneDiProva() {
     </section>
   )
 }
+
+// Pulsante amicizia (FE2-09) in tutti gli stati, con persone e amicizie dei dati finti
+// (mocks/dati.ts, viste da Valentina). Evento in comune e-03: lo organizza Valentina e Dario ha il
+// ticket, quindi la richiesta a Dario si puo' inviare davvero
+const amicizieDiProva: Omit<PulsanteAmiciziaProps, 'eventoId'>[] = [
+  { utente: { id: 'u-0004-dario', nome: 'Dario', cognome: 'Lucidi', immagineProfilo: null, attivo: true }, statoAmicizia: 'NESSUNA', amiciziaId: null },
+  { utente: { id: 'u-0002-matteo', nome: 'Matteo', cognome: 'Valenti', immagineProfilo: null, attivo: true }, statoAmicizia: 'INVIATA', amiciziaId: 'am-02' },
+  { utente: { id: 'u-0003-elena', nome: 'Elena', cognome: 'Rostagno', immagineProfilo: null, attivo: true }, statoAmicizia: 'RICEVUTA', amiciziaId: 'am-03' },
+  { utente: { id: 'u-0001-sofia', nome: 'Sofia', cognome: 'Moretti', immagineProfilo: null, attivo: true }, statoAmicizia: 'AMICI', amiciziaId: 'am-01' },
+  { utente: { id: 'u-0007-sospeso', nome: 'Utente', cognome: 'Sospeso', immagineProfilo: null, attivo: false }, statoAmicizia: 'NON_DISPONIBILE', amiciziaId: null },
+]
 
 function Sezione({ titolo, children }: { titolo: string; children: ReactNode }) {
   return (
@@ -458,6 +470,22 @@ export default function Componenti() {
             ))}
           </div>
         </div>
+      </Sezione>
+
+      <Sezione titolo="Pulsante amicizia (FE2-09)">
+        <ul className="flex max-w-md flex-col gap-space-sm">
+          {amicizieDiProva.map((p) => (
+            <li key={p.utente.id} className="flex items-center justify-between gap-space-sm rounded-lg bg-surface-container-low p-space-sm">
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate font-label-btn text-label-btn">
+                  {p.utente.nome} {p.utente.cognome}
+                </span>
+                <span className="font-label-code-status text-label-code-status text-outline">{p.statoAmicizia}</span>
+              </div>
+              <PulsanteAmicizia {...p} eventoId="e-03" />
+            </li>
+          ))}
+        </ul>
       </Sezione>
 
       <Sezione titolo="Stato vuoto">
