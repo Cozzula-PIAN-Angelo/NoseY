@@ -14,7 +14,7 @@ import { leggiErrore } from '@/lib/errori'
 const FUNZIONI = [
   { icona: 'radar', titolo: 'Eventi vicino a te', testo: 'La mappa degli eventi in programma, ordinati dal più vicino.' },
   { icona: 'qr_code_2', titolo: 'Ticket con QR', testo: 'Ti iscrivi in un clic e mostri il codice all’ingresso.' },
-  { icona: 'forum', titolo: 'Amici e chat', testo: 'Conosci chi partecipa ai tuoi stessi eventi e scrivigli.' },
+  { icona: 'forum', titolo: 'Amici e chat', testo: 'Conosci chi partecipa ai tuoi stessi eventi e scrivetevi in chat.' },
 ]
 
 // Campi del backend (RegisterRequest) → campi del form, per gli errori di VALIDAZIONE

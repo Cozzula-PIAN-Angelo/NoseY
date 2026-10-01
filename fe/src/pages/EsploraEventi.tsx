@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { CardEvento } from '@/components/eventi'
 import { Button, Icon, MessaggioErrore, Paginazione, Scheletro, StatoVuoto, TextField, stilePulsante } from '@/components/ui'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
@@ -14,6 +14,9 @@ import { cx } from '@/lib/cx'
 // Solo dati veri di ListaEventiMappa: niente prezzo, capienza, genere o indirizzo (l'API non li ha).
 // La posizione la usa il backend e cambia l'ORDINE, mai il numero degli eventi (requisito della traccia).
 
+/** ?periodo= dalla home ("oggi", "weekend"...): valido solo se e' uno dei filtri */
+const periodoDa = (v: string | null): Periodo => (['tutti', 'in-corso', 'oggi', 'weekend'].includes(v ?? '') ? (v as Periodo) : 'tutti')
+
 const PERIODI: { valore: Periodo; etichetta: string }[] = [
   { valore: 'tutti', etichetta: 'Tutti gli eventi' },
   { valore: 'in-corso', etichetta: 'In corso' },
@@ -27,8 +30,10 @@ const PER_PAGINA = 12
 export default function EsploraEventi() {
   const { stato, posizione, chiedi, dimentica } = usePosizioneUtente()
   const { data: eventi = [], isLoading, isFetching, error, refetch } = useListaEventiQuery(posizione ?? undefined)
-  const [cerca, setCerca] = useState('')
-  const [periodo, setPeriodo] = useState<Periodo>('tutti')
+  // La ricerca della home arriva con ?cerca= e ?periodo= (solo come valori di partenza)
+  const [parametri] = useSearchParams()
+  const [cerca, setCerca] = useState(() => parametri.get('cerca') ?? '')
+  const [periodo, setPeriodo] = useState<Periodo>(() => periodoDa(parametri.get('periodo')))
   const [mappaAperta, setMappaAperta] = useState(false)
   // La pagina vale solo per questi filtri: cambiandoli si riparte dalla prima
   const filtri = `${cerca.trim()}|${periodo}`

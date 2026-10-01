@@ -10,6 +10,7 @@ import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
 import EsploraEventi from '@/pages/EsploraEventi'
+import Home from '@/pages/Home'
 import MappaEventi from '@/pages/MappaEventi'
 import MieiEventi from '@/pages/MieiEventi'
 import MieiTicket from '@/pages/MieiTicket'
@@ -32,7 +33,7 @@ export const router = createBrowserRouter([
     element: <App />,
     children: [
       // ---------- Pubbliche ----------
-      { index: true, element: <PaginaProvvisoria titolo="Home" card="FE1-04" /> },
+      { index: true, element: <Home /> },
       { path: 'events', element: <EsploraEventi /> },
       { path: 'map', element: <MappaEventi /> },
       { path: 'events/:id', element: <DettaglioEvento /> },
