@@ -55,6 +55,11 @@
 			<version>${jjwt.version}</version>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- STOMP su WebSocket: chat e notifiche live (progettazione v4, sezione 11). -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
 		<!-- Actuator: Render non lo usa piu' (health check su /api/stato, decisione D19). -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

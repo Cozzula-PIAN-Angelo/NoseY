@@ -13,6 +13,8 @@ public interface UtenteRepository extends JpaRepository<Utente, UUID> {
 
 	Optional<Utente> findByEmail(String email);
 
+	boolean existsByIdAndStato(UUID id, StatoUtente stato);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select u from Utente u where u.id = :id")
 	Optional<Utente> findConLockById(UUID id);
