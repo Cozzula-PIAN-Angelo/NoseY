@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="it"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "tertiary": "#ffb95f", "on-error-container": "#ffdad6", "border-glass-hover": "rgba(99, 102, 241, 0.35)", "surface-variant": "#313540", "inverse-on-surface": "#2c303b", "error": "#ffb4ab", "outline": "#908fa0", "primary-fixed": "#e1e0ff", "surface-tint": "#c0c1ff", "surface-container-high": "#262a35", "on-tertiary-fixed-variant": "#653e00", "surface": "#0f131d", "surface-bright": "#353944", "surface-dim": "#0f131d", "secondary-container": "#00a6e0", "on-tertiary-container": "#3e2400", "poi-emergenza": "#f43f5e", "accent-gold-glow": "rgba(245, 158, 11, 0.18)", "on-primary": "#1000a9", "on-secondary-fixed": "#001e2c", "surface-container-lowest": "#0a0e18", "surface-glass": "rgba(17, 24, 39, 0.72)", "accent-gold-piercing": "#f59e0b", "primary-container": "#8083ff", "border-glass": "rgba(255, 255, 255, 0.08)", "tertiary-fixed-dim": "#ffb95f", "on-error": "#690005", "surface-container-highest": "#313540", "primary-fixed-dim": "#c0c1ff", "on-surface-variant": "#c7c4d7", "on-tertiary-fixed": "#2a1700", "surface-canvas": "#0b0f19", "primary": "#c0c1ff", "surface-card": "#111827", "inverse-surface": "#dfe2f1", "on-primary-fixed-variant": "#2f2ebe", "poi-uscita": "#38bdf8", "on-surface": "#dfe2f1", "outline-variant": "#464554", "on-primary-fixed": "#07006c", "poi-ingresso": "#10b981", "background": "#0f131d", "tertiary-fixed": "#ffddb8", "on-primary-container": "#0d0096", "on-secondary-container": "#00374d", "status-annullato": "#ef4444", "on-background": "#dfe2f1", "secondary-fixed-dim": "#7bd0ff", "on-secondary": "#00354a", "status-in-corso": "#10b981", "error-container": "#93000a", "surface-deep": "#070a11", "inverse-primary": "#494bd6", "on-secondary-fixed-variant": "#004c69", "secondary": "#7bd0ff", "surface-container-low": "#171b26", "on-tertiary": "#472a00", "secondary-fixed": "#c4e7ff", "status-programmato": "#818cf8", "tertiary-container": "#ca8100", "status-concluso": "#6b7280", "surface-container": "#1c1f2a" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "space-sm": "0.5rem", "space-xl": "2.5rem", "gutter": "1.5rem", "margin-mobile": "1rem", "space-md": "1rem", "gutter-mobile": "0.75rem", "space-lg": "1.5rem", "margin": "2rem" }, fontFamily: { "label-btn": ["Inter"], "display-hero-mobile": ["Plus Jakarta Sans"], "display-hero": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "label-sm": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "label-code-status": ["Inter"], "body-md": ["Plus Jakarta Sans"] }, fontSize: { "label-btn": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "display-hero-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }], "display-hero": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "body-lg": ["16px", { "lineHeight": "26px", "letterSpacing": "-0.005em", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" }], "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "label-code-status": ["11px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" }] } } } };</script></head><body class="min-h-screen bg-surface-canvas text-on-surface font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary relative overflow-x-hidden"><div class="pointer-events-none fixed inset-0 z-0"><div class="absolute -top-[25%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary/10 rounded-full blur-[140px]"></div><div class="absolute top-[40%] -left-[10%] w-[500px] h-[400px] bg-secondary/5 rounded-full blur-[120px]"></div><div class="absolute bottom-[10%] -right-[10%] w-[600px] h-[450px] bg-accent-gold-piercing/5 rounded-full blur-[130px]"></div></div><header class="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-2xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 w-full px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><img alt="Logo_NoseY.png" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vndiq4o6IVVJtH-p34E94ys6ErdgHIcom_Q_MOUFG1h5Fw3UwLwyK9nFzF1r3sWvgxPLNpqAVHeUuKUoHieHxb-X6jQtcbUYk__q04YLetcOw5E2PE9l5J7ZYkiE-6qf4j7rG49MQSj5aHcDRkcOvmExM8ekaSF-YtyA5qrLs0WAbtF7DrJjOjEhAerI9xuSubOvV2XHPk3Pjb3AlriSykvEBFhTcPREfryvjCYDxEddI4nqpKXhZHVVCafavybUEj-W_vkcGb"/><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight hidden sm:inline-block">NoseY</span><div class="hidden md:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-high"><span class="w-1.5 h-1.5 rounded-full bg-status-in-corso animate-pulse"></span><span class="font-label-code-status text-label-code-status text-secondary tracking-widest uppercase">AUTH GATEWAY // SECURE PROTOCOL</span></div></div><div class="flex items-center gap-space-lg"><nav class="flex items-center gap-space-md" data-active-classes="bg-primary-container text-on-primary-container font-bold rounded-lg px-3 py-1.5"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="login" href="#">Hai già un account? Accedi</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors hidden sm:inline-block" data-path="assistenza-supporto" href="#">Supporto</a></nav><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-[0_0_12px_rgba(192,193,255,0.25)]"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative z-10 w-full pt-20 bg-transparent flex flex-col justify-center"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-margin py-space-lg">
+<!-- Top System Architecture Header Pill -->
+<div class="flex items-center justify-between flex-wrap gap-space-sm mb-space-lg">
+<div class="flex items-center gap-space-sm px-space-md py-1.5 rounded-full bg-surface-container-high shadow-md">
+<span class="w-2 h-2 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-code-status text-label-code-status text-primary tracking-widest uppercase">SPEC BACKEND V4: SOVRASCRITTURA ACCOUNT NON VERIFICATI ATTIVA</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-code-status text-label-code-status text-outline uppercase tracking-wider">ENDPOINT PROTOCOL:</span>
+<code class="px-space-sm py-1 rounded bg-surface-container font-label-code-status text-label-code-status text-secondary">POST /api/auth/register</code>
+</div>
+</div>
+<!-- Main Asymmetric Bento Shell -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT: Atmospheric Clubbing Showcase & Security Pillar (5 Cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Hero Teaser Card with Ambient Imagery & Scrim -->
+<div class="relative overflow-hidden rounded-xl bg-surface-card shadow-xl min-h-[480px] flex flex-col justify-end p-space-lg">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="An ethereal high-end nocturnal club atmosphere bathed in neon violet laser arrays and deep indigo atmospheric smoke. Sleek silhouettes of nightlife participants immersed under laser chandeliers, warm gold champagne sparks reflecting off brushed titanium surfaces. Cinematic, hyper-detailed cyberpunk nightclub visual." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBf0M_F-_H8dSJSn0cdA2ejoS1CZ98guIQLtaUrmoPkk3rs2pojb9KQaWmojONBg_vArDH6JhuC76w803ewEuP_puOoVsbW25BbXwhOowrCOo5GtIT64tOh5w5DX4ZJqIkTR0BJQ1xpM3CURrnkE4SjrF7TzxZ-V6iCNy5zi4YqdLzWCTABO-8RVsJzWMBY48cWQA-Vwd-Pxmva2GetEW_yhr2UbDjaSL9H7gdslHTXSkZkfm_7iMBZ')">
+</div>
+<!-- Nocturne Lumina Scrim Gradient -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-deep via-surface-card/75 to-transparent"></div>
+<!-- Inner Floating Card Content -->
+<div class="relative z-10 flex flex-col gap-space-md">
+<div class="inline-flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-glass backdrop-blur-md w-max shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-accent-gold-piercing">auto_awesome</span>
+<span class="font-label-code-status text-label-code-status text-accent-gold-piercing uppercase tracking-wider">LUMINA GATE // NOCTURNE OS</span>
+</div>
+<div class="flex flex-col gap-1">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Accedi all'Epicentro della Notte</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">L'ecosistema immersivo riservato a clubber, curator e festival creator di nuova generazione.</p>
+</div>
+<!-- Visual Key Features Radar -->
+<div class="space-y-space-sm pt-space-xs">
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low/90 backdrop-blur-md shadow-sm">
+<div class="p-2 rounded bg-primary/10 text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">radar</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-[15px] text-on-surface font-semibold">Radar Geo-Spaziale Haversine</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tracciamento radiale dinamico entro 2.000m calcolato con precisione geodetica in tempo reale.</p>
+</div>
+</div>
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low/90 backdrop-blur-md shadow-sm">
+<div class="p-2 rounded bg-accent-gold-piercing/10 text-accent-gold-piercing flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">qr_code_2</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-[15px] text-on-surface font-semibold">Biglietti Crittografici Dynamic QR</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Generazione UUID v4 rotante anti-screenshot protetta da chiave hardware asimmetrica.</p>
+</div>
+</div>
+<div class="flex items-start gap-space-sm p-space-sm rounded-lg bg-surface-container-low/90 backdrop-blur-md shadow-sm">
+<div class="p-2 rounded bg-secondary/10 text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">forum</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-[15px] text-on-surface font-semibold">Community Live &amp; STOMP Engine</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Chatrooms geolocalizzate e streaming messaggi push sub-millisecondo su canale crittografato.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Security Spec Diagnostic Card -->
+<div class="p-space-md rounded-xl bg-surface-container-low shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-code-status text-label-code-status text-outline uppercase tracking-wider">HARDENING CRITTOGRAFICO</span>
+<span class="font-label-code-status text-label-code-status text-status-in-corso flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-status-in-corso animate-pulse"></span>ACTIVE POLICY
+            </span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="p-space-sm rounded bg-surface-container-high flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hashing Standard</span>
+<span class="font-headline-sm text-[14px] text-primary font-bold">BCrypt 12 Rounds</span>
+<span class="font-body-sm text-[11px] text-outline">Max 72-Byte boundary check</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-high flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Consegna OTP</span>
+<span class="font-headline-sm text-[14px] text-secondary font-bold">Brevo Secure Node</span>
+<span class="font-body-sm text-[11px] text-outline">6 Cifre Crittografate - 15min</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT: Interactive Registration Engine & Form (7 Cols) -->
+<div class="lg:col-span-7 flex flex-col gap-space-md">
+<!-- Error Simulation Switcher (Document 28 QA Testing Trigger) -->
+<div class="rounded-xl bg-surface-container-low p-space-md shadow-md">
+<div class="flex items-center justify-between cursor-pointer" id="toggle-sim-panel">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[20px]">science</span>
+<span class="font-label-btn text-label-btn text-on-surface">Simulatore Responsi Backend (Error Testing)</span>
+</div>
+<span class="material-symbols-outlined text-outline transition-transform duration-200" id="sim-panel-chevron">expand_more</span>
+</div>
+<div class="hidden flex-col gap-space-sm pt-space-md mt-space-sm" id="sim-panel-content">
+<p class="font-body-sm text-body-sm text-on-surface-variant">Clicca sui pulsanti sottostanti per testare l'iniezione dei payload di errore standard previsti da NoseY API Spec:</p>
+<div class="flex flex-wrap gap-space-sm">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-tertiary font-label-code-status text-label-code-status tracking-wide shadow-sm transition-all flex items-center gap-1.5" id="btn-simulate-409" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>409 EMAIL_GIA_REGISTRATA
+              </button>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-error font-label-code-status text-label-code-status tracking-wide shadow-sm transition-all flex items-center gap-1.5" id="btn-simulate-429" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>429 TROPPE_RICHIESTE (RATE LIMIT)
+              </button>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-outline font-label-code-status text-label-code-status tracking-wide transition-all" id="btn-clear-sim" type="button">
+                RIPRISTINA STATO
+              </button>
+</div>
+</div>
+</div>
+<!-- Dynamic Dismissible Server Alert Placeholder -->
+<div class="hidden rounded-xl p-space-md shadow-lg transition-all animate-in fade-in duration-300" id="alert-banner">
+<div class="flex items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-[24px]" id="alert-icon"></span>
+<div class="flex flex-col gap-0.5">
+<span class="font-headline-sm text-[15px] font-bold" id="alert-title"></span>
+<p class="font-body-sm text-body-sm" id="alert-message"></p>
+<div class="font-label-code-status text-label-code-status pt-1 opacity-80" id="alert-meta"></div>
+</div>
+</div>
+<button class="p-1 rounded hover:bg-white/10 transition-colors text-inherit" id="alert-close" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<!-- Registration Master Card -->
+<div class="rounded-xl bg-surface-card p-space-lg shadow-xl relative overflow-hidden flex flex-col gap-space-lg">
+<!-- Subtle Top Gradient Glow Bar -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-container via-primary to-secondary"></div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-md text-headline-md text-on-surface">Crea Account NoseY</h2>
+<span class="px-space-sm py-1 rounded bg-surface-container font-label-code-status text-label-code-status text-secondary">FASE 1 DI 2</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Completa i dati richiesti. Ti invieremo un codice di validazione OTP a 6 cifre via email.</p>
+</div>
+<form class="flex flex-col gap-space-md" id="registration-form" novalidate="">
+<!-- Grid: Nome & Cognome (Max 100 char ciascuno) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-btn text-label-btn text-on-surface" for="input-nome">Nome *</label>
+<span class="font-label-code-status text-label-code-status text-outline" id="nome-counter">0/100</span>
+</div>
+<div class="relative">
+<input class="w-full h-11 px-space-md rounded-lg bg-surface-container-high text-on-surface font-body-md placeholder:text-outline focus:outline-none focus:bg-surface-container-highest shadow-inner transition-all" id="input-nome" maxlength="100" placeholder="es. Valerio" required="" type="text"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-btn text-label-btn text-on-surface" for="input-cognome">Cognome *</label>
+<span class="font-label-code-status text-label-code-status text-outline" id="cognome-counter">0/100</span>
+</div>
+<div class="relative">
+<input class="w-full h-11 px-space-md rounded-lg bg-surface-container-high text-on-surface font-body-md placeholder:text-outline focus:outline-none focus:bg-surface-container-highest shadow-inner transition-all" id="input-cognome" maxlength="100" placeholder="es. Rossi" required="" type="text"/>
+</div>
+</div>
+</div>
+<!-- Email Normalizzata con badge di formato live -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-btn text-label-btn text-on-surface" for="input-email">Indirizzo Email *</label>
+<div class="hidden items-center gap-1 font-label-code-status text-label-code-status px-2 py-0.5 rounded bg-status-in-corso/10 text-status-in-corso" id="email-format-badge">
+<span class="material-symbols-outlined text-[13px]">check_circle</span>
+<span>FORMATO RFC VALIDO</span>
+</div>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">mail</span>
+<input class="w-full h-11 pl-11 pr-space-md rounded-lg bg-surface-container-high text-on-surface font-body-md placeholder:text-outline focus:outline-none focus:bg-surface-container-highest shadow-inner transition-all" id="input-email" placeholder="utente@dominio.it" required="" type="email"/>
+</div>
+<p class="font-body-sm text-[12px] text-outline">L'email verrà automaticamente normalizzata (strip whitespace + lowercase) prima dell'hashing backend.</p>
+</div>
+<!-- Password & BCrypt 72-Byte Indicator Section -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-btn text-label-btn text-on-surface" for="input-password">Password *</label>
+<span class="font-label-code-status text-label-code-status text-outline" id="byte-counter-label">0 / 72 BYTE UTF-8</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">lock</span>
+<input class="w-full h-11 pl-11 pr-11 rounded-lg bg-surface-container-high text-on-surface font-body-md placeholder:text-outline focus:outline-none focus:bg-surface-container-highest shadow-inner transition-all" id="input-password" placeholder="Minimo 8 caratteri sicuri" required="" type="password"/>
+<button aria-label="Mostra o nascondi password" class="absolute right-space-md text-outline hover:text-on-surface transition-colors p-1" id="btn-toggle-pwd" type="button">
+<span class="material-symbols-outlined text-[20px]" id="pwd-icon">visibility</span>
+</button>
+</div>
+<!-- Password Health Meter Bars -->
+<div class="grid grid-cols-4 gap-1.5 pt-1">
+<div class="h-1 rounded bg-surface-container transition-all" id="bar-1"></div>
+<div class="h-1 rounded bg-surface-container transition-all" id="bar-2"></div>
+<div class="h-1 rounded bg-surface-container transition-all" id="bar-3"></div>
+<div class="h-1 rounded bg-surface-container transition-all" id="bar-4"></div>
+</div>
+<div class="flex items-center justify-between pt-0.5">
+<span class="font-body-sm text-[12px] text-outline" id="pwd-strength-text">Complessità minima: 8 caratteri UTF-8</span>
+<span class="font-label-code-status text-[10px] text-outline/80 tracking-wider">LIMITE CRITTOGRAFICO BCRYPT: 72 BYTE</span>
+</div>
+</div>
+<!-- Grid: Data di Nascita & Indirizzo di Domicilio -->
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-space-md">
+<!-- Data di Nascita (obbligatoria) -->
+<div class="sm:col-span-5 flex flex-col gap-1.5">
+<label class="font-label-btn text-label-btn text-on-surface" for="input-dob">Data di Nascita *</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">calendar_today</span>
+<input class="w-full h-11 pl-11 pr-space-md rounded-lg bg-surface-container-high text-on-surface font-body-md focus:outline-none focus:bg-surface-container-highest shadow-inner transition-all scheme-dark" id="input-dob" required="" type="date"/>
+</div>
+<span class="font-body-sm text-[11px] text-outline">Accesso riservato ad un pubblico 18+</span>
+</div>
+<!-- Indirizzo di Domicilio (facoltativo, max 255 char) -->
+<div class="sm:col-span-7 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<label class="font-label-btn text-label-btn text-on-surface" for="input-indirizzo">Indirizzo di Domicilio (Facoltativo)</label>
+<span class="font-label-code-status text-label-code-status text-outline" id="indirizzo-counter">0/255</span>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-space-md text-outline pointer-events-none text-[20px]">location_on</span>
+<input class="w-full h-11 pl-11 pr-space-md rounded-lg bg-surface-container-high text-on-surface font-body-md placeholder:text-outline focus:outline-none focus:bg-surface-container-highest shadow-inner transition-all" id="input-indirizzo" maxlength="255" placeholder="es. Via Tortona 14, Milano" type="text"/>
+</div>
+<span class="font-body-sm text-[11px] text-outline">Utilizzato per precalcolare il raggio di prossimità eventi</span>
+</div>
+</div>
+<!-- Mandatory Legal & Haversine Consents -->
+<div class="pt-space-sm space-y-space-sm">
+<label class="flex items-start gap-space-sm cursor-pointer select-none">
+<input class="mt-1 w-4 h-4 rounded bg-surface-container-high text-primary-container focus:ring-0 focus:outline-none cursor-pointer" id="check-terms" required="" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                  Dichiaro di aver preso visione e di accettare i <a class="text-primary hover:underline font-semibold" href="#">Termini di Servizio</a> e la <a class="text-primary hover:underline font-semibold" href="#">Privacy Policy</a> per il trattamento crittografico dei dati e credenziali.
+                </span>
+</label>
+<label class="flex items-start gap-space-sm cursor-pointer select-none">
+<input class="mt-1 w-4 h-4 rounded bg-surface-container-high text-primary-container focus:ring-0 focus:outline-none cursor-pointer" id="check-haversine" required="" type="checkbox"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                  Autorizzo il calcolo radar della posizione in tempo reale tramite <span class="text-secondary font-semibold">Formula Geodetica Haversine</span> per la visualizzazione delle aree perimetrate e dei punti di interesse (POI) dell'evento.
+                </span>
+</label>
+</div>
+<!-- Submit Primary Glowing Button -->
+<div class="pt-space-md flex flex-col gap-space-sm">
+<button class="w-full h-12 rounded-lg bg-gradient-to-r from-primary-container to-inverse-primary hover:opacity-95 text-on-primary font-label-btn text-label-btn flex items-center justify-center gap-space-sm shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_32px_rgba(99,102,241,0.5)] transition-all transform active:scale-[0.99]" id="btn-submit" type="submit">
+<span>Crea Account &amp; Ricevi Codice OTP</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<!-- Secondary Login Re-direction -->
+<div class="text-center pt-space-xs">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Hai già un account verificato? 
+                  <a class="text-primary hover:text-primary-fixed font-semibold transition-colors" data-path="login" href="#">Accedi</a>
+</p>
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    // DOM Elements Cache
+    const form = document.getElementById('registration-form');
+    const inputNome = document.getElementById('input-nome');
+    const inputCognome = document.getElementById('input-cognome');
+    const inputEmail = document.getElementById('input-email');
+    const inputPassword = document.getElementById('input-password');
+    const inputIndirizzo = document.getElementById('input-indirizzo');
+    const inputDob = document.getElementById('input-dob');
+    
+    const nomeCounter = document.getElementById('nome-counter');
+    const cognomeCounter = document.getElementById('cognome-counter');
+    const indirizzoCounter = document.getElementById('indirizzo-counter');
+    const byteCounterLabel = document.getElementById('byte-counter-label');
+    const emailBadge = document.getElementById('email-format-badge');
+    
+    const btnTogglePwd = document.getElementById('btn-toggle-pwd');
+    const pwdIcon = document.getElementById('pwd-icon');
+    const pwdBars = [
+      document.getElementById('bar-1'),
+      document.getElementById('bar-2'),
+      document.getElementById('bar-3'),
+      document.getElementById('bar-4')
+    ];
+    const pwdStrengthText = document.getElementById('pwd-strength-text');
+
+    const toggleSimPanel = document.getElementById('toggle-sim-panel');
+    const simPanelContent = document.getElementById('sim-panel-content');
+    const simPanelChevron = document.getElementById('sim-panel-chevron');
+    const btnSim409 = document.getElementById('btn-simulate-409');
+    const btnSim429 = document.getElementById('btn-simulate-429');
+    const btnClearSim = document.getElementById('btn-clear-sim');
+
+    const alertBanner = document.getElementById('alert-banner');
+    const alertTitle = document.getElementById('alert-title');
+    const alertMessage = document.getElementById('alert-message');
+    const alertMeta = document.getElementById('alert-meta');
+    const alertIcon = document.getElementById('alert-icon');
+    const alertClose = document.getElementById('alert-close');
+
+    // Utf8 Byte Length Calculator for BCrypt 72-Byte Boundary
+    function getUtf8ByteLength(str) {
+      return new TextEncoder().encode(str).length;
+    }
+
+    // Toggle simulation panel
+    toggleSimPanel.addEventListener('click', () => {
+      const isHidden = simPanelContent.classList.contains('hidden');
+      if (isHidden) {
+        simPanelContent.classList.remove('hidden');
+        simPanelContent.classList.add('flex');
+        simPanelChevron.style.transform = 'rotate(180deg)';
+      } else {
+        simPanelContent.classList.add('hidden');
+        simPanelContent.classList.remove('flex');
+        simPanelChevron.style.transform = 'rotate(0deg)';
+      }
+    });
+
+    // Character Counters
+    inputNome.addEventListener('input', (e) => {
+      nomeCounter.textContent = `${e.target.value.length}/100`;
+    });
+
+    inputCognome.addEventListener('input', (e) => {
+      cognomeCounter.textContent = `${e.target.value.length}/100`;
+    });
+
+    inputIndirizzo.addEventListener('input', (e) => {
+      indirizzoCounter.textContent = `${e.target.value.length}/255`;
+    });
+
+    // Email Live RFC Validation & Normalization Visualizer
+    inputEmail.addEventListener('input', (e) => {
+      const rawVal = e.target.value;
+      const normalized = rawVal.trim().toLowerCase();
+      const rfcRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      
+      if (rfcRegex.test(normalized)) {
+        emailBadge.classList.remove('hidden');
+        emailBadge.classList.add('inline-flex');
+      } else {
+        emailBadge.classList.add('hidden');
+        emailBadge.classList.remove('inline-flex');
+      }
+    });
+
+    // Password Toggle Mask
+    btnTogglePwd.addEventListener('click', () => {
+      if (inputPassword.type === 'password') {
+        inputPassword.type = 'text';
+        pwdIcon.textContent = 'visibility_off';
+      } else {
+        inputPassword.type = 'password';
+        pwdIcon.textContent = 'visibility';
+      }
+    });
+
+    // Password Strength & 72-Byte Limit Guard
+    inputPassword.addEventListener('input', (e) => {
+      const pwd = e.target.value;
+      const bytes = getUtf8ByteLength(pwd);
+      byteCounterLabel.textContent = `${bytes} / 72 BYTE UTF-8`;
+
+      if (bytes > 72) {
+        byteCounterLabel.classList.add('text-error', 'font-bold');
+        byteCounterLabel.classList.remove('text-outline');
+      } else {
+        byteCounterLabel.classList.remove('text-error', 'font-bold');
+        byteCounterLabel.classList.add('text-outline');
+      }
+
+      // Strength estimation
+      let score = 0;
+      if (pwd.length >= 8) score++;
+      if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+      if (/[0-9]/.test(pwd)) score++;
+      if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+      // Reset bars
+      pwdBars.forEach(bar => {
+        bar.className = 'h-1 rounded bg-surface-container transition-all';
+      });
+
+      if (pwd.length === 0) {
+        pwdStrengthText.textContent = 'Complessità minima: 8 caratteri UTF-8';
+        pwdStrengthText.className = 'font-body-sm text-[12px] text-outline';
+        return;
+      }
+
+      if (score <= 1) {
+        pwdBars[0].className = 'h-1 rounded bg-error transition-all';
+        pwdStrengthText.textContent = 'Password Debole (minimo 8 caratteri)';
+        pwdStrengthText.className = 'font-body-sm text-[12px] text-error font-medium';
+      } else if (score === 2) {
+        pwdBars[0].className = 'h-1 rounded bg-tertiary transition-all';
+        pwdBars[1].className = 'h-1 rounded bg-tertiary transition-all';
+        pwdStrengthText.textContent = 'Sicurezza Media';
+        pwdStrengthText.className = 'font-body-sm text-[12px] text-tertiary font-medium';
+      } else if (score === 3) {
+        pwdBars[0].className = 'h-1 rounded bg-secondary transition-all';
+        pwdBars[1].className = 'h-1 rounded bg-secondary transition-all';
+        pwdBars[2].className = 'h-1 rounded bg-secondary transition-all';
+        pwdStrengthText.textContent = 'Password Robusta';
+        pwdStrengthText.className = 'font-body-sm text-[12px] text-secondary font-medium';
+      } else {
+        pwdBars.forEach(b => b.className = 'h-1 rounded bg-status-in-corso transition-all');
+        pwdStrengthText.textContent = 'Ottima Complessità Crittografica';
+        pwdStrengthText.className = 'font-body-sm text-[12px] text-status-in-corso font-semibold';
+      }
+    });
+
+    // Alert Banner Helper
+    function showAlert(type, title, message, metaCode) {
+      alertBanner.classList.remove('hidden');
+      alertTitle.textContent = title;
+      alertMessage.textContent = message;
+      alertMeta.textContent = metaCode;
+
+      if (type === '409') {
+        alertBanner.className = 'rounded-xl p-space-md shadow-lg transition-all bg-tertiary/15 text-tertiary flex flex-col gap-1';
+        alertIcon.textContent = 'warning';
+      } else if (type === '429') {
+        alertBanner.className = 'rounded-xl p-space-md shadow-lg transition-all bg-error/15 text-error flex flex-col gap-1';
+        alertIcon.textContent = 'speed';
+      } else if (type === 'success') {
+        alertBanner.className = 'rounded-xl p-space-md shadow-lg transition-all bg-status-in-corso/15 text-status-in-corso flex flex-col gap-1';
+        alertIcon.textContent = 'mark_email_read';
+      }
+    }
+
+    alertClose.addEventListener('click', () => {
+      alertBanner.classList.add('hidden');
+    });
+
+    btnSim409.addEventListener('click', () => {
+      showAlert(
+        '409',
+        'Conflitto: Email Già Registrata',
+        'L\'indirizzo indicato risulta associato ad un profilo verificato attivo. Se l\'account precedente non fosse stato validato, il backend V4 lo avrebbe sovrascritto automaticamente.',
+        'HTTP STATUS 409 // CODE: EMAIL_GIA_REGISTRATA // SOVRASCRITTURA_FALLITA'
+      );
+    });
+
+    btnSim429.addEventListener('click', () => {
+      showAlert(
+        '429',
+        'Limite Richieste Raggiunto (Rate Limit)',
+        'Troppe richieste di registrazione ravvicinate dallo stesso IP. Riprova tra 60 secondi come previsto dai criteri di sicurezza antispam.',
+        'HTTP STATUS 429 // CODE: TROPPE_RICHIESTE // RETRY-AFTER: 60s'
+      );
+    });
+
+    btnClearSim.addEventListener('click', () => {
+      alertBanner.classList.add('hidden');
+    });
+
+    // Client Submission Validation
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const pwdBytes = getUtf8ByteLength(inputPassword.value);
+      if (pwdBytes > 72) {
+        showAlert(
+          '409',
+          'Violazione Limite Password BCrypt',
+          `La password scelta occupa ${pwdBytes} byte UTF-8. Il massimo consentito dall'algoritmo di hashing NoseY è 72 byte.`,
+          'CLIENT ERROR // BCRYPT_BYTE_OVERFLOW'
+        );
+        return;
+      }
+
+      const normalizedEmail = inputEmail.value.trim().toLowerCase();
+
+      // Successful Dispatch Feedback
+      showAlert(
+        'success',
+        'Codice OTP Trasmesso',
+        `Abbiamo inviato un codice di convalida a 6 cifre all'indirizzo normalizzato "${normalizedEmail}". Inseriscilo nella schermata successiva per attivare il profilo.`,
+        'DISPATCH DISPONIBILE // GATEWAY: BREVO_SERVICE // EXPIRES: 15m'
+      );
+    });
+
+  })();
+</script></main><footer class="relative z-10 w-full bg-surface-deep/80 backdrop-blur-xl mt-auto"><div class="w-full px-margin py-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md text-center md:text-left"><div class="flex flex-wrap items-center justify-center md:justify-start gap-space-sm font-label-code-status text-label-code-status text-outline tracking-wider"><span class="flex items-center gap-1.5 text-secondary"><span class="material-symbols-outlined text-[14px]">verified_user</span>AES-256 GCM</span><span class="text-outline-variant">•</span><span>JWT STATELESS</span><span class="text-outline-variant">•</span><span class="text-primary-fixed-dim">BREVO SECURE OTP</span></div><div class="font-body-sm text-body-sm text-on-surface-variant/80">© 2025 NoseY Live Experience System. Tutti i diritti riservati.</div></div></footer></body></html>
