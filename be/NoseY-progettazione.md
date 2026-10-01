@@ -754,6 +754,7 @@ ListaPartecipanti        GET /api/events/{id}/participants
       proprietario    boolean  ← il proprietario compare in cima alla lista, anche se non è iscritto
       statoAmicizia   NESSUNA | INVIATA | RICEVUTA | AMICI | NON_DISPONIBILE   (vista di chi chiede)
       amiciziaId      valorizzato con INVIATA, RICEVUTA e AMICI, altrimenti null
+      chatId          la chat della coppia (decisione 20): con AMICI c'è sempre, con INVIATA e RICEVUTA se esiste già, altrimenti null
   - Ordine: il proprietario, poi i partecipanti per emesso_il
   - Errori: 404 NON_TROVATO, 403 NESSUN_TICKET
   - Note: statoAmicizia dice al frontend quale pulsante mostrare:
@@ -1101,22 +1102,25 @@ CambiaStatoUtente        PATCH /api/admin/users/{utenteId}/status
             403 RUOLO_INSUFFICIENTE (ruolo uguale o superiore al tuo, o sei tu), 409 UTENTE_ANONIMIZZATO
   - Effetti: SOSPESO → revoca tutti i token dell'utente · i suoi eventi restano (decisione D14)
 
-CreaArtista              POST /api/admin/artists
+CreaArtista              POST /api/admin/artists   (multipart/form-data, come CreaFoto)
   - Accesso: ADMIN
-  - DTO req (ArtistaRequest)
-      nome         @NotBlank @Size(max = 100)
-      immagineUrl  @URL(protocol = "https") @Size(max = 500)   (facoltativa)
+  - Parametri
+      nome   @NotBlank @Size(max = 100)
+      file   immagine (facoltativa) — stessa validazione di CreaFoto: JPEG/PNG/WEBP sui primi byte,
+             max 5 MB, salvata come byte[] nel DB (decisione 4, niente URL)
   - Resp: 201 Created + ArtistaResponse
-  - Errori: 400 VALIDAZIONE, 409 ARTISTA_NOME_GIA_USATO (senza distinzione di maiuscole)
+  - Errori: 400 VALIDAZIONE, 400 FILE_NON_VALIDO, 409 ARTISTA_NOME_GIA_USATO (senza distinzione di maiuscole)
 
-ModificaArtista          PATCH /api/admin/artists/{artistaId}
+ModificaArtista          PATCH /api/admin/artists/{artistaId}   (multipart/form-data)
   - Accesso: ADMIN
-  - DTO req (ModificaArtistaRequest)   ← tutti facoltativi
-      nome         @Size(max = 100) + non vuoto
-      immagineUrl  @URL(protocol = "https") @Size(max = 500)   "" = rimuovi
-      attivo       boolean
+  - Parametri   ← tutti facoltativi
+      nome             @Size(max = 100) — fornito (anche "") e non vuoto dopo strip, altrimenti VALIDAZIONE
+      file             nuova immagine, sostituisce quella attuale
+      rimuoviImmagine  boolean, default false — true toglie l'immagine; incompatibile con file (400 VALIDAZIONE)
+      attivo           boolean
   - Resp: 200 + ArtistaResponse
-  - Errori: 400 VALIDAZIONE, 400 RICHIESTA_VUOTA, 404 NON_TROVATO, 409 ARTISTA_NOME_GIA_USATO
+  - Errori: 400 VALIDAZIONE, 400 FILE_NON_VALIDO, 400 RICHIESTA_VUOTA (nessun parametro valorizzato),
+            404 NON_TROVATO, 409 ARTISTA_NOME_GIA_USATO
   - Note: attivo = false → sparisce da ListaArtisti e non si può più aggiungere agli eventi;
           resta negli eventi in cui c'è già
 
