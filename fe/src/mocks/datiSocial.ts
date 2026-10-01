@@ -1,5 +1,6 @@
 // "Database" in memoria del lato utenti e social (FE2-03): account, token, amicizie, chat,
-// messaggi e notifiche. Come dati.ts, le modifiche restano finche' non si ricarica la pagina.
+// messaggi e notifiche. Come dati.ts, le modifiche restano finche' non si ricarica la pagina,
+// tranne gli account registrati (salvati nel localStorage, vedi salvaIscritti).
 //
 // Account per provare il login (password uguale per tutti: "password123", codice email "123456"):
 //   valentina@nosey.it  USER, verificata: e' l'utente dei dati finti degli eventi (ID_UTENTE_CORRENTE)
@@ -72,6 +73,42 @@ utenti.push(
   { id: 'u-0006-nuovo', nome: 'Nuovo', cognome: 'Iscritto', immagineProfilo: null, attivo: true },
   { id: 'u-0007-sospeso', nome: 'Utente', cognome: 'Sospeso', immagineProfilo: null, attivo: false },
 )
+
+// Account creati con la registrazione: salvati nel localStorage, cosi' un refresh fra registrazione e
+// verifica non li perde (il codice risulterebbe "non corretto") e le altre schede li riconoscono
+// (con un account sconosciuto /users/me risponde 401 e la sessione, condivisa, si chiuderebbe)
+const CHIAVE_ISCRITTI = 'nosey.datiFinti.iscritti'
+const idIniziali = new Set(account.map((a) => a.id))
+
+type Iscritto = { account: AccountFinto; nome: string; cognome: string }
+
+function leggiIscritti(): Iscritto[] {
+  try {
+    return JSON.parse(localStorage.getItem(CHIAVE_ISCRITTI) ?? '[]') as Iscritto[]
+  } catch {
+    return []
+  }
+}
+
+/** Da chiamare dopo una registrazione o una verifica */
+export function salvaIscritti() {
+  const iscritti: Iscritto[] = account
+    .filter((a) => !idIniziali.has(a.id))
+    .map((a) => {
+      const u = utenti.find((x) => x.id === a.id)
+      return { account: a, nome: u?.nome ?? '', cognome: u?.cognome ?? '' }
+    })
+  try {
+    localStorage.setItem(CHIAVE_ISCRITTI, JSON.stringify(iscritti))
+  } catch {
+    // Spazio pieno o storage bloccato: restano solo in memoria
+  }
+}
+
+for (const { account: a, nome, cognome } of leggiIscritti()) {
+  account.push(a)
+  utenti.push({ id: a.id, nome, cognome, immagineProfilo: null, attivo: true })
+}
 
 export const trovaAccount = (id: Uuid) => account.find((a) => a.id === id)
 export const accountPerEmail = (email: string) => account.find((a) => a.email === email.trim().toLowerCase())

@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
+import { setWorkerUrl } from 'maplibre-gl'
 import MapGL, { Layer, Marker, NavigationControl, Source, type MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// Il worker di MapLibre (disegna le tessere) preparato da Vite come file a se', con le sue dipendenze
+import urlWorkerMapLibre from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import './mappa.css'
 import { Icon } from '@/components/ui'
 import { cx } from '@/lib/cx'
 import { IconaEvento, IconaPoi, STILE_POI, STILE_STATO } from './IconaMarker'
-import { arrotonda, ATTRIBUZIONE, poligonoCerchio, URL_STILI, type MappaProps, type MarkerMappa } from './tipi'
+import { arrotonda, poligonoCerchio, URL_STILI, type MappaProps, type MarkerMappa } from './tipi'
+
+// MapLibre 6 cerca il worker accanto al proprio file (import.meta.url), ma Vite raccoglie MapLibre
+// altrove (node_modules/.vite/deps in sviluppo, assets/ nella build) e il worker non si trova:
+// senza worker niente tessere, la mappa resta nera ("Worker failed to load"). Gli si dice dov'e'.
+setWorkerUrl(urlWorkerMapLibre)
 
 // Nome del marker per lo screen reader: "Chronos (in corso)", "Ingresso nord (ingresso)"
 function etichettaMarker(m: MarkerMappa): string {
@@ -48,10 +56,15 @@ export default function Mappa({
         style={{ width: '100%', height: '100%' }}
         cursor={sceltaAttiva ? 'crosshair' : undefined}
         onClick={sceltaAttiva ? (e) => onScegliPunto(arrotonda(e.lngLat)) : undefined}
-        onError={() => setErrore(true)}
-        // Sempre aperta (compact: false): la licenza chiede che l'attribuzione si veda
-        // senza dover cliccare sulla "i"
-        attributionControl={{ compact: false, customAttribution: ATTRIBUZIONE }}
+        onError={(e) => {
+          // Il dettaglio va nella console: l'avviso nella mappa resta generico
+          console.error('[Mappa] errore di MapLibre:', e.error)
+          setErrore(true)
+        }}
+        // Attribuzione sempre aperta (compact: false): la licenza chiede che si veda senza cliccare
+        // sulla "i". Il testo (OpenFreeMap, © OpenMapTiles, OpenStreetMap con il link al copyright)
+        // arriva dalle tessere di OpenFreeMap: aggiungerne un altro lo ripeterebbe due volte.
+        attributionControl={{ compact: false }}
       >
         <NavigationControl position="top-right" showCompass={false} />
 

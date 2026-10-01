@@ -13,6 +13,7 @@ import {
   inUtenteResponse,
   nuovoToken,
   revocaToken,
+  salvaIscritti,
   type AccountFinto,
 } from '../datiSocial'
 import { errore, leggiJson, nessunContenuto, nonVuoto } from '../utili'
@@ -82,6 +83,7 @@ export const handlerAuth = [
       utenti.push({ id: a.id, nome: '', cognome: '', immagineProfilo: null, attivo: true })
     }
     Object.assign(trovaUtente(a.id), { nome: (b.nome as string).trim(), cognome: (b.cognome as string).trim() })
+    salvaIscritti()
     console.info(`[dati finti] codice di verifica per ${email}: ${CODICE_FINTO}`)
     const corpo: RegistrazioneResponse = { id: a.id, email }
     return HttpResponse.json(corpo, { status: 201 })
@@ -101,6 +103,7 @@ export const handlerAuth = [
     if (b.codice !== CODICE_FINTO) return errore('CODICE_NON_VALIDO')
     if (b.password !== a.password) return errore('PASSWORD_ERRATA')
     a.verificato = true
+    salvaIscritti()
     return HttpResponse.json(login(a))
   }),
 
