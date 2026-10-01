@@ -1,6 +1,8 @@
 package it.epicode.nosey.notification;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import it.epicode.nosey.common.ApplicazioneException;
+import it.epicode.nosey.common.CodiceErrore;
 
 /**
  * Stessi valori nel percorso, in NotificaResponse e nel payload WebSocket
@@ -20,5 +22,19 @@ public enum CategoriaNotifica {
 	@JsonValue
 	public String valore() {
 		return valore;
+	}
+
+	/**
+	 * Categoria dal percorso o dal parametro ?categoria=. Non si lascia la conversione a Spring:
+	 * vorrebbe il nome dell'enum (EVENTS) e un valore errato diventerebbe VALIDAZIONE.
+	 */
+	public static CategoriaNotifica da(String valore) {
+		for (CategoriaNotifica categoria : values()) {
+			if (categoria.valore.equals(valore)) {
+				return categoria;
+			}
+		}
+		throw new ApplicazioneException(CodiceErrore.CATEGORIA_NON_VALIDA,
+				"Categoria non valida: usa events, friendships o chats");
 	}
 }

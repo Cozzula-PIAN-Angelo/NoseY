@@ -103,6 +103,16 @@ public class ChatService {
 	}
 
 	/**
+	 * SegnaChatLetta su tutte le chat dell'utente in due UPDATE, invece di tre query per chat:
+	 * serve a SegnaTutteLette per la categoria chats (sezione 10).
+	 */
+	@Transactional
+	public void segnaTutteLette(UUID utenteId) {
+		messaggioRepository.segnaTuttiLettiDellAltro(utenteId);
+		notificaChatRepository.segnaTutteLette(utenteId);
+	}
+
+	/**
 	 * InviaMessaggio (sezione 11). I controlli si ripetono a ogni invio, nell'ordine della
 	 * progettazione: la connessione resta aperta anche dopo logout, sospensione o cambio password.
 	 * Il messaggio arriva ai due utenti solo dopo il commit (MessaggioLiveListener).

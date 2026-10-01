@@ -1,5 +1,7 @@
 package it.epicode.nosey.notification;
 
+import it.epicode.nosey.chat.Chat;
+import it.epicode.nosey.friendship.Amicizia;
 import it.epicode.nosey.user.Utente;
 
 import java.time.Instant;
@@ -19,6 +21,9 @@ public record NotificaResponse(
 		Instant creataIl
 ) {
 
+	/** Unico tipo delle notifiche chats: NOTIFICA_CHAT non ha una colonna tipo. */
+	public static final String TIPO_CHAT = "NUOVI_MESSAGGI";
+
 	public static NotificaResponse da(NotificaEvento notifica) {
 		return new NotificaResponse(
 				notifica.getId(),
@@ -35,12 +40,7 @@ public record NotificaResponse(
 	 * cosi' dopo un'anonimizzazione compare il nome anonimo anche nelle notifiche gia' ricevute.
 	 */
 	public static NotificaResponse da(NotificaAmicizia notifica) {
-		Utente destinatario = notifica.getDestinatario();
-		Utente richiedente = notifica.getAmicizia().getRichiedente();
-		Utente altro = richiedente.getId().equals(destinatario.getId())
-				? notifica.getAmicizia().getRicevente()
-				: richiedente;
-		String nome = altro.getNome() + " " + altro.getCognome();
+		String nome = nomeDellAltro(notifica.getAmicizia(), notifica.getDestinatario());
 		String testo = switch (notifica.getTipo()) {
 			case RICHIESTA -> nome + " ti ha chiesto l'amicizia";
 			case ACCETTATA -> nome + " ha accettato la tua richiesta di amicizia";
@@ -53,5 +53,27 @@ public record NotificaResponse(
 				notifica.getAmicizia().getId(),
 				notifica.isLetta(),
 				notifica.getCreataIl());
+	}
+
+	/**
+	 * Come per le amicizie, il testo si genera alla lettura con il nome attuale dell'altro utente.
+	 * creataIl = aggiornata_il: l'ultimo messaggio che ha riaperto la notifica.
+	 */
+	public static NotificaResponse da(NotificaChat notifica) {
+		Chat chat = notifica.getChat();
+		return new NotificaResponse(
+				notifica.getId(),
+				CategoriaNotifica.CHATS,
+				TIPO_CHAT,
+				"Nuovi messaggi da " + nomeDellAltro(chat.getAmicizia(), notifica.getDestinatario()),
+				chat.getId(),
+				notifica.isLetta(),
+				notifica.getAggiornataIl());
+	}
+
+	private static String nomeDellAltro(Amicizia amicizia, Utente destinatario) {
+		Utente richiedente = amicizia.getRichiedente();
+		Utente altro = richiedente.getId().equals(destinatario.getId()) ? amicizia.getRicevente() : richiedente;
+		return altro.getNome() + " " + altro.getCognome();
 	}
 }
