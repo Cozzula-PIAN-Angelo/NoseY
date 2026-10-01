@@ -53,7 +53,7 @@ I documenti di progetto stanno in [`docs/`](docs/):
 - [`schema-db.md`](docs/schema-db.md) - schema relazionale (tabelle, relazioni, vincoli)
 - [`decisioni.md`](docs/decisioni.md) - decisioni tecniche con motivazioni e alternative
 - [`interfacce.md`](docs/interfacce.md) - interfacce condivise fra le parti, rotte e componenti del frontend
-- [`regole.md`](docs/regole.md) - regole di lavoro: branch, pull request, quando una card e' «Fatto»
+- [`regole.md`](docs/regole.md) - regole di lavoro: branch personali, pull request, quando una card e' «Fatto»
 - [`ruoli.md`](docs/ruoli.md) - membri del team e divisione del lavoro
 - [`verbali.md`](docs/verbali.md) - verbali delle riunioni
 
