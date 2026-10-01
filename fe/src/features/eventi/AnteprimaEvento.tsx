@@ -22,6 +22,7 @@ export function AnteprimaEvento({ evento, onChiudi }: AnteprimaEventoProps) {
     >
       <div className="relative w-28 shrink-0 sm:w-36">
         {copertina ? (
+          // Decorativa: EventoMappaResponse non porta la didascalia della copertina, e il titolo e' accanto
           <img src={copertina} alt="" className="absolute inset-0 size-full object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-inverse-primary/40 to-surface-deep">
