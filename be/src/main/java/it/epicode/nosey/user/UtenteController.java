@@ -2,6 +2,10 @@ package it.epicode.nosey.user;
 
 import it.epicode.nosey.auth.UtenteAutenticato;
 import it.epicode.nosey.common.ImmagineContenuto;
+import it.epicode.nosey.event.EventoMappaResponse;
+import it.epicode.nosey.event.EventoService;
+import it.epicode.nosey.ticket.PartecipanteService;
+import it.epicode.nosey.ticket.TicketResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -21,6 +25,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,6 +34,8 @@ import java.util.UUID;
 public class UtenteController {
 
 	private final UtenteService utenteService;
+	private final EventoService eventoService;
+	private final PartecipanteService partecipanteService;
 
 	@GetMapping("/me")
 	public UtenteResponse vediProfilo(@AuthenticationPrincipal UtenteAutenticato utente) {
@@ -59,6 +66,16 @@ public class UtenteController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void rimuoviImmagine(@AuthenticationPrincipal UtenteAutenticato utente) {
 		utenteService.rimuoviImmagine(utente);
+	}
+
+	@GetMapping("/me/events")
+	public List<EventoMappaResponse> mieiEventi(@AuthenticationPrincipal UtenteAutenticato utente) {
+		return eventoService.mieiEventi(utente.id());
+	}
+
+	@GetMapping("/me/tickets")
+	public List<TicketResponse> mieiTicket(@AuthenticationPrincipal UtenteAutenticato utente) {
+		return partecipanteService.mieiTicket(utente.id());
 	}
 
 	/**

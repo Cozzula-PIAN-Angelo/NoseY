@@ -26,4 +26,8 @@ public interface PartecipanteRepository extends JpaRepository<Partecipante, UUID
 
 	// VediMiaPartecipazione, CancellaPartecipazione (sezione 7).
 	Optional<Partecipante> findByEventoIdAndUtenteId(UUID eventoId, UUID utenteId);
+
+	// MieiTicket (sezione 2): l'ordinamento (programmati/in corso prima, poi conclusi/annullati)
+	// dipende dallo stato calcolato dalle date, quindi si fa in Java dopo aver letto tutto.
+	List<Partecipante> findByUtenteId(UUID utenteId);
 }
