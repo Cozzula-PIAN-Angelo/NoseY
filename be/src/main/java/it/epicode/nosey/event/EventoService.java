@@ -2,7 +2,6 @@ package it.epicode.nosey.event;
 
 import it.epicode.nosey.common.ApplicazioneException;
 import it.epicode.nosey.common.CodiceErrore;
-import it.epicode.nosey.common.ImmagineContenuto;
 import it.epicode.nosey.notification.NotificheService;
 import it.epicode.nosey.notification.ParteEvento;
 import it.epicode.nosey.ticket.PartecipanteRepository;
@@ -85,14 +84,6 @@ public class EventoService {
 				.collect(Collectors.toMap(foto -> foto.getEvento().getId(), Function.identity()));
 	}
 
-	// Pubblico (decisione 9): un tag img non puo' mandare il token.
-	@Transactional(readOnly = true)
-	public ImmagineContenuto immagineFoto(UUID eventoId, UUID fotoId) {
-		FotoEvento foto = fotoEventoRepository.findByIdAndEventoId(fotoId, eventoId)
-				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Foto non trovata"));
-		return new ImmagineContenuto(foto.getContenuto(), foto.getContentType(), foto.getVersione());
-	}
-
 	private double distanzaKm(double lat1, double lng1, double lat2, double lng2) {
 		double dLat = Math.toRadians(lat2 - lat1);
 		double dLng = Math.toRadians(lng2 - lng1);
@@ -138,7 +129,7 @@ public class EventoService {
 			throw new ApplicazioneException(CodiceErrore.NON_PROPRIETARIO, "Non sei il proprietario dell'evento");
 		}
 		Instant adesso = clock.instant();
-		StatoEvento statoAttuale = controllaScrivibile(evento, adesso);
+		StatoEvento statoAttuale = StatoEvento.controllaScrivibile(evento, adesso);
 
 		boolean dataEventoCambiata = richiesta.dataEvento() != null && !richiesta.dataEvento().equals(evento.getDataEvento());
 		boolean dataFineCambiata = richiesta.dataFine() != null && !richiesta.dataFine().equals(evento.getDataFine());
@@ -213,23 +204,11 @@ public class EventoService {
 		if (!evento.getProprietario().getId().equals(proprietarioId)) {
 			throw new ApplicazioneException(CodiceErrore.NON_PROPRIETARIO, "Non sei il proprietario dell'evento");
 		}
-		controllaScrivibile(evento, clock.instant());
+		StatoEvento.controllaScrivibile(evento, clock.instant());
 
 		evento.setStato(StatoEventoDb.ANNULLATO);
 		evento.setMotivoAnnullamento(motivo == null || motivo.isBlank() ? null : motivo.strip());
 		notificheService.notificaAnnullamento(evento);
-	}
-
-	// Evento concluso o annullato: niente scritture (progettazione v4, sezione 0 "Stato dell'evento").
-	private StatoEvento controllaScrivibile(Evento evento, Instant adesso) {
-		StatoEvento stato = StatoEvento.calcola(evento, adesso);
-		if (stato == StatoEvento.CONCLUSO) {
-			throw new ApplicazioneException(CodiceErrore.EVENTO_CONCLUSO, "L'evento e' concluso");
-		}
-		if (stato == StatoEvento.ANNULLATO) {
-			throw new ApplicazioneException(CodiceErrore.EVENTO_ANNULLATO, "L'evento e' annullato");
-		}
-		return stato;
 	}
 
 	@Transactional(readOnly = true)

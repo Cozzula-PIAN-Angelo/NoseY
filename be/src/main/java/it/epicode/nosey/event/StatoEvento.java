@@ -1,5 +1,8 @@
 package it.epicode.nosey.event;
 
+import it.epicode.nosey.common.ApplicazioneException;
+import it.epicode.nosey.common.CodiceErrore;
+
 import java.time.Instant;
 
 /**
@@ -25,5 +28,20 @@ public enum StatoEvento {
 			return IN_CORSO;
 		}
 		return CONCLUSO;
+	}
+
+	/**
+	 * Evento concluso o annullato: niente scritture su di esso ne' sulle sue sotto-risorse
+	 * (foto, POI, artisti). Usato da EventoService e dai service delle sotto-risorse.
+	 */
+	public static StatoEvento controllaScrivibile(Evento evento, Instant adesso) {
+		StatoEvento stato = calcola(evento, adesso);
+		if (stato == CONCLUSO) {
+			throw new ApplicazioneException(CodiceErrore.EVENTO_CONCLUSO, "L'evento e' concluso");
+		}
+		if (stato == ANNULLATO) {
+			throw new ApplicazioneException(CodiceErrore.EVENTO_ANNULLATO, "L'evento e' annullato");
+		}
+		return stato;
 	}
 }
