@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { BASE } from '@/lib/api'
+import { useState, type ReactNode } from 'react'
+import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
@@ -16,7 +16,7 @@ import {
 } from '@/components/mappa'
 import type { EventoMappaResponse, StatoEvento, TipoPoi } from '@/types/api'
 
-// Marker della mappa di prova: gli eventi arrivano da GET /api/events (dati finti di FE1-03),
+// Marker della mappa di prova: gli eventi arrivano da GET /api/events (useListaEventiQuery),
 // i tre POI sono quelli dell'evento al Colosseo.
 function markerDiProva(
   eventiMappa: EventoMappaResponse[],
@@ -40,19 +40,6 @@ function markerDiProva(
   ]
 }
 
-// PROVVISORIO (FE1-03): fetch diretta finche' non ci sono le funzioni API sopra il client
-// di FE2 (passo 5). Con i dati finti attivi risponde MSW.
-function useEventiDiProva() {
-  const [eventiMappa, setEventiMappa] = useState<EventoMappaResponse[]>([])
-  const [errore, setErrore] = useState<unknown>(null)
-  useEffect(() => {
-    fetch(`${BASE}/api/events`)
-      .then(async (r) => (r.ok ? r.json() : Promise.reject({ status: r.status, data: await r.json().catch(() => null) })))
-      .then(setEventiMappa)
-      .catch(setErrore)
-  }, [])
-  return { eventiMappa, errore }
-}
 
 const statiEvento = Object.keys(STILE_STATO) as StatoEvento[]
 const tipiPoiMappa = Object.keys(STILE_POI) as TipoPoi[]
@@ -147,7 +134,8 @@ export default function Componenti() {
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
   const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
   const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
-  const { eventiMappa, errore: erroreEventi } = useEventiDiProva()
+  // Eventi da GET /api/events (FE1-03): in sviluppo rispondono i dati finti MSW
+  const { data: eventiMappa = [], error: erroreEventi } = useListaEventiQuery()
   const avviso = useAvviso()
   const campiErrati = erroreModulo ? leggiErrore(erroreModulo).campi : {}
 
@@ -356,7 +344,7 @@ export default function Componenti() {
             <MessaggioErrore errore={erroreEventi} />
           ) : (
             <p className="font-body-sm text-body-sm text-on-surface-variant">
-              {eventiMappa.length} eventi da GET /api/events (dati finti MSW): clicca un marker per i dettagli.
+              {eventiMappa.length} eventi da GET /api/events (in sviluppo: dati finti MSW): clicca un marker per i dettagli.
             </p>
           )}
           <Mappa
