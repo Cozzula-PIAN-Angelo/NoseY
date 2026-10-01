@@ -116,7 +116,9 @@ export default function ModificaEvento() {
           erroriServer={erroriServer}
           inizioBloccato={evento.stato === 'IN_CORSO'}
           onInvia={invia}
-          sottoDescrizione={() => <MiglioraDescrizioneAI foto={evento.foto} />}
+          sottoDescrizione={(descrizione) => (
+            <MiglioraDescrizioneAI eventoId={evento.id} foto={evento.foto} descrizione={descrizione} />
+          )}
         />
       </div>
 
