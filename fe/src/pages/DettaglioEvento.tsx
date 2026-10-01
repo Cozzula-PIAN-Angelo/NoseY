@@ -1,10 +1,11 @@
 import { BadgeStato } from '@/components/eventi'
 import { Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
-import { useVediEventoQuery } from '@/features/eventi/apiEventi'
+import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
 import { AzioniEvento } from '@/features/eventi/AzioniEvento'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { MappaInterna } from '@/features/eventi/MappaInterna'
+import { TicketEvento } from '@/features/eventi/TicketEvento'
 import { useIscrizione } from '@/features/eventi/useIscrizione'
 import { urlImmagine } from '@/lib/api'
 import { leggiErrore } from '@/lib/errori'
@@ -67,6 +68,8 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
   // currentData (non data): passando a un altro evento non si vede, nemmeno per un attimo, quello di prima
   const { currentData: evento, isFetching, error, refetch } = useVediEventoQuery(id)
   const iscrizione = useIscrizione(id)
+  // Il ticket si chiede solo se sono iscritto: altrimenti il backend risponderebbe 404
+  const { currentData: ticket } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
 
   if (!evento && isFetching) return <Caricamento riquadro testo="Carico l'evento..." />
   if (error) {
@@ -115,7 +118,7 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-space-md lg:sticky lg:top-space-lg lg:self-start">
+        <aside className="flex flex-col gap-space-md">
           <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg">
             <BadgeStato stato={evento.stato} className="self-start" />
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile">{evento.titolo}</h1>
@@ -132,6 +135,11 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
               inCorso={iscrizione.inCorso ? 'iscrizione' : undefined}
             />
           </div>
+          {evento.sonoIscritto && ticket && (
+            <div id="ticket" className="scroll-mt-space-lg">
+              <TicketEvento ticket={ticket} />
+            </div>
+          )}
         </aside>
       </div>
     </article>

@@ -11,6 +11,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
     "maplibre-gl": "^6.11.2",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-map-gl": "^8.1.3",
