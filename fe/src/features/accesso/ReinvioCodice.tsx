@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { Button, Icon, useAvviso } from '@/components/ui'
 import { leggiErrore } from '@/lib/errori'
 import { LIMITI_UTENTI } from '@/types/api'
-import { useReinviaCodiceMutation } from '@/features/utenti/apiUtenti'
+import { usePasswordDimenticataMutation, useReinviaCodiceMutation } from '@/features/utenti/apiUtenti'
 import { segnaInvioCodice, ultimoInvioCodice } from './registrazioneInCorso'
 
 // «Reinvia il codice» con l'attesa fra un invio e l'altro (FE1-18, passo 7), come il riquadro
 // "Cooldown invio codice" della schermata Stitch. Il backend accetta un invio ogni 60 secondi e
 // al massimo 5 al giorno, e risponde 204 anche per email sconosciute (non rivela chi e' registrato).
+// Con scopo="reset" (FE2-06) rimanda il codice per reimpostare la password (PasswordDimenticata):
+// i limiti sono gli stessi e valgono per account, quindi l'attesa e' in comune.
 
 const ATTESA_MS = LIMITI_UTENTI.secondiTraInvii * 1000
 
@@ -16,8 +18,17 @@ const mmss = (ms: number) => {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
 
-export function ReinvioCodice({ email }: { email: string }) {
-  const [reinvia, { isLoading }] = useReinviaCodiceMutation()
+type ReinvioCodiceProps = {
+  email: string
+  /** Codice di verifica dell'email (predefinito) o di reset della password */
+  scopo?: 'verifica' | 'reset'
+}
+
+export function ReinvioCodice({ email, scopo = 'verifica' }: ReinvioCodiceProps) {
+  const [reinviaVerifica, statoVerifica] = useReinviaCodiceMutation()
+  const [reinviaReset, statoReset] = usePasswordDimenticataMutation()
+  const reinvia = scopo === 'reset' ? reinviaReset : reinviaVerifica
+  const isLoading = scopo === 'reset' ? statoReset.isLoading : statoVerifica.isLoading
   const avviso = useAvviso()
   // Fine dell'attesa: se il codice e' appena partito (registrazione in questa scheda) si aspetta subito
   const [fineAttesa, setFineAttesa] = useState(() => {
@@ -44,7 +55,10 @@ export function ReinvioCodice({ email }: { email: string }) {
   async function invia() {
     try {
       await reinvia({ email: email.trim() }).unwrap()
-      avviso.successo('Nuovo codice inviato', `Se ${email.trim()} è registrata e non ancora verificata, il codice arriva tra poco.`)
+      avviso.successo(
+        'Nuovo codice inviato',
+        `Se ${email.trim()} è registrata e ${scopo === 'reset' ? 'verificata' : 'non ancora verificata'}, il codice arriva tra poco.`,
+      )
       avviaAttesa()
     } catch (err) {
       if (leggiErrore(err).codice === 'TROPPE_RICHIESTE') {

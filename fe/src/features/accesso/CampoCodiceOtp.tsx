@@ -10,6 +10,8 @@ type CampoCodiceOtpProps = {
   disabled?: boolean
   /** Il cursore parte dalla prima casella */
   autoFocus?: boolean
+  /** Predefinita "Codice di verifica" (nel reset della password: "Codice ricevuto via email") */
+  etichetta?: string
 }
 
 const CIFRE = 6
@@ -18,7 +20,14 @@ const CIFRE = 6
 // Si scrive una cifra per casella (il cursore va avanti da solo), Backspace torna indietro,
 // e si puo' incollare il codice intero. Sul telefono compare il tastierino numerico, e
 // autocomplete="one-time-code" lascia proporre al telefono il codice arrivato.
-export function CampoCodiceOtp({ valore, onChange, errore, disabled = false, autoFocus = false }: CampoCodiceOtpProps) {
+export function CampoCodiceOtp({
+  valore,
+  onChange,
+  errore,
+  disabled = false,
+  autoFocus = false,
+  etichetta = 'Codice di verifica',
+}: CampoCodiceOtpProps) {
   const caselle = useRef<(HTMLInputElement | null)[]>([])
   const idEtichetta = useId()
   const idErrore = useId()
@@ -60,7 +69,7 @@ export function CampoCodiceOtp({ valore, onChange, errore, disabled = false, aut
       <div className="flex items-center justify-between">
         <span id={idEtichetta} className="flex items-center gap-2 font-label-btn text-label-btn text-on-surface">
           <Icon nome="dialpad" size={18} className="text-secondary" />
-          Codice di verifica
+          {etichetta}
         </span>
         <span className="font-label-code-status text-label-code-status uppercase text-outline">6 cifre · vale 15 minuti</span>
       </div>
