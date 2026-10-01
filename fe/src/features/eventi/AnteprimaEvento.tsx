@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import { BadgeStato } from '@/components/eventi'
 import { Icon } from '@/components/ui'
 import { urlImmagine } from '@/lib/api'
@@ -52,14 +53,13 @@ export function AnteprimaEvento({ evento, onChiudi }: AnteprimaEventoProps) {
             {distanza(evento.distanzaKm)}
           </p>
         )}
-        {/* Link normale finche' non c'e' il router (FE2-01): poi diventa <Link to=...> */}
-        <a
-          href={`/events/${evento.id}`}
+        <Link
+          to={`/events/${evento.id}`}
           className="mt-space-xs inline-flex items-center gap-1 self-start rounded-lg bg-primary px-space-md py-space-xs font-label-btn text-label-btn text-on-primary transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container focus-visible:ring-offset-2 focus-visible:ring-offset-surface-card"
         >
           Vedi evento
           <Icon nome="arrow_forward" size={18} />
-        </a>
+        </Link>
       </div>
     </article>
   )

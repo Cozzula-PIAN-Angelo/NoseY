@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router'
 import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
 import Componenti from '@/pages/Componenti'
+import DettaglioEvento from '@/pages/DettaglioEvento'
+import MappaEventi from '@/pages/MappaEventi'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
 
@@ -16,8 +18,8 @@ export const router = createBrowserRouter([
       // ---------- Pubbliche ----------
       { index: true, element: <PaginaProvvisoria titolo="Home" card="FE1-04" /> },
       { path: 'events', element: <PaginaProvvisoria titolo="Esplora eventi" card="FE1-04" /> },
-      { path: 'map', element: <PaginaProvvisoria titolo="Mappa radar degli eventi" card="FE1-04" /> },
-      { path: 'events/:id', element: <PaginaProvvisoria titolo="Dettaglio evento" card="FE1-05" /> },
+      { path: 'map', element: <MappaEventi /> },
+      { path: 'events/:id', element: <DettaglioEvento /> },
       { path: 'artists', element: <PaginaProvvisoria titolo="Catalogo artisti" card="FE1-11" /> },
       { path: 'artists/:artistaId', element: <PaginaProvvisoria titolo="Scheda artista" card="FE1-11" /> },
       // Catalogo dei componenti comuni (FE1-01): non e' nella barra di navigazione
