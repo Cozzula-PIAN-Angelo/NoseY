@@ -1,7 +1,9 @@
 import { BadgeStato } from '@/components/eventi'
 import { Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useVediEventoQuery } from '@/features/eventi/apiEventi'
+import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
+import { MappaInterna } from '@/features/eventi/MappaInterna'
 import { urlImmagine } from '@/lib/api'
 import { leggiErrore } from '@/lib/errori'
 import { intervallo } from '@/lib/formato'
@@ -93,6 +95,20 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
             ) : (
               <p className="font-body-md text-body-md text-outline">L'organizzatore non ha ancora scritto una descrizione.</p>
             )}
+          </section>
+
+          <section aria-labelledby="titolo-lineup" className="flex flex-col gap-space-sm">
+            <h2 id="titolo-lineup" className="font-headline-sm text-headline-sm">
+              Line-up
+            </h2>
+            <ArtistiEvento artisti={evento.artisti} />
+          </section>
+
+          <section aria-labelledby="titolo-mappa-interna" className="flex flex-col gap-space-sm">
+            <h2 id="titolo-mappa-interna" className="font-headline-sm text-headline-sm">
+              Come muoversi
+            </h2>
+            <MappaInterna evento={evento} />
           </section>
         </div>
 
