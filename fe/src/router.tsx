@@ -19,10 +19,10 @@ import ModificaEvento from '@/pages/ModificaEvento'
 import Notifiche from '@/pages/Notifiche'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PartecipantiEvento from '@/pages/PartecipantiEvento'
-import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
 import PasswordDimenticata from '@/pages/PasswordDimenticata'
 import Profilo from '@/pages/Profilo'
 import Registrazione from '@/pages/Registrazione'
+import SchedaArtista from '@/pages/SchedaArtista'
 import VerificaEmail from '@/pages/VerificaEmail'
 
 // Rotte concordate in docs/interfacce.md (TEAM-02). Percorsi in inglese, parametri con gli
@@ -39,7 +39,7 @@ export const router = createBrowserRouter([
       { path: 'map', element: <MappaEventi /> },
       { path: 'events/:id', element: <DettaglioEvento /> },
       { path: 'artists', element: <CatalogoArtisti /> },
-      { path: 'artists/:artistaId', element: <PaginaProvvisoria titolo="Scheda artista" card="FE1-11" /> },
+      { path: 'artists/:artistaId', element: <SchedaArtista /> },
       // Catalogo dei componenti comuni (FE1-01), con dati di prova: solo in sviluppo, non in produzione
       ...(import.meta.env.DEV ? [{ path: 'componenti', element: <Componenti /> }] : []),
 
