@@ -3,12 +3,13 @@ import { delay, http, HttpResponse } from 'msw'
 import type { PartecipanteResponse, StatoAmicizia } from '@/types/api'
 import { amicizieCorrente, eventi, ID_UTENTE_CORRENTE, inTicket, nuovoId, trovaUtente } from '../dati'
 import { errore, nessunContenuto, statoDa } from '../utili'
-import { api, evento, RITARDO } from './comuni'
+import { api, evento, nonLoggato, RITARDO } from './comuni'
 
 export const handlerPartecipanti = [
   // IscrizioneEvento: nessun body, l'utente e' quello "loggato"
   http.post(api('/events/:id/participants'), async ({ params }) => {
     await delay(RITARDO)
+    if (nonLoggato()) return errore('NON_AUTENTICATO')
     const { evento: e, risposta } = evento(params.id)
     if (risposta) return risposta
     if (e.proprietarioId === ID_UTENTE_CORRENTE) return errore('PROPRIETARIO_NON_ISCRIVIBILE')

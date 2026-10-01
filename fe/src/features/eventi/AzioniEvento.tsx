@@ -16,7 +16,7 @@ const nonAncora = 'Non ancora disponibile'
 
 // Pulsanti della pagina dell'evento (FE1-05), in base a chi guarda e allo stato:
 //   proprietario  → Modifica, Annulla evento (solo se PROGRAMMATO o IN_CORSO), Partecipanti
-//   iscritto      → Il mio ticket, Annulla iscrizione (solo se PROGRAMMATO), Partecipanti
+//   iscritto      → Il mio ticket (porta al ticket nella pagina), Annulla iscrizione (solo se PROGRAMMATO), Partecipanti
 //   altri         → Iscriviti (solo se PROGRAMMATO o IN_CORSO)
 // I link sono <a> finche' non c'e' il router (FE2-01): poi diventano <Link to=...>.
 export function AzioniEvento({ evento, onIscriviti, onAnnullaIscrizione, onAnnullaEvento, inCorso }: AzioniEventoProps) {
@@ -52,7 +52,7 @@ export function AzioniEvento({ evento, onIscriviti, onAnnullaIscrizione, onAnnul
             <Icon nome="check_circle" size={18} piena />
             Hai il ticket per questo evento
           </p>
-          <a href="/tickets" className={stilePulsante({ variant: attivo ? 'primary' : 'secondary', pieno: true })}>
+          <a href="#ticket" className={stilePulsante({ variant: attivo ? 'primary' : 'secondary', pieno: true })}>
             <Icon nome="confirmation_number" size={18} />
             Il mio ticket
           </a>

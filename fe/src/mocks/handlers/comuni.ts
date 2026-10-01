@@ -29,3 +29,17 @@ export function eventoDelProprietario(id: unknown): Esito {
   if (stato === 'ANNULLATO') return { risposta: errore('EVENTO_ANNULLATO') }
   return esito
 }
+
+/**
+ * Prova del caso "non ho fatto l'accesso": nella console del browser
+ *   localStorage.setItem('datiFinti.anonimo', 'true')   poi ricarica la pagina
+ *   localStorage.removeItem('datiFinti.anonimo')         per tornare "loggati"
+ * In questa modalita' le azioni che richiedono il login rispondono 401 NON_AUTENTICATO.
+ */
+export function nonLoggato(): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem('datiFinti.anonimo') === 'true'
+  } catch {
+    return false
+  }
+}

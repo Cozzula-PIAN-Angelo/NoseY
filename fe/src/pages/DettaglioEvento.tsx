@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { BadgeStato } from '@/components/eventi'
-import { Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
-import { useVediEventoQuery } from '@/features/eventi/apiEventi'
+import { Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
 import { AzioniEvento } from '@/features/eventi/AzioniEvento'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { MappaInterna } from '@/features/eventi/MappaInterna'
+import { TicketEvento } from '@/features/eventi/TicketEvento'
+import { useIscrizione } from '@/features/eventi/useIscrizione'
 import { urlImmagine } from '@/lib/api'
 import { leggiErrore } from '@/lib/errori'
 import { intervallo } from '@/lib/formato'
@@ -65,6 +68,10 @@ function Proprietario({ utente }: { utente: UtentePubblicoResponse }) {
 export default function DettaglioEvento({ id }: { id: Uuid }) {
   // currentData (non data): passando a un altro evento non si vede, nemmeno per un attimo, quello di prima
   const { currentData: evento, isFetching, error, refetch } = useVediEventoQuery(id)
+  const iscrizione = useIscrizione(id)
+  const [confermaAnnullamento, setConfermaAnnullamento] = useState(false)
+  // Il ticket si chiede solo se sono iscritto: altrimenti il backend risponderebbe 404
+  const { currentData: ticket } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
 
   if (!evento && isFetching) return <Caricamento riquadro testo="Carico l'evento..." />
   if (error) {
@@ -113,7 +120,7 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
           </section>
         </div>
 
-        <aside className="flex flex-col gap-space-md lg:sticky lg:top-space-lg lg:self-start">
+        <aside className="flex flex-col gap-space-md">
           <div className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg">
             <BadgeStato stato={evento.stato} className="self-start" />
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile">{evento.titolo}</h1>
@@ -124,10 +131,38 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
             <Proprietario utente={evento.proprietario} />
           </div>
           <div className="rounded-2xl bg-surface-card p-space-lg">
-            <AzioniEvento evento={evento} />
+            <AzioniEvento
+              evento={evento}
+              onIscriviti={iscrizione.iscrivi}
+              onAnnullaIscrizione={() => setConfermaAnnullamento(true)}
+              inCorso={iscrizione.iscrizioneInCorso ? 'iscrizione' : undefined}
+            />
           </div>
+          {evento.sonoIscritto && ticket && (
+            <div id="ticket" className="scroll-mt-space-lg">
+              <TicketEvento ticket={ticket} />
+            </div>
+          )}
         </aside>
       </div>
+
+      <ConfirmDialog
+        aperta={confermaAnnullamento}
+        titolo="Annullare l'iscrizione?"
+        icona="event_busy"
+        variante="danger"
+        testoConferma="Annulla iscrizione"
+        testoAnnulla="Tieni il ticket"
+        inCorso={iscrizione.annullamentoInCorso}
+        onConferma={async () => {
+          await iscrizione.annulla()
+          setConfermaAnnullamento(false)
+        }}
+        onAnnulla={() => setConfermaAnnullamento(false)}
+      >
+        Il tuo ticket per «{evento.titolo}» non sarà più valido. Potrai iscriverti di nuovo finché
+        l'evento non inizia, con un nuovo ticket.
+      </ConfirmDialog>
     </article>
   )
 }
