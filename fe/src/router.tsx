@@ -3,6 +3,7 @@ import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
 import AdminArtisti from '@/pages/AdminArtisti'
 import AdminUtenti from '@/pages/AdminUtenti'
+import CatalogoArtisti from '@/pages/CatalogoArtisti'
 import Amici from '@/pages/Amici'
 import Accesso from '@/pages/Accesso'
 import Chat from '@/pages/Chat'
@@ -37,7 +38,7 @@ export const router = createBrowserRouter([
       { path: 'events', element: <EsploraEventi /> },
       { path: 'map', element: <MappaEventi /> },
       { path: 'events/:id', element: <DettaglioEvento /> },
-      { path: 'artists', element: <PaginaProvvisoria titolo="Catalogo artisti" card="FE1-11" /> },
+      { path: 'artists', element: <CatalogoArtisti /> },
       { path: 'artists/:artistaId', element: <PaginaProvvisoria titolo="Scheda artista" card="FE1-11" /> },
       // Catalogo dei componenti comuni (FE1-01), con dati di prova: solo in sviluppo, non in produzione
       ...(import.meta.env.DEV ? [{ path: 'componenti', element: <Componenti /> }] : []),
