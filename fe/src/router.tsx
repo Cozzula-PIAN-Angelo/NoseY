@@ -5,6 +5,7 @@ import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
 import MappaEventi from '@/pages/MappaEventi'
+import ModificaEvento from '@/pages/ModificaEvento'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
 
@@ -31,7 +32,7 @@ export const router = createBrowserRouter([
         element: <SoloConLogin />,
         children: [
           { path: 'events/new', element: <CreaEvento /> },
-          { path: 'events/:id/edit', element: <PaginaProvvisoria titolo="Modifica evento" card="FE1-07" /> },
+          { path: 'events/:id/edit', element: <ModificaEvento /> },
           { path: 'events/:id/participants', element: <PaginaProvvisoria titolo="Partecipanti" card="FE1-14" /> },
           { path: 'my-events', element: <PaginaProvvisoria titolo="I miei eventi" card="FE1-08" /> },
           { path: 'tickets', element: <PaginaProvvisoria titolo="I miei ticket" card="FE1-08" /> },
