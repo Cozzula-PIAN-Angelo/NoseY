@@ -13,6 +13,7 @@ import MappaEventi from '@/pages/MappaEventi'
 import MieiEventi from '@/pages/MieiEventi'
 import MieiTicket from '@/pages/MieiTicket'
 import ModificaEvento from '@/pages/ModificaEvento'
+import Notifiche from '@/pages/Notifiche'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PartecipantiEvento from '@/pages/PartecipantiEvento'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
@@ -51,7 +52,7 @@ export const router = createBrowserRouter([
           { path: 'friends', element: <Amici /> },
           { path: 'chat', element: <Chat /> },
           { path: 'chat/:chatId', element: <Chat /> },
-          { path: 'notifications', element: <PaginaProvvisoria titolo="Notifiche" card="FE2-13" /> },
+          { path: 'notifications', element: <Notifiche /> },
           { path: 'profile', element: <Profilo /> },
         ],
       },

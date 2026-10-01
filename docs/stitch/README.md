@@ -9,7 +9,7 @@ del frontend: non sono codice dell'app.
 |---|---|---|---|
 | `registrazione-account.png` / `.html` | NoseY - Registrazione Account | `9ae5d9e2e94b477c8dcc0ec1ebc6aa15` | FE1-18, FE2-06 (barrette della nuova password), FE2-07 (profilo), FE2-08 (immagine del profilo) |
 | `verifica-otp.png` / `.html` | NoseY - Verifica Codice OTP & Accesso Mappa | `75b52121f4614ca6aabad40da1748d65` | FE1-18, FE2-06 (password dimenticata) |
-| `community-amicizie-chat.png` / `.html` | NoseY - Community, Amicizie & Chat Live STOMP | `5e110fa098de44cd8e5b740d88526bc5` | FE2-10 (amici e richieste, colonna "Social Radar"), FE2-12 (chat: elenco e conversazione) |
+| `community-amicizie-chat.png` / `.html` | NoseY - Community, Amicizie & Chat Live STOMP | `5e110fa098de44cd8e5b740d88526bc5` | FE2-10 (amici e richieste, colonna "Social Radar"), FE2-12 (chat: elenco e conversazione), FE2-13 (notifiche: righe e colori del pannello "Notifiche Feed", pillola dello stato della connessione) |
 
 Nelle pagine vere si tengono layout, colori e componenti; si lasciano fuori gli elementi
 che servivano solo a provare il design (es. "Simulatore Responsi Backend", "Dev Simulation

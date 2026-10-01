@@ -216,7 +216,7 @@ Convenzioni:
 | `/friends` | Amici e richieste (ricevute, inviate) | login | ListaAmici, ListaRichieste... | Community (colonna Social) |
 | `/chat` | Elenco delle chat | login | ListaChat | Community & Chat |
 | `/chat/:chatId` | Conversazione | login | ListaMessaggi, WebSocket | Community & Chat |
-| `/notifications` | Notifiche: eventi, amicizie, chat | login | ListaNotifiche..., ContaNonLette | — |
+| `/notifications` | Notifiche: eventi, amicizie, chat | login | ListaNotifiche..., ContaNonLette | Community, Amicizie & Chat (pannello "Notifiche Feed") |
 | `/profile` | Profilo, avatar, password, elimina account | login | VediProfilo, ModificaProfilo, CambioPassword, Anonimizzazione | — |
 | `/login` | Accesso | ospite | Login | — |
 | `/register` | Registrazione | ospite | Registrazione | — |
@@ -288,6 +288,9 @@ Funzioni e tipi: `leggiErrore()` (`@/lib/errori`), `PaginaResponse` e `DIMENSION
   (`ErroreWebSocket`); `TOKEN_NON_VALIDO` lo gestisce gia' `ConnessioneLive`.
 - **Stato**: `useStatoConnessione()` → `assente` · `connessione` · `connesso` · `riconnessione`,
   per l'indicatore della schermata Community & Chat.
+- **Notifiche live** (FE2-13): le riceve gia' `useNotificheLive` (chiamato da `ConnessioneLive`)
+  in tutta l'app: avviso a comparsa, badge della campanella, lista della categoria e, per gli
+  eventi, dettaglio/POI/foto ricaricati (decisione 23). Le pagine non si iscrivono di nuovo.
 - **Dati finti**: `mocks/handlers/websocket.ts` fa da server STOMP; per simulare un arrivo live
   `pubblicaFinto(utenteId, 'messages' | 'notifications' | 'errors', corpo)`.
 

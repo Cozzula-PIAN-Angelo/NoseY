@@ -680,3 +680,42 @@ Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
   sessione si chiude; con il controllo sulle API la regola per l'uscita resta una sola (il 401).
 - **Stato della connessione in una slice Redux**: e' solo un indicatore, non dati dell'utente;
   `useSyncExternalStore` evita di toccare lo store per ogni cambio.
+
+## Decisione 23: notifiche live nel frontend
+
+### Scelta
+
+- Le notifiche live (`/user/queue/notifications`) le riceve `useNotificheLive`
+  (`fe/src/features/social`), chiamato da `ConnessioneLive`: valgono in tutta l'app, non solo
+  nella pagina `/notifications`.
+- A ogni notifica si invalidano `NonLette` e la lista della sua categoria: conteggio e lista si
+  ricaricano dal backend, senza modificare la cache a mano. Una notifica accorpata (stesso id)
+  viene cosi' sostituita e il badge non cresce, perche' il conteggio lo fa il backend.
+- Si ricarica anche cio' a cui la notifica si riferisce: per `events` (tranne MANUALE)
+  dettaglio, POI e foto dell'evento, per `friendships` amicizie, chat e partecipanti. Chi sta
+  guardando l'evento lo vede cambiare senza ricaricare la pagina.
+- Ogni notifica live mostra anche un avviso a comparsa con il suo testo.
+- Il badge della campanella cambia anche con i messaggi dell'amico su `/user/queue/messages`
+  (per le chat non arriva nessuna notifica, sezione 10); prima lo faceva solo l'elenco delle
+  chat, quando era in cache.
+- La campanella resta un link a `/notifications` con il pallino oro di Stitch, senza il pannello
+  a tendina "Notifiche Feed" della schermata (`interfacce.md`, barra di navigazione).
+
+### Motivazione
+
+- Il frontend non sa quali notifiche non lette ha gia' contato: una notifica accorpata che era
+  arrivata prima dell'apertura dell'app ha un id che il frontend non ha mai visto via WebSocket.
+  Solo il conteggio del backend e' sempre giusto.
+- Le liste sono a pagine: inserire a mano una notifica in cima alla prima pagina sposterebbe
+  le altre senza aggiornare `totaleElementi` e le pagine successive.
+- Le notifiche sono poche (una per evento accorpata, al massimo 5 manuali al giorno per evento):
+  una richiesta in piu' per ciascuna non pesa.
+
+### Alternative scartate
+
+- **Aggiornare la cache a mano (sostituire o inserire in cima)**: conteggio sbagliato per le
+  accorpate non viste live e pagine disallineate.
+- **Iscrizione alla coda solo nella pagina delle notifiche**: il badge e l'evento aperto non si
+  aggiornerebbero nelle altre pagine.
+- **Pannello a tendina sotto la campanella**: non previsto in `interfacce.md`; la pagina
+  `/notifications` fa gia' tutto.

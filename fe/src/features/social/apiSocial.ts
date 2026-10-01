@@ -120,22 +120,19 @@ export const apiSocial = apiConEtichette.injectEndpoints({
         } catch {
           return // tolta dalla cache prima di arrivare
         }
+        // Il badge della campanella lo aggiorna useNotificheLive (FE2-13), anche senza questo elenco
         const annulla = iscriviti<MessaggioResponse>(CODE_WEBSOCKET.messaggi, (m) => {
           let inElenco = false
-          let dellAmico = false
           updateCachedData((lista) => {
             const i = lista.findIndex((c) => c.id === m.chatId)
             if (i < 0) return
             inElenco = true
             const [chat] = lista.splice(i, 1)
             chat.ultimoMessaggio = { testo: m.testo, mittenteId: m.mittenteId, inviatoIl: m.inviatoIl }
-            dellAmico = m.mittenteId === chat.amico.id
-            if (dellAmico) chat.nonLetti += 1
+            if (m.mittenteId === chat.amico.id) chat.nonLetti += 1
             lista.unshift(chat)
           })
           if (!inElenco) dispatch(apiSocial.util.invalidateTags([{ type: 'Chat', id: LISTA }]))
-          // Badge della campanella (ContaNonLette), se qualcuno lo sta mostrando
-          else if (dellAmico) dispatch(apiSocial.util.invalidateTags(['NonLette']))
         })
         await cacheEntryRemoved
         annulla()
