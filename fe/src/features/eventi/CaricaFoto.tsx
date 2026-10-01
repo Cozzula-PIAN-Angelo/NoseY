@@ -1,13 +1,14 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { Button, Icon, useAvviso } from '@/components/ui'
+import { Button, Icon, TextField, useAvviso } from '@/components/ui'
 import { controllaImmagine } from '@/lib/immagini'
 import { LIMITI_EVENTI, type Uuid } from '@/types/api'
 import { useCreaFotoMutation } from './apiEventi'
 
 // Caricamento di una foto dell'evento (FE1-09): scelta del file, controllo di tipo e dimensione
-// prima dell'invio (lib/immagini.ts), anteprima, poi «Carica».
-export function CaricaFoto({ eventoId }: { eventoId: Uuid }) {
+// prima dell'invio (lib/immagini.ts), anteprima e didascalia, poi «Carica». Al massimo 10 foto.
+export function CaricaFoto({ eventoId, numeroFoto }: { eventoId: Uuid; numeroFoto: number }) {
   const [file, setFile] = useState<File | null>(null)
+  const [didascalia, setDidascalia] = useState('')
   const [anteprima, setAnteprima] = useState<string | null>(null)
   const [errore, setErrore] = useState<string | null>(null)
   const input = useRef<HTMLInputElement>(null)
@@ -25,6 +26,7 @@ export function CaricaFoto({ eventoId }: { eventoId: Uuid }) {
 
   function annulla() {
     setFile(null)
+    setDidascalia('')
     setAnteprima(null)
     setErrore(null)
     if (input.current) input.current.value = ''
@@ -41,7 +43,7 @@ export function CaricaFoto({ eventoId }: { eventoId: Uuid }) {
   async function invia() {
     if (!file) return
     try {
-      await carica({ id: eventoId, file }).unwrap()
+      await carica({ id: eventoId, file, didascalia: didascalia.trim() || undefined }).unwrap()
       avviso.successo('Foto caricata')
       annulla()
     } catch (e) {
@@ -49,8 +51,17 @@ export function CaricaFoto({ eventoId }: { eventoId: Uuid }) {
     }
   }
 
+  const pieno = numeroFoto >= LIMITI_EVENTI.fotoPerEvento
+
   return (
     <div className="flex flex-col gap-space-sm rounded-xl border border-dashed border-outline-variant p-space-md">
+      <p className="flex items-center justify-between font-label-code-status text-label-code-status uppercase text-outline">
+        <span>Foto dell'evento</span>
+        <span className={pieno ? 'text-accent-gold-piercing' : 'text-secondary'}>
+          {numeroFoto} / {LIMITI_EVENTI.fotoPerEvento}
+        </span>
+      </p>
+
       <input
         ref={input}
         type="file"
@@ -62,11 +73,24 @@ export function CaricaFoto({ eventoId }: { eventoId: Uuid }) {
         onChange={(e) => scegli(e.target.files?.[0])}
       />
 
-      {file && anteprima ? (
+      {pieno ? (
+        <p className="flex items-start gap-space-xs rounded-lg bg-accent-gold-glow p-space-sm font-body-md text-body-md text-on-surface">
+          <Icon nome="photo_library" size={20} className="mt-0.5 text-accent-gold-piercing" />
+          Hai raggiunto il massimo di {LIMITI_EVENTI.fotoPerEvento} foto: cancellane una per aggiungerne un'altra.
+        </p>
+      ) : file && anteprima ? (
         <div className="flex flex-col gap-space-sm sm:flex-row sm:items-start">
           <img src={anteprima} alt="Anteprima della foto scelta" className="aspect-[16/9] w-full rounded-lg object-cover sm:w-56" />
           <div className="flex min-w-0 flex-1 flex-col gap-space-sm">
             <p className="truncate font-body-sm text-body-sm text-on-surface-variant">{file.name}</p>
+            <TextField
+              etichetta="Didascalia"
+              maxLength={LIMITI_EVENTI.didascalia}
+              value={didascalia}
+              onChange={(e) => setDidascalia(e.target.value)}
+              placeholder="Es. Il palco principale al tramonto"
+              aiuto="Facoltativa: descrive la foto anche a chi usa lo screen reader."
+            />
             <div className="flex flex-wrap gap-space-xs">
               <Button icona="upload" inCorso={isLoading} onClick={invia}>
                 Carica
