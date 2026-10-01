@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
+import Accesso from '@/pages/Accesso'
 import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
@@ -52,7 +53,7 @@ export const router = createBrowserRouter([
       {
         element: <SoloOspiti />,
         children: [
-          { path: 'login', element: <PaginaProvvisoria titolo="Accesso" card="FE2-05" /> },
+          { path: 'login', element: <Accesso /> },
           { path: 'register', element: <Registrazione /> },
           { path: 'verify', element: <VerificaEmail /> },
           { path: 'forgot-password', element: <PaginaProvvisoria titolo="Password dimenticata" card="FE2-06" /> },
