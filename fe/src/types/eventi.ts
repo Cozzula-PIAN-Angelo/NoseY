@@ -288,7 +288,6 @@ export const LIMITI_EVENTI = {
   didascalia: 150,
   etichettaPoi: 50,
   nomeArtista: 100,
-  immagineUrlArtista: 500,
   fotoPerEvento: 10,
   poiPerEvento: 15,
   /** Distanza massima di un POI dall'evento */
