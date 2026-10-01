@@ -492,3 +492,30 @@ sostituisce con la pagina vera.
   fondo alla lista finche' nessuno scrive.
 - **ORDER BY nella query** con `coalesce` sull'ultimo messaggio: serve una subquery correlata per
   ogni chat, e l'ultimo messaggio va letto comunque per la risposta.
+
+---
+
+## Decisione 17: validazione di InviaMessaggio nel service
+
+### Scelta
+
+- Il payload di InviaMessaggio (`SEND /app/chats/{chatId}/send`) non usa `@Valid` nel controller
+  STOMP ed e' facoltativo (`@Payload(required = false)`): `ChatService.invia` lo valida con il
+  `Validator` di Jakarta, dopo il controllo del token e il limite di frequenza.
+- Corpo mancante o testo non valido danno lo stesso errore: `VALIDAZIONE` su `/user/queue/errors`.
+
+### Motivazione
+
+- La sezione 11 fissa l'ordine dei controlli: token, limite, testo, membro, sola lettura. Con
+  `@Valid` Spring valida il payload prima di chiamare il metodo, quindi un token revocato con un
+  testo vuoto darebbe `VALIDAZIONE` invece di `TOKEN_NON_VALIDO`, e i messaggi non validi non
+  conterebbero nel limite.
+- Le annotazioni restano sul record `InviaMessaggioRequest`: le regole si leggono nello stesso
+  posto dei DTO HTTP.
+
+### Alternative scartate
+
+- **`@Valid` sul payload** (come nei controller HTTP): non rispetta l'ordine della sezione 11.
+- **Token e limite nel `JwtChannelInterceptor`**: il limite riguarda solo i messaggi di chat, non
+  ogni SEND, e gli errori dell'interceptor non passano da `GestoreErroriWebSocket`.
+- **Controllo a mano del testo** (`isBlank`, lunghezza): duplicherebbe le annotazioni del record.

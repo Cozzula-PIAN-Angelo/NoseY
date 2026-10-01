@@ -103,6 +103,16 @@ public class TokenService {
 		}
 	}
 
+	/**
+	 * Controllo a ogni SEND sul WebSocket (sezione 11): il token della connessione e' stato verificato
+	 * al CONNECT, ma nel frattempo puo' essere scaduto o revocato (logout, sospensione, password).
+	 */
+	@Transactional(readOnly = true)
+	public boolean ancoraValido(UtenteAutenticato utente) {
+		return clock.instant().isBefore(utente.scadenza())
+				&& tokenJwtRepository.existsByJtiAndRevocatoFalse(utente.jti());
+	}
+
 	@Transactional
 	public void revoca(UUID jti) {
 		tokenJwtRepository.revocaPerJti(jti);
