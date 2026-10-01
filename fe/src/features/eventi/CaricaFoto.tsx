@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button, Icon, TextField, useAvviso } from '@/components/ui'
+import { leggiErrore } from '@/lib/errori'
 import { controllaImmagine } from '@/lib/immagini'
 import { LIMITI_EVENTI, type Uuid } from '@/types/api'
 import { useCreaFotoMutation } from './apiEventi'
@@ -47,7 +48,26 @@ export function CaricaFoto({ eventoId, numeroFoto }: { eventoId: Uuid; numeroFot
       avviso.successo('Foto caricata')
       annulla()
     } catch (e) {
-      avviso.erroreApi(e)
+      // I due errori del caricamento si mostrano nel riquadro, dove l'utente sta guardando
+      const { codice } = leggiErrore(e)
+      if (codice === 'LIMITE_FOTO') {
+        // Foto aggiunte nel frattempo (un'altra scheda, un altro dispositivo): la lista si
+        // aggiorna da sola e il riquadro passa al messaggio del limite
+        annulla()
+        avviso.attenzione(
+          'Limite di foto raggiunto',
+          `L'evento ha già ${LIMITI_EVENTI.fotoPerEvento} foto: cancellane una per caricare questa.`,
+        )
+      } else if (codice === 'FILE_NON_VALIDO') {
+        // Il controllo del browser e' passato ma quello del server no (es. immagine rovinata)
+        setErrore('Il server non ha accettato il file: potrebbe essere danneggiato. Prova a salvarlo di nuovo o scegline un altro.')
+        setFile(null)
+        setAnteprima(null)
+        // Svuotato, cosi' si puo' riscegliere lo stesso file dopo averlo sistemato
+        if (input.current) input.current.value = ''
+      } else {
+        avviso.erroreApi(e)
+      }
     }
   }
 
