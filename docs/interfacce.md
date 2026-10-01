@@ -246,6 +246,24 @@ Import: `@/components/ui` e `@/components/mappa`. Esempi dal vivo nel catalogo
 Funzioni e tipi: `leggiErrore()` (`@/lib/errori`), `PaginaResponse` e `DIMENSIONE_PAGINA`
 (`@/lib/pagine`), tipi dei DTO da `@/types/api`, dati finti MSW in `fe/src/mocks/`.
 
+### Login e chiamate API (FE2-01, FE2-02)
+
+- **Endpoint**: sempre nell'unica API `apiSlice` (`@/store/apiSlice`), con `injectEndpoints`
+  dalla cartella della funzionalita' (es. `features/eventi/apiEventi.ts`). Token
+  (`Authorization: Bearer`) e 401 li gestisce la sua `baseQuery`: nessuna API separata.
+- **401 `NON_AUTENTICATO`**: sessione chiusa, cache svuotata, avviso "Sessione scaduta" e
+  `/login?redirect=<pagina>`. Sul login il 401 e' `CREDENZIALI_ERRATE` e non fa uscire.
+- **Chi ha fatto l'accesso**: `useSessione()` (`@/hooks/useSessione`) →
+  `{ utente, loggato, admin, superadmin }`. Proprietario e iscrizione di un evento si
+  leggono da `sonoProprietario` / `sonoIscritto` della risposta, non da qui.
+- **Stato** (Redux, `@/store/sessioneSlice`): `accesso(loginResponse)` dopo Login e Verifica,
+  `utenteAggiornato(utente)` dopo ModificaProfilo, `uscita()` per "Esci". Salvato in
+  localStorage; all'avvio `GET /api/users/me` aggiorna l'utente; alla scadenza del token e
+  dopo login o uscita in un'altra scheda la sessione si allinea da sola.
+- **Accesso alle pagine**: rotte contenitore `SoloConLogin`, `SoloOspiti`,
+  `SoloRuolo minimo="ADMIN"` in `src/router.tsx` (`@/components/layout`); dopo il login si
+  torna al `?redirect=` (`urlLogin()`, `percorsoDopoLogin()` in `@/lib/dopoLogin`).
+
 ### Da realizzare (nomi e props concordati qui)
 
 **`PulsanteAmicizia`** (`@/components/amicizia`): un utente e la relazione con lui, come
