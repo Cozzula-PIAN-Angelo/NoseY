@@ -8,12 +8,13 @@ import { GestioneArtisti } from '@/features/eventi/GestioneArtisti'
 import { erroriSuiCampi } from '@/features/eventi/erroriEvento'
 import { FormEvento, type ErroriEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
 import { GestioneFoto } from '@/features/eventi/GestioneFoto'
+import { MiglioraDescrizioneAI } from '@/features/eventi/MiglioraDescrizioneAI'
 import { modificheEvento, valoriDaEvento } from '@/features/eventi/modificheEvento'
 import { leggiErrore } from '@/lib/errori'
 
 // Modifica di un evento (FE1-07), rotta /events/:id/edit (solo con il login, solo il proprietario).
 // Sezioni: dati dell'evento (FE1-07), foto (#foto, FE1-09), line-up (#lineup, FE1-11),
-// mappa interna (#mappa-interna, FE1-10); poi annullamento (FE1-13).
+// mappa interna (#mappa-interna, FE1-10); sotto la descrizione il miglioramento con l'AI (FE1-12).
 
 function Contenitore({ children }: { children: ReactNode }) {
   return (
@@ -115,6 +116,9 @@ export default function ModificaEvento() {
           erroriServer={erroriServer}
           inizioBloccato={evento.stato === 'IN_CORSO'}
           onInvia={invia}
+          sottoDescrizione={(descrizione, cambiaDescrizione) => (
+            <MiglioraDescrizioneAI eventoId={evento.id} foto={evento.foto} descrizione={descrizione} onAccettata={cambiaDescrizione} />
+          )}
         />
       </div>
 
