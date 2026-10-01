@@ -558,3 +558,30 @@ sostituisce con la pagina vera.
 
 Nota: sul piano gratuito Google puo' usare i contenuti inviati per migliorare i suoi prodotti.
 Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
+
+---
+
+## Decisione 19: il 429 della notifica manuale dopo il controllo del proprietario
+
+### Scelta
+
+- In InviaNotificaManuale (BE1-16) il limite `NOTIFICHE_MANUALI` (5 in 24 ore per evento) si
+  consuma DOPO i controlli sull'evento e sul proprietario. Ordine: 400 VALIDAZIONE → 404
+  NON_TROVATO → 403 NON_PROPRIETARIO → 429 TROPPE_RICHIESTE → 409 EVENTO_CONCLUSO /
+  EVENTO_ANNULLATO.
+- Un tentativo del proprietario conta anche se poi l'evento risulta concluso o annullato.
+
+### Motivazione
+
+- La chiave del limite e' l'id dell'evento, non l'utente. Con il 429 prima del 403 (ordine generale
+  della sezione 0 della progettazione) qualsiasi utente autenticato che conosce l'id di un evento
+  potrebbe fare 5 richieste, ricevere 403, ed esaurire la quota del proprietario per 24 ore.
+- Negli altri limiti (AI, iscrizioni, richieste di amicizia) la chiave e' l'id dell'utente: ognuno
+  consuma solo la propria quota, e l'ordine generale resta valido.
+
+### Alternative scartate
+
+- **429 subito dopo la validazione, come nella sezione 0**: apre il blocco delle notifiche descritto
+  sopra.
+- **Chiave composta evento + utente**: inutile, solo il proprietario supera il 403; cambierebbe la
+  chiave indicata in `docs/interfacce.md` senza vantaggi.
