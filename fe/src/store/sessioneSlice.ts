@@ -51,6 +51,8 @@ const sessioneSlice = createSlice({
     },
     /** Dopo VediProfilo o ModificaProfilo */
     utenteAggiornato(stato, azione: PayloadAction<UtenteResponse>) {
+      // Risposta arrivata dopo l'uscita: non deve far ricomparire un utente senza token
+      if (!stato.token) return
       stato.utente = azione.payload
       salva(stato)
     },

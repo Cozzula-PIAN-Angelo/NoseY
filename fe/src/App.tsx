@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router'
-import { BarraNavigazione, PiePagina, SessioneScaduta } from '@/components/layout'
+import { BarraNavigazione, ControlloSessione, PiePagina, SessioneScaduta } from '@/components/layout'
 import { Avvisi } from '@/components/ui'
 
 // Radice di tutte le rotte (src/router.tsx): layout comune delle schermate Stitch,
@@ -15,6 +15,8 @@ export default function App() {
 
       <PiePagina />
 
+      {/* Profilo aggiornato all'avvio, uscita alla scadenza del token */}
+      <ControlloSessione />
       {/* Dopo un 401: avviso e pagina di login */}
       <SessioneScaduta />
 
