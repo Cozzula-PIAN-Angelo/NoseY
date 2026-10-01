@@ -7,7 +7,7 @@ del frontend: non sono codice dell'app.
 
 | File | Schermata Stitch | ID | Card |
 |---|---|---|---|
-| `registrazione-account.png` / `.html` | NoseY - Registrazione Account | `9ae5d9e2e94b477c8dcc0ec1ebc6aa15` | FE1-18, FE2-06 (barrette della nuova password), FE2-07 (profilo) |
+| `registrazione-account.png` / `.html` | NoseY - Registrazione Account | `9ae5d9e2e94b477c8dcc0ec1ebc6aa15` | FE1-18, FE2-06 (barrette della nuova password), FE2-07 (profilo), FE2-08 (immagine del profilo) |
 | `verifica-otp.png` / `.html` | NoseY - Verifica Codice OTP & Accesso Mappa | `75b52121f4614ca6aabad40da1748d65` | FE1-18, FE2-06 (password dimenticata) |
 
 Nelle pagine vere si tengono layout, colori e componenti; si lasciano fuori gli elementi
