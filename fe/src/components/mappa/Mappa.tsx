@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import MapGL, { Marker, NavigationControl, type MapRef } from 'react-map-gl/maplibre'
+import MapGL, { Layer, Marker, NavigationControl, Source, type MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import './mappa.css'
 import { Icon } from '@/components/ui'
 import { cx } from '@/lib/cx'
 import { IconaEvento, IconaPoi, STILE_POI, STILE_STATO } from './IconaMarker'
-import { arrotonda, ATTRIBUZIONE, URL_STILI, type MappaProps, type MarkerMappa } from './tipi'
+import { arrotonda, ATTRIBUZIONE, poligonoCerchio, URL_STILI, type MappaProps, type MarkerMappa } from './tipi'
 
 // Nome del marker per lo screen reader: "Chronos (in corso)", "Ingresso nord (ingresso)"
 function etichettaMarker(m: MarkerMappa): string {
@@ -21,6 +21,7 @@ export default function Mappa({
   marker = [],
   puntoScelto,
   onScegliPunto,
+  cerchio,
   stile = 'dark',
   etichetta = 'Mappa',
   className,
@@ -54,12 +55,26 @@ export default function Mappa({
       >
         <NavigationControl position="top-right" showCompass={false} />
 
+        {cerchio && (
+          // Colori del cerchio radar di Stitch: primary tenue, bordo tratteggiato
+          <Source id="cerchio" type="geojson" data={poligonoCerchio(cerchio.centro, cerchio.raggioKm)}>
+            <Layer id="cerchio-area" type="fill" paint={{ 'fill-color': '#8083ff', 'fill-opacity': 0.08 }} />
+            <Layer
+              id="cerchio-bordo"
+              type="line"
+              paint={{ 'line-color': '#c0c1ff', 'line-width': 1.5, 'line-opacity': 0.7, 'line-dasharray': [2, 2] }}
+            />
+          </Source>
+        )}
+
         {marker.map((m) => (
           <Marker
             key={m.id}
             latitude={m.lat}
             longitude={m.lng}
             anchor="center"
+            draggable={m.onSposta !== undefined}
+            onDragEnd={m.onSposta ? (e) => m.onSposta?.(arrotonda(e.lngLat)) : undefined}
             onClick={(e) => {
               // Senza questo il clic sul marker arriverebbe anche alla mappa (scelta del punto)
               e.originalEvent.stopPropagation()
@@ -80,7 +95,7 @@ export default function Mappa({
               }}
               className={cx(
                 'block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                m.onClick ? 'cursor-pointer' : 'cursor-default',
+                m.onSposta ? 'cursor-grab active:cursor-grabbing' : m.onClick ? 'cursor-pointer' : 'cursor-default',
               )}
             >
               {m.tipo === 'evento' ? <IconaEvento stato={m.stato} selezionato={m.selezionato} /> : <IconaPoi tipo={m.tipo} />}

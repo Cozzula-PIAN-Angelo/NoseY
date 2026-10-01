@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { Caricamento, MessaggioErrore, StatoVuoto, stilePulsante, useAvviso } from '@/components/ui'
 import { useModificaEventoMutation, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { CaricaFoto } from '@/features/eventi/CaricaFoto'
+import { EditorMappaInterna } from '@/features/eventi/EditorMappaInterna'
 import { erroriSuiCampi } from '@/features/eventi/erroriEvento'
 import { FormEvento, type ErroriEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
 import { GestioneFoto } from '@/features/eventi/GestioneFoto'
@@ -10,8 +11,8 @@ import { modificheEvento, valoriDaEvento } from '@/features/eventi/modificheEven
 import { leggiErrore } from '@/lib/errori'
 
 // Modifica di un evento (FE1-07), rotta /events/:id/edit (solo con il login, solo il proprietario).
-// Sezioni: dati dell'evento (FE1-07), foto (#foto, FE1-09); poi mappa interna (FE1-10),
-// artisti (FE1-11) e annullamento (FE1-13).
+// Sezioni: dati dell'evento (FE1-07), foto (#foto, FE1-09), mappa interna (#mappa-interna, FE1-10);
+// poi artisti (FE1-11) e annullamento (FE1-13).
 
 function Contenitore({ children }: { children: ReactNode }) {
   return (
@@ -125,6 +126,17 @@ export default function ModificaEvento() {
         </p>
         <CaricaFoto eventoId={evento.id} numeroFoto={evento.foto.length} />
         <GestioneFoto eventoId={evento.id} foto={evento.foto} />
+      </section>
+
+      <section
+        id="mappa-interna"
+        aria-labelledby="titolo-mappa-interna"
+        className="flex scroll-mt-20 flex-col gap-space-md rounded-2xl bg-surface-card p-space-md sm:p-space-lg"
+      >
+        <h2 id="titolo-mappa-interna" className="font-headline-sm text-headline-sm">
+          Mappa interna
+        </h2>
+        <EditorMappaInterna evento={evento} />
       </section>
     </Contenitore>
   )

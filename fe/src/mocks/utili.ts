@@ -85,14 +85,8 @@ export function statoDa(e: { dataEvento: IstanteIso; dataFine: IstanteIso; annul
   return 'CONCLUSO'
 }
 
-/** Distanza in km fra due punti (formula di Haversine, come nel backend) */
-export function distanzaKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
-  const rad = (g: number) => (g * Math.PI) / 180
-  const dLat = rad(b.lat - a.lat)
-  const dLng = rad(b.lng - a.lng)
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2
-  return 6371 * 2 * Math.asin(Math.sqrt(h))
-}
+/** Distanza in km fra due punti: la stessa funzione del frontend (lib/geo.ts) */
+export { distanzaKm } from '@/lib/geo'
 
 /** Testo "non vuoto": almeno un carattere che non sia uno spazio */
 export const nonVuoto = (t: unknown): t is string => typeof t === 'string' && t.trim().length > 0
