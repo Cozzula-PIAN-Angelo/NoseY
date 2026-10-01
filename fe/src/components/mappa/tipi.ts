@@ -38,6 +38,8 @@ export type MappaProps = {
   puntoScelto?: Coordinate | null
   /** Se presente, cliccando sulla mappa (o trascinando il segnaposto) si sceglie un punto */
   onScegliPunto?: (punto: Coordinate) => void
+  /** Cerchio da disegnare, es. i 2 km entro cui stanno i POI di un evento */
+  cerchio?: { centro: Coordinate; raggioKm: number }
   /** Stile della mappa (default "dark") */
   stile?: StileMappa
   /** Descrizione della mappa per gli screen reader */
@@ -66,4 +68,24 @@ export const ATTRIBUZIONE = [
 export function arrotonda(punto: Coordinate): Coordinate {
   const r = (n: number) => Math.round(n * 1e6) / 1e6
   return { lat: r(punto.lat), lng: r(punto.lng) }
+}
+
+/**
+ * Poligono GeoJSON che approssima un cerchio sulla superficie terrestre (64 lati bastano a
+ * sembrare rotondo). Un grado di longitudine si accorcia allontanandosi dall'equatore: per
+ * questo la longitudine si divide per il coseno della latitudine.
+ */
+export function poligonoCerchio(centro: Coordinate, raggioKm: number, lati = 64) {
+  const R = 6371
+  const dLat = (raggioKm / R) * (180 / Math.PI)
+  const dLng = dLat / Math.cos((centro.lat * Math.PI) / 180)
+  const anello = Array.from({ length: lati + 1 }, (_, i) => {
+    const angolo = (i / lati) * 2 * Math.PI
+    return [centro.lng + dLng * Math.cos(angolo), centro.lat + dLat * Math.sin(angolo)]
+  })
+  return {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: { type: 'Polygon' as const, coordinates: [anello] },
+  }
 }

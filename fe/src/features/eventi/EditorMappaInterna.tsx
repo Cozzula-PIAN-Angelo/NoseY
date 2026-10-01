@@ -49,14 +49,17 @@ export function EditorMappaInterna({ evento }: { evento: EventoDettaglioResponse
   return (
     <div className="flex flex-col gap-space-md">
       <p className="font-body-md text-body-md text-on-surface-variant">
-        Clicca sulla mappa nel punto di un ingresso, di un'uscita o di un punto di emergenza.
+        Clicca sulla mappa nel punto di un ingresso, di un'uscita o di un punto di emergenza,
+        dentro il cerchio di {LIMITI_EVENTI.raggioPoiKm} km attorno all'evento. Avvicinati con la rotellina per più precisione.
       </p>
 
       <Mappa
         etichetta={`Mappa interna di ${evento.titolo}: clicca per aggiungere un punto`}
         centro={{ lat: evento.lat, lng: evento.lng }}
-        zoom={16}
+        // Con il cerchio di 2 km intero sullo schermo si vede subito fin dove si puo' cliccare
+        zoom={13}
         marker={marker}
+        cerchio={{ centro: { lat: evento.lat, lng: evento.lng }, raggioKm: LIMITI_EVENTI.raggioPoiKm }}
         puntoScelto={punto}
         onScegliPunto={setPunto}
         className="h-96"
