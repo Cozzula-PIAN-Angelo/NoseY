@@ -4,9 +4,11 @@ import { BadgeStato } from '@/components/eventi'
 import { Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
+import { AnnullaEvento } from '@/features/eventi/AnnullaEvento'
 import { AzioniEvento } from '@/features/eventi/AzioniEvento'
 import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
 import { MappaInterna } from '@/features/eventi/MappaInterna'
+import { NotificaPartecipanti } from '@/features/eventi/NotificaPartecipanti'
 import { TicketEvento } from '@/features/eventi/TicketEvento'
 import { useIscrizione } from '@/features/eventi/useIscrizione'
 import { urlImmagine } from '@/lib/api'
@@ -79,6 +81,7 @@ function SchedaEvento({ id }: { id: Uuid }) {
   const { currentData: evento, isFetching, error, refetch } = useVediEventoQuery(id)
   const iscrizione = useIscrizione(id)
   const [confermaAnnullamento, setConfermaAnnullamento] = useState(false)
+  const [annullaEventoAperta, setAnnullaEventoAperta] = useState(false)
   // Il ticket si chiede solo se sono iscritto: altrimenti il backend risponderebbe 404
   const { currentData: ticket } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
 
@@ -144,9 +147,13 @@ function SchedaEvento({ id }: { id: Uuid }) {
               evento={evento}
               onIscriviti={iscrizione.iscrivi}
               onAnnullaIscrizione={() => setConfermaAnnullamento(true)}
+              onAnnullaEvento={() => setAnnullaEventoAperta(true)}
               inCorso={iscrizione.iscrizioneInCorso ? 'iscrizione' : undefined}
             />
           </div>
+          {evento.sonoProprietario && (evento.stato === 'PROGRAMMATO' || evento.stato === 'IN_CORSO') && (
+            <NotificaPartecipanti key={evento.id} evento={evento} />
+          )}
           {evento.sonoIscritto && ticket && (
             <div id="ticket" className="scroll-mt-space-lg">
               <TicketEvento ticket={ticket} />
@@ -172,6 +179,9 @@ function SchedaEvento({ id }: { id: Uuid }) {
         Il tuo ticket per «{evento.titolo}» non sarà più valido. Potrai iscriverti di nuovo finché
         l'evento non inizia, con un nuovo ticket.
       </ConfirmDialog>
+      {evento.sonoProprietario && (
+        <AnnullaEvento evento={evento} aperta={annullaEventoAperta} onChiudi={() => setAnnullaEventoAperta(false)} />
+      )}
     </article>
   )
 }

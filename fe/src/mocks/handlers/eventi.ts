@@ -17,6 +17,10 @@ import { api, evento, eventoDelProprietario, RITARDO } from './comuni'
 const nelFuturo = (v: unknown) => typeof v === 'string' && !Number.isNaN(Date.parse(v)) && Date.parse(v) > Date.now()
 const dataValida = (v: unknown) => typeof v === 'string' && !Number.isNaN(Date.parse(v))
 
+/** Ora degli invii della notifica manuale, per evento (limite di 5 nelle ultime 24 ore) */
+const notificheInviate = new Map<string, number[]>()
+const GIORNO_MS = 24 * 3_600_000
+
 export const handlerEventi = [
   // ListaEventiMappa: solo PROGRAMMATO e IN_CORSO; la posizione cambia l'ordine, mai il numero
   http.get(api('/events'), async ({ request }) => {
@@ -156,13 +160,18 @@ export const handlerEventi = [
     return nessunContenuto()
   }),
 
-  // InviaNotificaManuale
+  // InviaNotificaManuale: al massimo 5 nelle ultime 24 ore per evento, poi 429 TROPPE_RICHIESTE
   http.post(api('/events/:id/notifications'), async ({ params, request }) => {
     await delay(RITARDO)
     const b = await leggiJson(request)
     if (!nonVuoto(b.testo) || b.testo.length > LIMITI_EVENTI.testoNotificaManuale)
       return errore('VALIDAZIONE', { testo: 'Obbligatorio, massimo 500 caratteri' })
     const { evento: e, risposta } = eventoDelProprietario(params.id)
-    return risposta ?? HttpResponse.json({ inviate: e.partecipanti.length }, { status: 201 })
+    if (risposta) return risposta
+    const adesso = Date.now()
+    const recenti = (notificheInviate.get(e.id) ?? []).filter((t) => t > adesso - GIORNO_MS)
+    if (recenti.length >= LIMITI_EVENTI.notificheManualiAlGiorno) return errore('TROPPE_RICHIESTE')
+    notificheInviate.set(e.id, [...recenti, adesso])
+    return HttpResponse.json({ inviate: e.partecipanti.length }, { status: 201 })
   }),
 ]
