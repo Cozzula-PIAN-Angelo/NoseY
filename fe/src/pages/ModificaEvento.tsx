@@ -5,7 +5,7 @@ import { useModificaEventoMutation, useVediEventoQuery } from '@/features/eventi
 import { CaricaFoto } from '@/features/eventi/CaricaFoto'
 import { erroriSuiCampi } from '@/features/eventi/erroriEvento'
 import { FormEvento, type ErroriEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
-import { GalleriaFoto } from '@/features/eventi/GalleriaFoto'
+import { GestioneFoto } from '@/features/eventi/GestioneFoto'
 import { modificheEvento, valoriDaEvento } from '@/features/eventi/modificheEvento'
 import { leggiErrore } from '@/lib/errori'
 
@@ -124,7 +124,7 @@ export default function ModificaEvento() {
           La prima foto diventa la copertina. Le foto servono anche per migliorare la descrizione con l'AI.
         </p>
         <CaricaFoto eventoId={evento.id} numeroFoto={evento.foto.length} />
-        {evento.foto.length > 0 && <GalleriaFoto key={evento.id} foto={evento.foto} titoloEvento={evento.titolo} />}
+        <GestioneFoto eventoId={evento.id} foto={evento.foto} />
       </section>
     </Contenitore>
   )
