@@ -13,6 +13,7 @@ import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 import PartecipantiEvento from '@/pages/PartecipantiEvento'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
 import PasswordDimenticata from '@/pages/PasswordDimenticata'
+import Profilo from '@/pages/Profilo'
 import Registrazione from '@/pages/Registrazione'
 import VerificaEmail from '@/pages/VerificaEmail'
 
@@ -47,7 +48,7 @@ export const router = createBrowserRouter([
           { path: 'chat', element: <PaginaProvvisoria titolo="Chat" card="FE2-12" /> },
           { path: 'chat/:chatId', element: <PaginaProvvisoria titolo="Conversazione" card="FE2-12" /> },
           { path: 'notifications', element: <PaginaProvvisoria titolo="Notifiche" card="FE2-13" /> },
-          { path: 'profile', element: <PaginaProvvisoria titolo="Profilo" card="FE2-07" /> },
+          { path: 'profile', element: <Profilo /> },
         ],
       },
 
