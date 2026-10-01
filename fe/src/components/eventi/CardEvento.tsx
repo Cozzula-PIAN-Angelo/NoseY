@@ -20,6 +20,7 @@ export function CardEvento({ evento, azioni }: CardEventoProps) {
     <article className="flex w-full flex-col overflow-hidden rounded-2xl bg-surface-card shadow-lg">
       <div className="relative aspect-[16/9] bg-surface-container">
         {copertina ? (
+          // Decorativa: EventoMappaResponse non porta la didascalia della copertina, e il titolo e' subito sotto
           <img src={copertina} alt="" className="size-full object-cover" />
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-inverse-primary/40 to-surface-deep">

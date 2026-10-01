@@ -95,7 +95,11 @@ export function GestioneFoto({ eventoId, foto }: GestioneFotoProps) {
       >
         {daCancellare && (
           <div className="flex flex-col gap-space-sm">
-            <img src={urlImmagine(daCancellare.url) ?? undefined} alt="" className="aspect-[16/9] w-full rounded-lg object-cover" />
+            <img
+              src={urlImmagine(daCancellare.url) ?? undefined}
+              alt={daCancellare.didascalia ?? 'La foto da eliminare'}
+              className="aspect-[16/9] w-full rounded-lg object-cover"
+            />
             <p>
               La foto verrà eliminata definitivamente.
               {daCancellare.copertina && foto.length > 1 && ' È la copertina: al suo posto andrà la foto caricata per prima tra le rimaste.'}

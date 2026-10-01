@@ -114,21 +114,31 @@ function RigaUtente({ utente, azioni }: { utente: AdminUtenteResponse; azioni: A
           <span className="font-label-btn text-label-btn text-on-surface">
             {utente.nome} {utente.cognome}
           </span>
-          <span className="font-body-sm text-body-sm text-on-surface-variant">{utente.email}</span>
+          <span className="font-body-sm text-body-sm text-on-surface-variant [overflow-wrap:anywhere]">{utente.email}</span>
+          {/* Da telefono ruolo e stato stanno qui, al posto delle loro colonne */}
+          <span className="mt-1 flex flex-wrap items-center gap-space-xs md:hidden">
+            <span className={cx('rounded px-2 py-0.5 font-label-code-status text-label-code-status uppercase', ruolo.classi)}>
+              {ruolo.etichetta}
+            </span>
+            <span className="flex items-center gap-1.5 font-body-sm text-body-sm text-on-surface">
+              <span aria-hidden="true" className={cx('size-2 rounded-full', stato.colore)} />
+              {stato.etichetta}
+            </span>
+          </span>
         </div>
       </td>
-      <td className="px-space-sm py-space-sm">
+      <td className="px-space-sm py-space-sm max-md:hidden">
         <span className={cx('rounded px-2 py-0.5 font-label-code-status text-label-code-status uppercase', ruolo.classi)}>
           {ruolo.etichetta}
         </span>
       </td>
-      <td className="px-space-sm py-space-sm">
+      <td className="px-space-sm py-space-sm max-md:hidden">
         <span className="flex items-center gap-1.5 font-body-sm text-body-sm text-on-surface">
           <span aria-hidden="true" className={cx('size-2 rounded-full', stato.colore)} />
           {stato.etichetta}
         </span>
       </td>
-      <td className="px-space-sm py-space-sm">
+      <td className="px-space-sm py-space-sm max-md:hidden">
         {utente.verificato ? (
           <span className="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
             <Icon nome="verified" size={16} className="text-status-in-corso" />
@@ -138,12 +148,12 @@ function RigaUtente({ utente, azioni }: { utente: AdminUtenteResponse; azioni: A
           <span className="font-body-sm text-body-sm text-outline">Da verificare</span>
         )}
       </td>
-      <td className="whitespace-nowrap px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant">
+      <td className="whitespace-nowrap px-space-sm py-space-sm font-body-sm text-body-sm text-on-surface-variant max-md:hidden">
         {giorno(utente.creatoIl)}
       </td>
       <td className="px-space-sm py-space-sm">
         {/* Un account anonimizzato non si tocca piu'; righe del proprio ruolo o superiore: niente azioni */}
-        <div className="flex items-center justify-end gap-space-xs">
+        <div className="flex items-center justify-end gap-space-xs max-md:flex-col max-md:items-end">
           {azioni.ruoloModificabile && (
             <Button
               variant="ghost"
@@ -152,6 +162,7 @@ function RigaUtente({ utente, azioni }: { utente: AdminUtenteResponse; azioni: A
               onClick={azioni.onCambiaRuolo}
               disabled={bloccoRuolo(utente) !== undefined}
               title={bloccoRuolo(utente)}
+              className="whitespace-nowrap"
               aria-label={utente.ruolo === 'ADMIN' ? `Togli il ruolo admin a ${nome}` : `Rendi admin ${nome}`}
             >
               {utente.ruolo === 'ADMIN' ? 'Togli admin' : 'Rendi admin'}
@@ -247,15 +258,16 @@ export default function AdminUtenti() {
     contenuto = (
       <div className="flex flex-col gap-space-md">
         <div className={cx('overflow-x-auto rounded-xl bg-surface-card transition-opacity', isFetching && 'opacity-60')}>
-          <table className="w-full min-w-[52rem] text-left">
+          {/* Da telefono (sotto md) restano due colonne: account (con ruolo e stato) e azioni; se non bastano, la tabella scorre */}
+          <table className="w-full text-left md:min-w-[52rem]">
             <caption className="sr-only">Account registrati, dal più recente</caption>
             <thead>
               <tr className="font-label-code-status text-label-code-status uppercase text-outline">
                 <th scope="col" className="px-space-sm py-space-sm font-normal">Account</th>
-                <th scope="col" className="px-space-sm py-space-sm font-normal">Ruolo</th>
-                <th scope="col" className="px-space-sm py-space-sm font-normal">Stato</th>
-                <th scope="col" className="px-space-sm py-space-sm font-normal">Email</th>
-                <th scope="col" className="px-space-sm py-space-sm font-normal">Registrazione</th>
+                <th scope="col" className="px-space-sm py-space-sm font-normal max-md:hidden">Ruolo</th>
+                <th scope="col" className="px-space-sm py-space-sm font-normal max-md:hidden">Stato</th>
+                <th scope="col" className="px-space-sm py-space-sm font-normal max-md:hidden">Email</th>
+                <th scope="col" className="px-space-sm py-space-sm font-normal max-md:hidden">Registrazione</th>
                 <th scope="col" className="px-space-sm py-space-sm text-right font-normal">
                   <span className="sr-only">Azioni</span>
                 </th>

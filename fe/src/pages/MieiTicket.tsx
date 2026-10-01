@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { BadgeStato } from '@/components/eventi'
 import { Link } from 'react-router'
 import { Caricamento, Icon, MessaggioErrore, StatoVuoto, stilePulsante } from '@/components/ui'
@@ -20,6 +20,16 @@ export default function MieiTicket() {
   const { data: ticket = [], isLoading, error, refetch } = useMieiTicketQuery()
   const [scheda, setScheda] = useState<Scheda>('attivi')
   const [selezionatoId, setSelezionatoId] = useState<Uuid | null>(null)
+  const dettaglio = useRef<HTMLDivElement>(null)
+
+  /** Da telefono la lista sta sotto il ticket aperto: dopo la scelta si torna su a mostrarlo */
+  function apri(id: Uuid) {
+    setSelezionatoId(id)
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      const ridotto = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      dettaglio.current?.scrollIntoView({ behavior: ridotto ? 'auto' : 'smooth', block: 'start' })
+    }
+  }
 
   const gruppi = { attivi: ticket.filter(attivo), passati: ticket.filter((t) => !attivo(t)) }
   const elenco = gruppi[scheda]
@@ -82,7 +92,7 @@ export default function MieiTicket() {
         />
       ) : (
         <div className="grid items-start gap-space-lg lg:grid-cols-12">
-          <div className="flex flex-col gap-space-sm lg:col-span-7">
+          <div ref={dettaglio} className="flex scroll-mt-20 flex-col gap-space-sm lg:col-span-7">
             <TicketEvento ticket={aperto} conEvento />
             <Link to={`/events/${aperto.evento.id}`} className={cx(stilePulsante({ variant: 'secondary' }), 'self-start')}>
               <Icon nome="visibility" size={18} />
@@ -102,7 +112,7 @@ export default function MieiTicket() {
                     <button
                       type="button"
                       aria-pressed={selezionato}
-                      onClick={() => setSelezionatoId(t.id)}
+                      onClick={() => apri(t.id)}
                       className={cx(
                         'flex w-full flex-col gap-space-xs rounded-xl border-l-2 p-space-md text-left transition-all',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container',
