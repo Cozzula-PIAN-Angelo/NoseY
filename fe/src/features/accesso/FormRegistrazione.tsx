@@ -4,6 +4,7 @@ import { Button, CampoPassword, DateTimeField, TextField } from '@/components/ui
 import { cx } from '@/lib/cx'
 import { LIMITI_UTENTI } from '@/types/api'
 import { robustezzaPassword } from './robustezzaPassword'
+import { ORDINE_CAMPI, validaRegistrazione, type ErroriRegistrazione } from './validaRegistrazione'
 
 // Form di registrazione (FE1-18) come la schermata Stitch "Registrazione Account":
 // nome e cognome, email, password con robustezza e limite in byte, conferma, data di nascita,
@@ -40,12 +41,24 @@ type FormRegistrazioneProps = {
 
 export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazioneProps) {
   const [v, setV] = useState<ValoriRegistrazione>(REGISTRAZIONE_VUOTA)
-  const cambia = <K extends keyof ValoriRegistrazione>(campo: K, valore: ValoriRegistrazione[K]) =>
+  const [errori, setErrori] = useState<ErroriRegistrazione>({})
+  // L'errore di un campo sparisce appena lo si cambia (la conferma anche quando cambia la password)
+  const cambia = <K extends keyof ValoriRegistrazione>(campo: K, valore: ValoriRegistrazione[K]) => {
     setV((attuali) => ({ ...attuali, [campo]: valore }))
+    setErrori((e) => ({ ...e, [campo]: undefined, ...(campo === 'password' ? { conferma: undefined } : {}) }))
+  }
   const robustezza = robustezzaPassword(v.password)
 
   function invia(e: FormEvent) {
     e.preventDefault()
+    const trovati = validaRegistrazione(v)
+    setErrori(trovati)
+    const primo = ORDINE_CAMPI.find((c) => trovati[c])
+    if (primo) {
+      // Il cursore va sul primo campo sbagliato (gli id sono reg-<campo>)
+      document.getElementById(`reg-${primo}`)?.focus()
+      return
+    }
     onInvia(v)
   }
 
@@ -60,6 +73,8 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
           contatore
           value={v.nome}
           onChange={(e) => cambia('nome', e.target.value)}
+          id="reg-nome"
+          errore={errori.nome}
           placeholder="es. Valerio"
         />
         <TextField
@@ -70,6 +85,8 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
           contatore
           value={v.cognome}
           onChange={(e) => cambia('cognome', e.target.value)}
+          id="reg-cognome"
+          errore={errori.cognome}
           placeholder="es. Rossi"
         />
       </div>
@@ -83,6 +100,8 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
         maxLength={LIMITI_UTENTI.email}
         value={v.email}
         onChange={(e) => cambia('email', e.target.value)}
+          id="reg-email"
+          errore={errori.email}
         placeholder="utente@dominio.it"
         aiuto="Ti invieremo qui il codice di verifica a 6 cifre."
       />
@@ -95,6 +114,8 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
           contaByte={LIMITI_UTENTI.passwordMaxByte}
           value={v.password}
           onChange={(e) => cambia('password', e.target.value)}
+          id="reg-password"
+          errore={errori.password}
           placeholder="Almeno 8 caratteri"
         />
         {/* Robustezza: 4 barrette come nel design */}
@@ -117,6 +138,8 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
         autoComplete="new-password"
         value={v.conferma}
         onChange={(e) => cambia('conferma', e.target.value)}
+        id="reg-conferma"
+        errore={errori.conferma}
         placeholder="Riscrivi la password"
       />
 
@@ -130,6 +153,8 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
           autoComplete="bday"
           value={v.dataNascita}
           onChange={(e) => cambia('dataNascita', e.target.value)}
+          id="reg-dataNascita"
+          errore={errori.dataNascita}
         />
         <TextField
           className="sm:col-span-7"
@@ -140,15 +165,20 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
           contatore
           value={v.indirizzo}
           onChange={(e) => cambia('indirizzo', e.target.value)}
+          id="reg-indirizzo"
+          errore={errori.indirizzo}
           placeholder="es. Via Tortona 14, Milano"
         />
       </div>
 
       <label className="flex cursor-pointer select-none items-start gap-space-sm pt-space-sm">
         <input
+          id="reg-termini"
           type="checkbox"
           checked={v.termini}
           onChange={(e) => cambia('termini', e.target.checked)}
+          aria-invalid={errori.termini ? true : undefined}
+          aria-describedby={errori.termini ? 'reg-termini-errore' : undefined}
           className="mt-1 size-4 shrink-0 cursor-pointer rounded accent-primary-container"
         />
         <span className="font-body-sm text-body-sm leading-relaxed text-on-surface-variant">
@@ -156,6 +186,11 @@ export function FormRegistrazione({ inCorso = false, onInvia }: FormRegistrazion
           l'<span className="font-semibold text-primary">Informativa sulla privacy</span>.
         </span>
       </label>
+      {errori.termini && (
+        <p id="reg-termini-errore" className="-mt-space-sm font-body-sm text-body-sm text-status-annullato">
+          {errori.termini}
+        </p>
+      )}
 
       <div className="flex flex-col gap-space-sm pt-space-md">
         <Button type="submit" variant="gradient" size="lg" pieno iconaDopo="arrow_forward" inCorso={inCorso}>
