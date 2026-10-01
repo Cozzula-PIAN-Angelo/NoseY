@@ -12,10 +12,15 @@ import {
   nonVuoto,
   statoDa,
 } from '../utili'
-import { api, evento, eventoDelProprietario, RITARDO } from './comuni'
+import { aiGuasta, api, evento, eventoDelProprietario, RITARDO } from './comuni'
 
 const nelFuturo = (v: unknown) => typeof v === 'string' && !Number.isNaN(Date.parse(v)) && Date.parse(v) > Date.now()
 const dataValida = (v: unknown) => typeof v === 'string' && !Number.isNaN(Date.parse(v))
+
+/** Ora delle richieste all'AI (limite di 10 nell'ultima ora, come app.limiti.ai del backend) */
+const richiesteAI: number[] = []
+const ORA_MS = 3_600_000
+const LIMITE_AI_ORA = 10
 
 /** Ora degli invii della notifica manuale, per evento (limite di 5 nelle ultime 24 ore) */
 const notificheInviate = new Map<string, number[]>()
@@ -132,16 +137,21 @@ export const handlerEventi = [
     return HttpResponse.json(inDettaglio(e))
   }),
 
-  // MiglioraDescrizioneAI: NON salva, propone soltanto
+  // MiglioraDescrizioneAI: NON salva, propone soltanto. Al massimo 10 all'ora per utente, poi 429
   http.post(api('/events/:id/description/ai'), async ({ params, request }) => {
     const b = await leggiJson(request)
     if (typeof b.fotoId !== 'string') return errore('VALIDAZIONE', { fotoId: 'Obbligatorio' })
+    const adesso = Date.now()
+    const recenti = richiesteAI.filter((t) => t > adesso - ORA_MS)
+    if (recenti.length >= LIMITE_AI_ORA) return errore('TROPPE_RICHIESTE')
+    richiesteAI.splice(0, richiesteAI.length, ...recenti, adesso)
     const { evento: e, risposta } = eventoDelProprietario(params.id)
     if (risposta) return risposta
     if (!e.foto.some((f) => f.id === b.fotoId)) return errore('NON_TROVATO')
     const testo = nonVuoto(b.descrizione) ? b.descrizione.trim() : e.descrizione
     if (!testo) return errore('DESCRIZIONE_MANCANTE')
     await delay(1500) // l'AI e' lenta: utile per provare la rotellina
+    if (aiGuasta()) return errore('SERVIZIO_ESTERNO')
     return HttpResponse.json({
       descrizioneProposta: `${testo}\n\nUn'esperienza da vivere dal vivo: luci, suono e atmosfera pensati per una notte che non si dimentica. (Proposta dei dati finti)`,
     })

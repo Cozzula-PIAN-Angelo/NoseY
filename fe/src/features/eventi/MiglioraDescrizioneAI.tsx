@@ -1,7 +1,8 @@
 import { useId, useState } from 'react'
-import { Button, Icon, useAvviso } from '@/components/ui'
+import { Button, Icon, Scheletro, useAvviso } from '@/components/ui'
 import { urlImmagine } from '@/lib/api'
 import { cx } from '@/lib/cx'
+import { leggiErrore } from '@/lib/errori'
 import type { FotoResponse, Uuid } from '@/types/api'
 import { useMiglioraDescrizioneMutation, useModificaEventoMutation } from './apiEventi'
 
@@ -15,16 +16,21 @@ type MiglioraDescrizioneAIProps = {
   onAccettata: (testo: string) => void
 }
 
+/** Messaggio sotto il pulsante per gli errori previsti dall'AI */
+type Problema = { icona: string; testo: string; riprova: boolean }
+
 // Descrizione migliorata con l'AI (FE1-12), nella modifica dell'evento sotto il campo Descrizione.
 // Il backend manda al provider una foto dell'evento e il testo, e restituisce una proposta che NON
 // salva (progettazione v4, sezione 3). Passi:
 //   1. scelta della foto, di partenza la copertina
 //   2. invio del testo del campo, anche se non ancora salvato
 //   3. proposta accanto al testo inviato: "Usa questa" la salva subito (PATCH { descrizione }), "Scarta"
+//   4. attesa lunga (l'AI impiega qualche secondo) e messaggi per TROPPE_RICHIESTE e SERVIZIO_ESTERNO
 export function MiglioraDescrizioneAI({ eventoId, foto, descrizione, onAccettata }: MiglioraDescrizioneAIProps) {
   const [fotoScelta, setFotoScelta] = useState<string>()
   // Testo inviato e proposta ricevuta: l'originale resta quello inviato anche se poi si modifica il campo
   const [proposta, setProposta] = useState<{ originale: string; testo: string } | null>(null)
+  const [problema, setProblema] = useState<Problema | null>(null)
   const [migliora, { isLoading: inAttesa }] = useMiglioraDescrizioneMutation()
   const [modifica, { isLoading: salvataggio }] = useModificaEventoMutation()
   const avviso = useAvviso()
@@ -36,12 +42,28 @@ export function MiglioraDescrizioneAI({ eventoId, foto, descrizione, onAccettata
 
   async function chiediProposta() {
     if (!scelta || !testo) return
+    setProblema(null)
     setProposta(null)
     try {
       const { descrizioneProposta } = await migliora({ id: eventoId, dati: { fotoId: scelta.id, descrizione: testo } }).unwrap()
       setProposta({ originale: testo, testo: descrizioneProposta })
     } catch (err) {
-      avviso.erroreApi(err)
+      const { codice } = leggiErrore(err)
+      if (codice === 'TROPPE_RICHIESTE') {
+        setProblema({
+          icona: 'schedule',
+          testo: "Hai chiesto molte proposte nell'ultima ora (al massimo 10): riprova più tardi.",
+          riprova: false,
+        })
+      } else if (codice === 'SERVIZIO_ESTERNO') {
+        setProblema({
+          icona: 'cloud_off',
+          testo: 'Il servizio di AI non risponde in questo momento. Il tuo testo non è cambiato: riprova tra poco.',
+          riprova: true,
+        })
+      } else {
+        avviso.erroreApi(err)
+      }
     }
   }
 
@@ -125,6 +147,29 @@ export function MiglioraDescrizioneAI({ eventoId, foto, descrizione, onAccettata
               <span className="font-body-sm text-body-sm text-outline">Scrivi qualche riga nella descrizione: l'AI la migliora.</span>
             )}
           </div>
+
+          {inAttesa && (
+            <div role="status" className="flex flex-col gap-space-xs">
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                L'AI sta scrivendo la proposta: può volerci qualche secondo.
+              </p>
+              <Scheletro className="h-4 w-full" />
+              <Scheletro className="h-4 w-11/12" />
+              <Scheletro className="h-4 w-3/5" />
+            </div>
+          )}
+
+          {problema && (
+            <div role="alert" className="flex flex-wrap items-start gap-space-sm rounded-xl bg-tertiary/10 p-space-sm">
+              <Icon nome={problema.icona} size={18} className="mt-0.5 shrink-0 text-tertiary" />
+              <p className="min-w-0 flex-1 font-body-sm text-body-sm text-on-surface">{problema.testo}</p>
+              {problema.riprova && (
+                <Button variant="ghost" size="sm" icona="refresh" onClick={chiediProposta}>
+                  Riprova
+                </Button>
+              )}
+            </div>
+          )}
 
           {proposta && (
             <div className="flex flex-col gap-space-sm">

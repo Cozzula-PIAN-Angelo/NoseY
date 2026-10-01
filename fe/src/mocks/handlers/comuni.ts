@@ -43,3 +43,16 @@ export function nonLoggato(): boolean {
     return false
   }
 }
+
+/**
+ * Prova del caso "il servizio di AI non risponde" (MiglioraDescrizioneAI → 502 SERVIZIO_ESTERNO):
+ *   localStorage.setItem('datiFinti.aiGuasta', 'true')    nella console del browser
+ *   localStorage.removeItem('datiFinti.aiGuasta')         per farla tornare a rispondere
+ */
+export function aiGuasta(): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem('datiFinti.aiGuasta') === 'true'
+  } catch {
+    return false
+  }
+}
