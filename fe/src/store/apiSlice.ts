@@ -26,8 +26,10 @@ const baseQuery = fetchBaseQuery({
   },
 })
 
-// Sul login il 401 e' CREDENZIALI_ERRATE (email o password sbagliate), non una sessione scaduta
-const LOGIN = '/api/auth/login'
+// Sul login il 401 e' CREDENZIALI_ERRATE (email o password sbagliate), non una sessione scaduta.
+// Sul logout un 401 vuol dire token gia' scaduto o revocato: si sta uscendo comunque, quindi
+// niente avviso "Sessione scaduta" ne' rimando al login (l'uscita la chiude MenuUtente).
+const SENZA_SESSIONE_SCADUTA = ['/api/auth/login', '/api/auth/logout']
 
 // 401 NON_AUTENTICATO = token scaduto o revocato (progettazione v4, sezione 0): si esce, si svuota
 // la cache (i dati dell'utente non restano in memoria) e SessioneScaduta porta al login.
@@ -39,7 +41,7 @@ const baseQueryConSessione: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQu
 ) => {
   const risultato = await baseQuery(args, api, extraOptions)
   const url = typeof args === 'string' ? args : args.url
-  if (risultato.error?.status === 401 && url !== LOGIN && (api.getState() as RootState).sessione.token) {
+  if (risultato.error?.status === 401 && !SENZA_SESSIONE_SCADUTA.includes(url) && (api.getState() as RootState).sessione.token) {
     api.dispatch(sessioneScaduta())
     api.dispatch(apiSlice.util.resetApiState())
   }

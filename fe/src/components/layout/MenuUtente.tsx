@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Icon } from '@/components/ui'
+import { useLogoutMutation } from '@/features/utenti/apiUtenti'
 import { useAppDispatch } from '@/hooks/redux'
 import { urlImmagine } from '@/lib/api'
 import { apiSlice } from '@/store/apiSlice'
@@ -50,7 +51,16 @@ export function MenuUtente({ utente }: { utente: UtenteResponse }) {
     }
   }, [inUscita, pathname, dispatch])
 
-  function esci() {
+  // Logout (FE2-05): prima si revoca il token sul server, finche' la sessione c'e' ancora.
+  // Se non riesce (rete, token gia' scaduto) si esce lo stesso: chi preme "Esci" vuole uscire.
+  const [logout, { isLoading: logoutInCorso }] = useLogoutMutation()
+
+  async function esci() {
+    try {
+      await logout().unwrap()
+    } catch {
+      // Il token resta valido fino alla scadenza, ma da questo browser si esce comunque
+    }
     setInUscita(true)
     naviga('/')
   }
@@ -123,6 +133,7 @@ export function MenuUtente({ utente }: { utente: UtenteResponse }) {
             <button
               type="button"
               onClick={esci}
+              disabled={logoutInCorso}
               className="flex w-full items-center gap-space-sm px-space-md py-space-xs font-body-md text-body-md text-error transition-colors hover:bg-surface-container"
             >
               <Icon nome="logout" />

@@ -214,20 +214,28 @@ export type ModificaPoiRequest = {
   etichetta?: string
 }
 
-/** CreaArtista: POST /api/admin/artists (solo ADMIN) */
+/**
+ * CreaArtista: POST /api/admin/artists (solo ADMIN), in multipart/form-data (non JSON), come CreaFoto:
+ *   const dati = new FormData(); dati.append('nome', nome); dati.append('file', file)
+ */
 export type ArtistaRequest = {
   /** Obbligatorio, max 100, unico senza distinzione di maiuscole */
   nome: string
-  /** Solo https, max 500 */
-  immagineUrl?: string
+  /** Facoltativa: JPEG, PNG o WEBP, max 5 MB (400 FILE_NON_VALIDO). Niente URL: i byte stanno nel DB */
+  file?: File
 }
 
-/** ModificaArtista: PATCH /api/admin/artists/{artistaId} (solo ADMIN) */
+/**
+ * ModificaArtista: PATCH /api/admin/artists/{artistaId} (solo ADMIN), in multipart/form-data.
+ * Tutti i campi facoltativi; nessun campo → 400 RICHIESTA_VUOTA.
+ */
 export type ModificaArtistaRequest = {
   /** Max 100, non vuoto */
   nome?: string
-  /** Solo https, max 500, "" = rimuovi */
-  immagineUrl?: string
+  /** Nuova immagine, sostituisce quella attuale */
+  file?: File
+  /** true = toglie l'immagine (default false); insieme a file → 400 VALIDAZIONE */
+  rimuoviImmagine?: boolean
   /** false = disattivato: sparisce dal catalogo ma resta negli eventi dove c'e' gia' */
   attivo?: boolean
 }

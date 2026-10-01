@@ -1,9 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { Button, CampoPassword, DateTimeField, TextField } from '@/components/ui'
-import { cx } from '@/lib/cx'
-import { bytePassword, LIMITI_UTENTI } from '@/types/api'
-import { robustezzaPassword } from './robustezzaPassword'
+import { LIMITI_UTENTI } from '@/types/api'
+import { BarreRobustezza } from './BarreRobustezza'
 import { ORDINE_CAMPI, validaRegistrazione, type ErroriRegistrazione } from './validaRegistrazione'
 
 // Form di registrazione (FE1-18) come la schermata Stitch "Registrazione Account":
@@ -32,8 +31,6 @@ export const REGISTRAZIONE_VUOTA: ValoriRegistrazione = {
   termini: false,
 }
 
-const COLORI_ROBUSTEZZA = ['', 'bg-status-annullato', 'bg-accent-gold-piercing', 'bg-secondary', 'bg-status-in-corso']
-
 type FormRegistrazioneProps = {
   inCorso?: boolean
   /** Errori arrivati dal backend, da mostrare sui campi */
@@ -59,7 +56,6 @@ export function FormRegistrazione({ inCorso = false, erroriServer = NESSUN_ERROR
     setV((attuali) => ({ ...attuali, [campo]: valore }))
     setErrori((e) => ({ ...e, [campo]: undefined, ...(campo === 'password' ? { conferma: undefined } : {}) }))
   }
-  const robustezza = robustezzaPassword(v.password)
 
   function invia(e: FormEvent) {
     e.preventDefault()
@@ -129,27 +125,7 @@ export function FormRegistrazione({ inCorso = false, erroriServer = NESSUN_ERROR
           errore={errori.password}
           placeholder="Almeno 8 caratteri"
         />
-        {/* Come nel design: 4 barrette di robustezza, poi giudizio a sinistra e byte a destra */}
-        <div aria-hidden="true" className="grid grid-cols-4 gap-1.5">
-          {[1, 2, 3, 4].map((n) => (
-            <div
-              key={n}
-              className={cx(
-                'h-1 rounded transition-colors',
-                n <= robustezza.livello ? COLORI_ROBUSTEZZA[robustezza.livello] : 'bg-surface-container-highest',
-              )}
-            />
-          ))}
-        </div>
-        <div className="flex items-center justify-between gap-space-sm">
-          <p aria-live="polite" className="font-body-sm text-body-sm text-outline">
-            {robustezza.testo}
-          </p>
-          {/* Il limite vero del backend: 72 byte in UTF-8 (accenti ed emoji pesano di piu') */}
-          <span className="shrink-0 font-label-code-status text-label-code-status text-outline">
-            {bytePassword(v.password)} / {LIMITI_UTENTI.passwordMaxByte} byte
-          </span>
-        </div>
+        <BarreRobustezza password={v.password} />
       </div>
 
       <CampoPassword
