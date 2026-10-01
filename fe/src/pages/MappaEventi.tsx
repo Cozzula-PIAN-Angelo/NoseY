@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
 import { Button, Icon } from '@/components/ui'
 import { Mappa, type MarkerMappa } from '@/components/mappa'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
+import { AnteprimaEvento } from '@/features/eventi/AnteprimaEvento'
 import { usePosizioneUtente } from '@/features/eventi/usePosizioneUtente'
+import type { Uuid } from '@/types/api'
 
 // Mappa pubblica degli eventi (FE1-04), rotta /map (docs/interfacce.md).
 // Con la posizione gli eventi arrivano ordinati per distanza, senza per data:
@@ -21,6 +24,17 @@ const testiPosizione = {
 export default function MappaEventi() {
   const { stato, posizione, chiedi, dimentica } = usePosizioneUtente()
   const { data: eventi = [] } = useListaEventiQuery(posizione ?? undefined)
+  const [selezionatoId, setSelezionatoId] = useState<Uuid | null>(null)
+  // Cercato ogni volta nella lista: se l'evento sparisce (es. dopo un aggiornamento) l'anteprima si chiude
+  const selezionato = eventi.find((e) => e.id === selezionatoId) ?? null
+
+  // Esc chiude l'anteprima
+  useEffect(() => {
+    if (!selezionato) return
+    const chiudi = (e: KeyboardEvent) => e.key === 'Escape' && setSelezionatoId(null)
+    window.addEventListener('keydown', chiudi)
+    return () => window.removeEventListener('keydown', chiudi)
+  }, [selezionato])
 
   const marker: MarkerMappa[] = eventi.map((e) => ({
     id: e.id,
@@ -29,6 +43,8 @@ export default function MappaEventi() {
     lat: e.lat,
     lng: e.lng,
     etichetta: e.titolo,
+    selezionato: e.id === selezionatoId,
+    onClick: () => setSelezionatoId(e.id),
   }))
 
   return (
@@ -62,13 +78,21 @@ export default function MappaEventi() {
         )}
       </section>
 
-      <Mappa
-        etichetta="Mappa degli eventi"
-        centro={posizione ?? CENTRO_PREDEFINITO}
-        zoom={posizione ? 13 : 12}
-        marker={marker}
-        className="h-[480px]"
-      />
+      <div className="relative">
+        <Mappa
+          etichetta="Mappa degli eventi"
+          centro={posizione ?? CENTRO_PREDEFINITO}
+          zoom={posizione ? 13 : 12}
+          marker={marker}
+          className="h-[480px]"
+        />
+        {selezionato && (
+          // In basso a sinistra, sopra l'attribuzione di OpenStreetMap (che deve restare visibile)
+          <div className="absolute inset-x-space-sm bottom-9 z-10 sm:right-auto sm:w-[26rem]">
+            <AnteprimaEvento evento={selezionato} onChiudi={() => setSelezionatoId(null)} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }
