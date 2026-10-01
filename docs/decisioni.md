@@ -585,3 +585,56 @@ Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
   sopra.
 - **Chiave composta evento + utente**: inutile, solo il proprietario supera il 403; cambierebbe la
   chiave indicata in `docs/interfacce.md` senza vantaggi.
+
+---
+
+## Decisione 20: chatId in PartecipanteResponse
+
+### Scelta
+
+- `PartecipanteResponse` di ListaPartecipanti (BE1-17) ha anche `chatId`, oltre ai campi della
+  sezione 7: `{ utente, proprietario, statoAmicizia, amiciziaId, chatId }`.
+- Stessa regola di `RelazioneAmicizia` (decisione 15): valorizzato, se la chat esiste, solo quando
+  lo e' `amiciziaId` (INVIATA, RICEVUTA, AMICI); con AMICI c'e' sempre. Con NESSUNA e
+  NON_DISPONIBILE e' null.
+- Chiude il punto aperto su `chatId` in `docs/interfacce.md`.
+
+### Motivazione
+
+- Il pulsante "Chat" della lista partecipanti (`PulsanteAmicizia`) apre `/chat/:chatId`: con il
+  dato nella risposta non serve una seconda chiamata.
+- Il dato e' gia' letto nella stessa query sulle amicizie (decisione 15, sezione 18): nessun costo
+  in piu'.
+
+### Alternative scartate
+
+- **Testo letterale della sezione 7 (senza `chatId`)**: il frontend dovrebbe chiamare anche
+  ListaAmici solo per trovare la chat.
+
+## Decisione 21: valori non ammessi e richieste senza effetto in CambiaStatoUtente e CambiaRuolo
+
+### Scelta
+
+- CambiaRuolo (BE1-18): `ruolo` e' una stringa, identica a `RUOLO.nome`. `SUPERADMIN` → 400
+  `RUOLO_NON_AMMESSO`; un nome che non esiste (es. `PIPPO`) → 400 `VALIDAZIONE` con il campo `ruolo`.
+- CambiaStatoUtente: `stato` e' l'enum `StatoUtente`; `ANONIMIZZATO` → 400 `STATO_NON_AMMESSO`, un
+  valore che non esiste → 400 `VALIDAZIONE` (corpo non leggibile).
+- Stato o ruolo uguali a quelli attuali: 200 con `AdminUtenteResponse`, nessuna modifica. In
+  particolare un cambio di ruolo senza effetto non revoca i token.
+- Il controllo della decisione D16 (ruolo inferiore, mai se stessi) e'
+  `AdminUtenteService.verificaRuoloInferiore`, da riusare per la moderazione di eventi e foto. Il
+  livello di chi chiede si legge dal database, non dal token.
+
+### Motivazione
+
+- La sezione 13 riserva `RUOLO_NON_AMMESSO` a SUPERADMIN, un ruolo che esiste ma non si assegna via
+  API; un nome inesistente e' un DTO non valido, come un valore sconosciuto dell'enum dello stato.
+- Revocare i token senza un cambio reale farebbe uscire l'utente senza motivo; la richiesta ripetuta
+  (doppio clic, retry del frontend) resta innocua.
+
+### Alternative scartate
+
+- **`RUOLO_NON_AMMESSO` per ogni valore diverso da USER e ADMIN**: mescolerebbe errori di formato e
+  regole di merito.
+- **409 su stato o ruolo invariati**: il frontend dovrebbe gestire un errore per un'operazione gia'
+  riuscita.

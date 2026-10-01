@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +26,11 @@ public class PartecipanteController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public TicketResponse iscrivi(@PathVariable UUID id, @AuthenticationPrincipal UtenteAutenticato utente) {
 		return partecipanteService.iscrivi(id, utente.id());
+	}
+
+	@GetMapping
+	public List<PartecipanteResponse> lista(@PathVariable UUID id, @AuthenticationPrincipal UtenteAutenticato utente) {
+		return partecipanteService.lista(id, utente.id());
 	}
 
 	@GetMapping("/me")
