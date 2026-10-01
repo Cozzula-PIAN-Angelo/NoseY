@@ -30,7 +30,7 @@ const dimensioni: Record<ButtonSize, string> = {
 
 /**
  * Classi del pulsante, da usare anche sui link che devono sembrare pulsanti:
- *   <a href="/tickets" className={stilePulsante({ variant: 'secondary' })}>I miei ticket</a>
+ *   <Link to="/tickets" className={stilePulsante({ variant: 'secondary' })}>I miei ticket</Link>
  */
 export function stilePulsante({
   variant = 'primary',

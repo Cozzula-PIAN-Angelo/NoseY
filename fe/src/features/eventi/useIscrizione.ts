@@ -1,6 +1,7 @@
+import { useNavigate } from 'react-router'
 import { useAvviso } from '@/components/ui'
 import { leggiErrore } from '@/lib/errori'
-import { vaiAlLogin } from '@/lib/navigazione'
+import { urlLogin } from '@/lib/dopoLogin'
 import type { Uuid } from '@/types/api'
 import { useCancellaIscrizioneMutation, useIscrivitiMutation } from './apiEventi'
 import { messaggioIscrizione, type AzioneIscrizione } from './messaggiIscrizione'
@@ -12,6 +13,7 @@ export function useIscrizione(eventoId: Uuid) {
   const [iscriviti, { isLoading: iscrizioneInCorso }] = useIscrivitiMutation()
   const [cancella, { isLoading: annullamentoInCorso }] = useCancellaIscrizioneMutation()
   const avviso = useAvviso()
+  const navigate = useNavigate()
 
   /**
    * 401 → login; codici previsti (GIA_ISCRITTO, EVENTO_CONCLUSO...) → messaggio pensato per
@@ -20,7 +22,7 @@ export function useIscrizione(eventoId: Uuid) {
   function gestisciErrore(errore: unknown, azione: AzioneIscrizione) {
     const { codice } = leggiErrore(errore)
     if (codice === 'NON_AUTENTICATO') {
-      vaiAlLogin(`/events/${eventoId}`)
+      navigate(urlLogin(`/events/${eventoId}`))
       return
     }
     const specifico = messaggioIscrizione(codice, azione)

@@ -70,7 +70,7 @@ export default function MappaEventi() {
   }))
 
   return (
-    <div className="flex flex-col gap-space-lg">
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-space-lg px-margin-mobile py-space-xl md:px-margin">
       <header className="flex flex-col gap-space-xs">
         <p className="flex items-center gap-1.5 font-label-code-status text-label-code-status uppercase tracking-wider text-status-in-corso">
           <span className="size-1.5 rounded-full bg-status-in-corso motion-safe:animate-pulse" />

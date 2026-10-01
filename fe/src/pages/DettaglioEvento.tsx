@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useParams } from 'react-router'
 import { BadgeStato } from '@/components/eventi'
 import { Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
@@ -14,8 +15,7 @@ import { intervallo } from '@/lib/formato'
 import type { StatoEvento, UtentePubblicoResponse, Uuid } from '@/types/api'
 
 // Pagina dell'evento (FE1-05), rotta /events/:id (docs/interfacce.md). Pubblica: con il login
-// il backend aggiunge sonoProprietario e sonoIscritto. Finche' non c'e' il router (FE2-01)
-// l'id arriva come prop; poi sara' useParams().
+// il backend aggiunge sonoProprietario e sonoIscritto.
 
 /** Avviso in cima alla pagina per gli eventi annullati o conclusi */
 function AvvisoStato({ stato, motivo }: { stato: StatoEvento; motivo: string | null }) {
@@ -65,7 +65,16 @@ function Proprietario({ utente }: { utente: UtentePubblicoResponse }) {
   )
 }
 
-export default function DettaglioEvento({ id }: { id: Uuid }) {
+export default function DettaglioEvento() {
+  const { id = '' } = useParams()
+  return (
+    <div className="mx-auto w-full max-w-[1440px] px-margin-mobile py-space-xl md:px-margin">
+      <SchedaEvento id={id} />
+    </div>
+  )
+}
+
+function SchedaEvento({ id }: { id: Uuid }) {
   // currentData (non data): passando a un altro evento non si vede, nemmeno per un attimo, quello di prima
   const { currentData: evento, isFetching, error, refetch } = useVediEventoQuery(id)
   const iscrizione = useIscrizione(id)

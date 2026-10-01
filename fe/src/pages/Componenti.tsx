@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
-import DettaglioEvento from '@/pages/DettaglioEvento'
-import MappaEventi from '@/pages/MappaEventi'
+import { useAppDispatch, useAppSelector } from '@/hooks/redux'
+import { accesso, selezionaUtente, uscita } from '@/store/sessioneSlice'
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { CODICI_ERRORE, type CodiceErrore } from '@/lib/codiciErrore'
 import { leggiErrore, type ErroreResponse } from '@/lib/errori'
@@ -42,18 +42,6 @@ function markerDiProva(
   ]
 }
 
-
-// Eventi dei dati finti per l'anteprima del dettaglio: i tre stati del "Fatto quando" di FE1-05
-const eventiDiProva = [
-  { id: 'e-04', etichetta: 'Programmato' },
-  { id: 'e-02', etichetta: 'Programmato (sei iscritta)' },
-  { id: 'e-05', etichetta: 'Programmato (sei proprietaria, senza foto)' },
-  { id: 'e-01', etichetta: 'In corso (sei iscritta)' },
-  { id: 'e-03', etichetta: 'In corso (sei proprietaria)' },
-  { id: 'e-07', etichetta: 'Concluso' },
-  { id: 'e-08', etichetta: 'Annullato' },
-  { id: 'inesistente', etichetta: 'Inesistente (404)' },
-]
 
 const statiEvento = Object.keys(STILE_STATO) as StatoEvento[]
 const tipiPoiMappa = Object.keys(STILE_POI) as TipoPoi[]
@@ -128,6 +116,51 @@ const registrazioneRifiutata = erroreFinto('VALIDAZIONE', 400, {
   password: 'La lunghezza deve essere compresa tra 8 e 72',
 })
 
+// Solo in sviluppo: entra con l'utente "loggato" dei dati finti (mocks/dati.ts), per provare
+// le pagine protette (es. /events/new) finche' non c'e' la pagina di login (FE2-05).
+// Il token e' finto: con il backend vero (VITE_DATI_FINTI=false) le chiamate rispondono 401.
+function SessioneDiProva() {
+  const dispatch = useAppDispatch()
+  const utente = useAppSelector(selezionaUtente)
+
+  function entra() {
+    dispatch(
+      accesso({
+        token: 'token-dei-dati-finti',
+        scadenza: new Date(Date.now() + 24 * 3_600_000).toISOString(),
+        utente: {
+          id: 'u-0000-valentina',
+          email: 'valentina@esempio.it',
+          nome: 'Valentina',
+          cognome: 'Ferro',
+          indirizzo: null,
+          dataNascita: null,
+          immagineProfilo: null,
+          ruolo: 'USER',
+        },
+      }),
+    )
+  }
+
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-space-sm rounded-xl border border-dashed border-tertiary/50 p-space-md">
+      <p className="font-body-md text-body-md text-on-surface-variant">
+        <strong className="text-tertiary">Sessione di prova (dati finti):</strong>{' '}
+        {utente ? `accesso come ${utente.nome} ${utente.cognome}` : 'nessun accesso'}
+      </p>
+      {utente ? (
+        <Button size="sm" variant="secondary" icona="logout" onClick={() => dispatch(uscita())}>
+          Esci
+        </Button>
+      ) : (
+        <Button size="sm" variant="gold" icona="login" onClick={entra}>
+          Accedi con l'utente finto
+        </Button>
+      )}
+    </section>
+  )
+}
+
 function Sezione({ titolo, children }: { titolo: string; children: ReactNode }) {
   return (
     <section className="rounded-xl bg-surface-card p-space-lg">
@@ -147,7 +180,6 @@ export default function Componenti() {
   const [paginaEventi, setPaginaEventi] = useState(0)
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
   const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
-  const [eventoAnteprima, setEventoAnteprima] = useState('e-04')
   const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
   // Eventi da GET /api/events (FE1-03): in sviluppo rispondono i dati finti MSW
   const { data: eventiMappa = [], error: erroreEventi } = useListaEventiQuery()
@@ -178,32 +210,8 @@ export default function Componenti() {
         <h1 className="font-headline-lg text-headline-lg">Catalogo componenti</h1>
       </header>
 
-      {/* Anteprima delle pagine FE1 finche' non c'e' il router (FE2-01) */}
-      <section className="rounded-xl border border-dashed border-outline-variant p-space-md">
-        <p className="mb-space-md font-label-code-status text-label-code-status uppercase text-outline">
-          Anteprima pagina /map (FE1-04)
-        </p>
-        <MappaEventi />
-      </section>
+      {import.meta.env.DEV && <SessioneDiProva />}
 
-      <section className="flex flex-col gap-space-md rounded-xl border border-dashed border-outline-variant p-space-md">
-        <p className="font-label-code-status text-label-code-status uppercase text-outline">
-          Anteprima pagina /events/:id (FE1-05)
-        </p>
-        <div className="flex flex-wrap gap-space-xs">
-          {eventiDiProva.map((e) => (
-            <Button
-              key={e.id}
-              size="sm"
-              variant={eventoAnteprima === e.id ? 'primary' : 'secondary'}
-              onClick={() => setEventoAnteprima(e.id)}
-            >
-              {e.etichetta}
-            </Button>
-          ))}
-        </div>
-        <DettaglioEvento id={eventoAnteprima} />
-      </section>
 
       <Sezione titolo="Pulsanti">
         <div className="flex flex-wrap items-center gap-space-sm">
