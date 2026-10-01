@@ -76,6 +76,13 @@ app:
     # In locale va impostato nella configurazione di avvio (variabile d'ambiente JWT_SECRET).
     secret: ${JWT_SECRET}
     durata: ${JWT_DURATA:24h}
+  # Miglioramento della descrizione con Google Gemini (decisione 18). Senza chiave l'endpoint
+  # risponde 502 SERVIZIO_ESTERNO. Chiave da https://aistudio.google.com/apikey
+  ai:
+    api-key: ${GEMINI_API_KEY:}
+    modello: ${AI_MODELLO:gemini-3.5-flash}
+    url: https://generativelanguage.googleapis.com/v1beta
+    timeout: 30s
   # Limiti di frequenza in memoria (progettazione v4, sezione 0): si azzerano a ogni riavvio.
   # Finestra che scorre: "al giorno" = nelle ultime 24 ore. I limiti sui codici via email
   # non sono qui, stanno nel database (UTENTE).
