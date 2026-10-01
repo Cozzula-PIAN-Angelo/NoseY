@@ -17,3 +17,16 @@ export function passwordRicordata(email: string): string {
 export function dimenticaPassword() {
   inAttesa = null
 }
+
+// Ora dell'ultimo invio del codice, per email (anche questa solo in memoria): il backend
+// accetta un nuovo invio solo dopo 60 secondi (429 TROPPE_RICHIESTE).
+const ultimiInvii = new Map<string, number>()
+
+export function segnaInvioCodice(email: string, quando = Date.now()) {
+  ultimiInvii.set(email.trim().toLowerCase(), quando)
+}
+
+/** Ora (ms) dell'ultimo invio a questa email in questa scheda, oppure null */
+export function ultimoInvioCodice(email: string): number | null {
+  return ultimiInvii.get(email.trim().toLowerCase()) ?? null
+}

@@ -4,6 +4,7 @@ import { Mappa, type MarkerMappa } from '@/components/mappa'
 import { Button, CampoPassword, Icon, TextField, useAvviso } from '@/components/ui'
 import { CampoCodiceOtp } from '@/features/accesso/CampoCodiceOtp'
 import { dimenticaPassword, passwordRicordata } from '@/features/accesso/registrazioneInCorso'
+import { ReinvioCodice } from '@/features/accesso/ReinvioCodice'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { useVerificaMutation } from '@/features/utenti/apiUtenti'
 import { leggiErrore } from '@/lib/errori'
@@ -150,6 +151,7 @@ export default function VerificaEmail() {
               Verifica il codice e accedi
             </Button>
           </form>
+          <ReinvioCodice key={email.trim().toLowerCase()} email={email} />
         </section>
 
         <aside className="flex flex-col gap-space-md rounded-2xl bg-surface-glass p-space-md shadow-xl backdrop-blur-xl sm:p-space-lg lg:col-span-5">
