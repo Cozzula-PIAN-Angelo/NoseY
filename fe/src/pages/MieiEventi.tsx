@@ -1,5 +1,6 @@
+import { Link } from 'react-router'
 import { CardEvento } from '@/components/eventi'
-import { Caricamento, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { Caricamento, Icon, MessaggioErrore, StatoVuoto, stilePulsante } from '@/components/ui'
 import { useMieiEventiQuery } from '@/features/eventi/apiEventi'
 
 // I miei eventi (FE1-08), rotta /my-events (solo con il login): tutti quelli che ho creato,
@@ -26,12 +27,35 @@ export default function MieiEventi() {
           icona="event_note"
           titolo="Non hai ancora creato eventi"
           messaggio="Quando crei un evento lo ritrovi qui, insieme a quelli passati."
+          azione={
+            <Link to="/events/new" className={stilePulsante({ variant: 'gold' })}>
+              <Icon nome="add_circle" size={18} />
+              Crea evento
+            </Link>
+          }
         />
       ) : (
         <ul className="grid gap-space-lg sm:grid-cols-2 xl:grid-cols-3">
           {eventi.map((e) => (
             <li key={e.id} className="flex">
-              <CardEvento evento={e} />
+              <CardEvento
+                evento={e}
+                azioni={
+                  <>
+                    <Link to={`/events/${e.id}`} className={stilePulsante({ variant: 'secondary', size: 'sm' })}>
+                      <Icon nome="visibility" size={18} />
+                      Vedi evento
+                    </Link>
+                    {/* Conclusi e annullati non si modificano piu' (409 dal backend) */}
+                    {(e.stato === 'PROGRAMMATO' || e.stato === 'IN_CORSO') && (
+                      <Link to={`/events/${e.id}/edit`} className={stilePulsante({ size: 'sm' })}>
+                        <Icon nome="edit" size={18} />
+                        Modifica
+                      </Link>
+                    )}
+                  </>
+                }
+              />
             </li>
           ))}
         </ul>

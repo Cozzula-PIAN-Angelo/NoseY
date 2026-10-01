@@ -17,7 +17,7 @@ export function CardEvento({ evento, azioni }: CardEventoProps) {
   const copertina = urlImmagine(evento.copertinaUrl)
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl bg-surface-card shadow-lg">
+    <article className="flex w-full flex-col overflow-hidden rounded-2xl bg-surface-card shadow-lg">
       <div className="relative aspect-[16/9] bg-surface-container">
         {copertina ? (
           <img src={copertina} alt="" className="size-full object-cover" />

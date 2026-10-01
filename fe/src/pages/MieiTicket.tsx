@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BadgeStato } from '@/components/eventi'
-import { Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { Link } from 'react-router'
+import { Caricamento, Icon, MessaggioErrore, StatoVuoto, stilePulsante } from '@/components/ui'
 import { useMieiTicketQuery } from '@/features/eventi/apiEventi'
 import { TicketEvento } from '@/features/eventi/TicketEvento'
 import { cx } from '@/lib/cx'
@@ -70,11 +71,23 @@ export default function MieiTicket() {
               ? 'Quando ti iscrivi a un evento il ticket compare qui.'
               : 'Qui trovi i ticket degli eventi conclusi o annullati.'
           }
+          azione={
+            scheda === 'attivi' && (
+              <Link to="/map" className={stilePulsante()}>
+                <Icon nome="map" size={18} />
+                Trova un evento
+              </Link>
+            )
+          }
         />
       ) : (
         <div className="grid items-start gap-space-lg lg:grid-cols-12">
-          <div className="lg:col-span-7">
+          <div className="flex flex-col gap-space-sm lg:col-span-7">
             <TicketEvento ticket={aperto} conEvento />
+            <Link to={`/events/${aperto.evento.id}`} className={cx(stilePulsante({ variant: 'secondary' }), 'self-start')}>
+              <Icon nome="visibility" size={18} />
+              Vedi evento
+            </Link>
           </div>
 
           <section aria-labelledby="titolo-pass" className="flex flex-col gap-space-sm lg:col-span-5">
