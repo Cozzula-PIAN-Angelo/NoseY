@@ -20,7 +20,7 @@ export type UtentePubblicoResponse = {
   id: Uuid
   nome: string
   cognome: string
-  /** URL dell'immagine, null se non impostata */
+  /** Percorso relativo "/api/users/{id}/avatar?v=..." (decisione 9), null se manca: usare urlImmagine() */
   immagineProfilo: string | null
   attivo: boolean
 }

@@ -15,6 +15,24 @@ import type {
 } from '@/types/api'
 import { immagineFinta, statoDa, traOre } from './utili'
 
+// ---------------------------------------------------------------- Immagini
+
+/**
+ * Immagini servite dai GET finti, come il backend (decisione 9): nei DTO va il percorso relativo
+ * con ?v=, qui il contenuto. Chiave = percorso senza ?v=.
+ */
+export const immagini = new Map<string, { contenuto: Blob | string; tipo: string }>()
+let versioneImmagini = 0
+
+/** Salva un'immagine e restituisce il percorso da mettere nel DTO, es. "/api/artists/a-01/image?v=..." */
+export function salvaImmagine(percorso: string, contenuto: Blob | string, tipo = 'image/svg+xml'): string {
+  immagini.set(percorso, { contenuto, tipo })
+  return `${percorso}?v=${(++versioneImmagini).toString(16).padStart(16, '0')}`
+}
+
+/** Toglie l'immagine di un percorso (anche con ?v=) */
+export const cancellaImmagine = (percorso: string) => immagini.delete(percorso.split('?')[0])
+
 // ---------------------------------------------------------------- Utenti
 
 /** L'utente "loggato": finche' non c'e' l'autenticazione, i dati finti fanno tutto a nome suo */
@@ -22,7 +40,13 @@ export const ID_UTENTE_CORRENTE: Uuid = 'u-0000-valentina'
 
 export const utenti: UtentePubblicoResponse[] = [
   { id: ID_UTENTE_CORRENTE, nome: 'Valentina', cognome: 'Ferro', immagineProfilo: null, attivo: true },
-  { id: 'u-0001-sofia', nome: 'Sofia', cognome: 'Moretti', immagineProfilo: null, attivo: true },
+  {
+    id: 'u-0001-sofia',
+    nome: 'Sofia',
+    cognome: 'Moretti',
+    immagineProfilo: salvaImmagine('/api/users/u-0001-sofia/avatar', immagineFinta('SM', 320)),
+    attivo: true,
+  },
   { id: 'u-0002-matteo', nome: 'Matteo', cognome: 'Valenti', immagineProfilo: null, attivo: true },
   { id: 'u-0003-elena', nome: 'Elena', cognome: 'Rostagno', immagineProfilo: null, attivo: true },
   { id: 'u-0004-dario', nome: 'Dario', cognome: 'Lucidi', immagineProfilo: null, attivo: true },
@@ -40,13 +64,16 @@ export const trovaUtente = (id: Uuid) => utenti.find((u) => u.id === id)!
 
 // ---------------------------------------------------------------- Artisti
 
+const artistaImg = (id: Uuid, nome: string, tinta: number) =>
+  salvaImmagine(`/api/artists/${id}/image`, immagineFinta(nome, tinta))
+
 export const artisti: ArtistaResponse[] = [
-  { id: 'a-01', nome: 'Aura Minimal', immagineUrl: immagineFinta('Aura Minimal', 280), attivo: true },
-  { id: 'a-02', nome: 'Distorsioni Analogiche', immagineUrl: immagineFinta('Distorsioni Analogiche', 190), attivo: true },
-  { id: 'a-03', nome: 'Elena Kosh', immagineUrl: immagineFinta('Elena Kosh', 320), attivo: true },
-  { id: 'a-04', nome: 'Komorebi Sound Lab', immagineUrl: immagineFinta('Komorebi Sound Lab', 170), attivo: true },
-  { id: 'a-05', nome: 'Marco Jovine Trio', immagineUrl: immagineFinta('Marco Jovine Trio', 30), attivo: true },
-  { id: 'a-06', nome: 'Vektor Theory Live', immagineUrl: immagineFinta('Vektor Theory Live', 250), attivo: true },
+  { id: 'a-01', nome: 'Aura Minimal', immagineUrl: artistaImg('a-01', 'Aura Minimal', 280), attivo: true },
+  { id: 'a-02', nome: 'Distorsioni Analogiche', immagineUrl: artistaImg('a-02', 'Distorsioni Analogiche', 190), attivo: true },
+  { id: 'a-03', nome: 'Elena Kosh', immagineUrl: artistaImg('a-03', 'Elena Kosh', 320), attivo: true },
+  { id: 'a-04', nome: 'Komorebi Sound Lab', immagineUrl: artistaImg('a-04', 'Komorebi Sound Lab', 170), attivo: true },
+  { id: 'a-05', nome: 'Marco Jovine Trio', immagineUrl: artistaImg('a-05', 'Marco Jovine Trio', 30), attivo: true },
+  { id: 'a-06', nome: 'Vektor Theory Live', immagineUrl: artistaImg('a-06', 'Vektor Theory Live', 250), attivo: true },
   { id: 'a-07', nome: 'Echo Chamber (ritirati)', immagineUrl: null, attivo: false },
 ]
 
@@ -79,7 +106,10 @@ export const nuovoId = (prefisso: string): Uuid => `${prefisso}-${Date.now().toS
 const foto = (evento: string, titolo: string, tinta: number, quante = 2): FotoResponse[] =>
   Array.from({ length: quante }, (_, i) => ({
     id: `f-${evento}-${i + 1}`,
-    url: immagineFinta(i === 0 ? titolo : `${titolo} · ${i + 1}`, tinta + i * 25),
+    url: salvaImmagine(
+      `/api/events/e-${evento}/photos/f-${evento}-${i + 1}/image`,
+      immagineFinta(i === 0 ? titolo : `${titolo} · ${i + 1}`, tinta + i * 25),
+    ),
     didascalia: i === 0 ? `Locandina di ${titolo}` : null,
     copertina: i === 0,
   }))

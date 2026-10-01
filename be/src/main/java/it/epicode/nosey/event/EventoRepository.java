@@ -18,6 +18,9 @@ public interface EventoRepository extends JpaRepository<Evento, UUID> {
 
 	List<Evento> findByProprietarioIdAndStato(UUID proprietarioId, StatoEventoDb stato);
 
+	// MieiEventi (sezione 2): tutti, anche conclusi e annullati, per dataEvento decrescente.
+	List<Evento> findByProprietarioIdOrderByDataEventoDesc(UUID proprietarioId);
+
 	// ListaEventiMappa (progettazione v4, sezione 3): solo PROGRAMMATO con data_fine >= adesso
 	// (comprende anche gli eventi gia' iniziati, IN_CORSO nel DTO). Ordine base per dataEvento;
 	// con lat/lng il service riordina per distanza in Java (Haversine).
