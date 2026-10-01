@@ -15,25 +15,36 @@ type StatoSessione = SessioneSalvata & {
   scaduta: boolean
 }
 
-const CHIAVE = 'nosey.sessione'
+/** Chiave in localStorage: la usa anche ControlloSessione per seguire le altre schede */
+export const CHIAVE_SESSIONE = 'nosey.sessione'
 const vuota: SessioneSalvata = { token: null, scadenza: null, utente: null }
 
-function leggi(): StatoSessione {
+// Sessione dal testo salvato in localStorage; vuota se manca, e' rovinata o il token e' scaduto
+function daTesto(testo: string | null): StatoSessione {
   try {
-    const salvata = JSON.parse(localStorage.getItem(CHIAVE) ?? 'null') as SessioneSalvata | null
+    const salvata = JSON.parse(testo ?? 'null') as SessioneSalvata | null
     if (salvata?.token && salvata.scadenza && new Date(salvata.scadenza) > new Date()) {
       return { ...salvata, scaduta: false }
     }
   } catch {
-    // localStorage non disponibile o dato rovinato: si riparte senza sessione
+    // Dato rovinato: si riparte senza sessione
   }
   return { ...vuota, scaduta: false }
 }
 
+function leggi(): StatoSessione {
+  try {
+    return daTesto(localStorage.getItem(CHIAVE_SESSIONE))
+  } catch {
+    // localStorage non disponibile (es. bloccato dal browser)
+    return { ...vuota, scaduta: false }
+  }
+}
+
 function salva({ token, scadenza, utente }: SessioneSalvata) {
   try {
-    if (token) localStorage.setItem(CHIAVE, JSON.stringify({ token, scadenza, utente }))
-    else localStorage.removeItem(CHIAVE)
+    if (token) localStorage.setItem(CHIAVE_SESSIONE, JSON.stringify({ token, scadenza, utente }))
+    else localStorage.removeItem(CHIAVE_SESSIONE)
   } catch {
     // Senza localStorage la sessione dura finche' la pagina resta aperta
   }
@@ -66,6 +77,10 @@ const sessioneSlice = createSlice({
       salva(vuota)
       return { ...vuota, scaduta: true }
     },
+    /** Login o uscita in un'altra scheda: arriva il nuovo valore di localStorage (gia' salvato) */
+    sessioneDaAltraScheda(_stato, azione: PayloadAction<string | null>) {
+      return daTesto(azione.payload)
+    },
     /** L'avviso di sessione scaduta e' stato mostrato */
     scadutaGestita(stato) {
       stato.scaduta = false
@@ -73,7 +88,8 @@ const sessioneSlice = createSlice({
   },
 })
 
-export const { accesso, utenteAggiornato, uscita, sessioneScaduta, scadutaGestita } = sessioneSlice.actions
+export const { accesso, utenteAggiornato, uscita, sessioneScaduta, sessioneDaAltraScheda, scadutaGestita } =
+  sessioneSlice.actions
 export default sessioneSlice.reducer
 
 const livello: Record<Ruolo, number> = { USER: 0, ADMIN: 1, SUPERADMIN: 2 }
