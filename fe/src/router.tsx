@@ -10,6 +10,7 @@ import MieiEventi from '@/pages/MieiEventi'
 import MieiTicket from '@/pages/MieiTicket'
 import ModificaEvento from '@/pages/ModificaEvento'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
+import PartecipantiEvento from '@/pages/PartecipantiEvento'
 import PaginaProvvisoria from '@/pages/PaginaProvvisoria'
 import PasswordDimenticata from '@/pages/PasswordDimenticata'
 import Registrazione from '@/pages/Registrazione'
@@ -39,7 +40,7 @@ export const router = createBrowserRouter([
         children: [
           { path: 'events/new', element: <CreaEvento /> },
           { path: 'events/:id/edit', element: <ModificaEvento /> },
-          { path: 'events/:id/participants', element: <PaginaProvvisoria titolo="Partecipanti" card="FE1-14" /> },
+          { path: 'events/:id/participants', element: <PartecipantiEvento /> },
           { path: 'my-events', element: <MieiEventi /> },
           { path: 'tickets', element: <MieiTicket /> },
           { path: 'friends', element: <PaginaProvvisoria titolo="Amici e richieste" card="FE2-10" /> },

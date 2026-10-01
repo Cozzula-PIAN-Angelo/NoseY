@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from 'react-router'
 import { BadgeStato } from '@/components/eventi'
-import { Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { Avatar, Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
 import { AnnullaEvento } from '@/features/eventi/AnnullaEvento'
@@ -11,7 +11,6 @@ import { MappaInterna } from '@/features/eventi/MappaInterna'
 import { NotificaPartecipanti } from '@/features/eventi/NotificaPartecipanti'
 import { TicketEvento } from '@/features/eventi/TicketEvento'
 import { useIscrizione } from '@/features/eventi/useIscrizione'
-import { urlImmagine } from '@/lib/api'
 import { leggiErrore } from '@/lib/errori'
 import { intervallo } from '@/lib/formato'
 import type { StatoEvento, UtentePubblicoResponse, Uuid } from '@/types/api'
@@ -46,17 +45,9 @@ function AvvisoStato({ stato, motivo }: { stato: StatoEvento; motivo: string | n
 }
 
 function Proprietario({ utente }: { utente: UtentePubblicoResponse }) {
-  const avatar = urlImmagine(utente.immagineProfilo)
-  const iniziali = `${utente.nome[0] ?? ''}${utente.cognome[0] ?? ''}`.toUpperCase()
   return (
     <div className="flex items-center gap-space-sm">
-      {avatar ? (
-        <img src={avatar} alt="" className="size-10 rounded-full object-cover" />
-      ) : (
-        <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-full bg-surface-container-high font-label-btn text-label-btn text-primary">
-          {iniziali}
-        </span>
-      )}
+      <Avatar utente={utente} />
       <div className="flex flex-col">
         <span className="font-label-code-status text-label-code-status uppercase text-outline">Organizzato da</span>
         <span className="font-label-btn text-label-btn text-on-surface">
