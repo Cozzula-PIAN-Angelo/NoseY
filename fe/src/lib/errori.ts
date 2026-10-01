@@ -65,6 +65,9 @@ export function erroreDaRisposta(status: number, corpo?: unknown): ErroreLeggibi
   if (isErroreResponse(corpo) && isCodiceErrore(corpo.codice)) {
     return daCodice(corpo.codice, status, corpo.codice === 'VALIDAZIONE' ? (corpo.campi ?? {}) : {})
   }
+  // 502/503/504 senza ErroreResponse non vengono dal backend ma da chi sta davanti (proxy di
+  // Vite col backend spento, Render che lo sta riavviando): non e' SERVIZIO_ESTERNO (l'AI)
+  if (!isErroreResponse(corpo) && [502, 503, 504].includes(status)) return { ...erroreRete, status, campi: {} }
   // Codice sconosciuto o risposta senza ErroreResponse (es. proxy): conta solo lo status
   const codice = perStatus[status] ?? (status >= 500 ? 'ERRORE_INTERNO' : undefined)
   if (codice) return { ...daCodice(codice, status), codice: undefined }

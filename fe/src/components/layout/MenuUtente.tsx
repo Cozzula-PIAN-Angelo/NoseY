@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { Icon } from '@/components/ui'
 import { useAppDispatch } from '@/hooks/redux'
 import { urlImmagine } from '@/lib/api'
+import { apiSlice } from '@/store/apiSlice'
 import { haRuolo, uscita } from '@/store/sessioneSlice'
 import type { UtenteResponse } from '@/types/utenti'
 
@@ -42,7 +43,11 @@ export function MenuUtente({ utente }: { utente: UtenteResponse }) {
   // transizione di React, quindi la sessione si chiude solo quando la home e' davvero a schermo.
   const [inUscita, setInUscita] = useState(false)
   useEffect(() => {
-    if (inUscita && pathname === '/') dispatch(uscita())
+    if (inUscita && pathname === '/') {
+      dispatch(uscita())
+      // Niente dati del vecchio utente in cache (es. i suoi ticket) per chi accede dopo
+      dispatch(apiSlice.util.resetApiState())
+    }
   }, [inUscita, pathname, dispatch])
 
   function esci() {
