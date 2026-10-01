@@ -1,30 +1,39 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAvviso } from '@/components/ui'
 import { useCreaEventoMutation } from '@/features/eventi/apiEventi'
-import { FormEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
+import { erroriSuiCampi } from '@/features/eventi/erroriEvento'
+import { FormEvento, type ErroriEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
 import { istanteDaLocale } from '@/lib/date'
+import type { EventoRequest } from '@/types/api'
 
 // Creazione di un evento (FE1-07), rotta /events/new (solo con il login).
 export default function CreaEvento() {
   const [crea, { isLoading }] = useCreaEventoMutation()
   const avviso = useAvviso()
   const navigate = useNavigate()
+  const [erroriServer, setErroriServer] = useState<ErroriEvento>({})
 
   async function invia(v: ValoriEvento) {
+    const dati: EventoRequest = {
+      titolo: v.titolo.trim(),
+      // Descrizione vuota = non inviata (e' facoltativa)
+      descrizione: v.descrizione.trim() || undefined,
+      dataEvento: istanteDaLocale(v.inizio),
+      dataFine: istanteDaLocale(v.fine),
+      lat: v.posizione!.lat,
+      lng: v.posizione!.lng,
+    }
     try {
-      const evento = await crea({
-        titolo: v.titolo.trim(),
-        // Descrizione vuota = non inviata (e' facoltativa)
-        descrizione: v.descrizione.trim() || undefined,
-        dataEvento: istanteDaLocale(v.inizio),
-        dataFine: istanteDaLocale(v.fine),
-        lat: v.posizione!.lat,
-        lng: v.posizione!.lng,
-      }).unwrap()
+      const evento = await crea(dati).unwrap()
       avviso.successo('Evento creato', `«${evento.titolo}» è sulla mappa.`)
       navigate(`/events/${evento.id}`)
     } catch (errore) {
-      avviso.erroreApi(errore)
+      const campi = erroriSuiCampi(errore, dati)
+      if (campi) {
+        setErroriServer(campi)
+        avviso.attenzione('Controlla i campi evidenziati', 'Alcuni dati non vanno bene: trovi la spiegazione sotto ogni campo.')
+      } else avviso.erroreApi(errore)
     }
   }
 
@@ -38,7 +47,7 @@ export default function CreaEvento() {
         </p>
       </header>
       <div className="rounded-2xl bg-surface-card p-space-md sm:p-space-lg">
-        <FormEvento testoInvio="Crea evento" inCorso={isLoading} onInvia={invia} />
+        <FormEvento testoInvio="Crea evento" inCorso={isLoading} erroriServer={erroriServer} onInvia={invia} />
       </div>
     </div>
   )

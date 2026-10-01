@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Caricamento, MessaggioErrore, StatoVuoto, stilePulsante, useAvviso } from '@/components/ui'
 import { useModificaEventoMutation, useVediEventoQuery } from '@/features/eventi/apiEventi'
-import { FormEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
+import { erroriSuiCampi } from '@/features/eventi/erroriEvento'
+import { FormEvento, type ErroriEvento, type ValoriEvento } from '@/features/eventi/FormEvento'
 import { modificheEvento, valoriDaEvento } from '@/features/eventi/modificheEvento'
 import { leggiErrore } from '@/lib/errori'
 
@@ -23,6 +24,7 @@ export default function ModificaEvento() {
   const [modifica, { isLoading }] = useModificaEventoMutation()
   const avviso = useAvviso()
   const navigate = useNavigate()
+  const [erroriServer, setErroriServer] = useState<ErroriEvento>({})
 
   if (!evento && isFetching) return <Contenitore><Caricamento riquadro testo="Carico l'evento..." /></Contenitore>
   if (error) {
@@ -75,7 +77,11 @@ export default function ModificaEvento() {
       avviso.successo('Evento aggiornato', 'I partecipanti riceveranno una notifica con le modifiche.')
       navigate(`/events/${id}`)
     } catch (errore) {
-      avviso.erroreApi(errore)
+      const campi = erroriSuiCampi(errore, modifiche)
+      if (campi) {
+        setErroriServer(campi)
+        avviso.attenzione('Controlla i campi evidenziati', 'Alcune modifiche non sono possibili: trovi la spiegazione sotto ogni campo.')
+      } else avviso.erroreApi(errore)
     }
   }
 
@@ -94,6 +100,7 @@ export default function ModificaEvento() {
           iniziali={iniziali}
           testoInvio="Salva modifiche"
           inCorso={isLoading}
+          erroriServer={erroriServer}
           inizioBloccato={evento.stato === 'IN_CORSO'}
           onInvia={invia}
         />

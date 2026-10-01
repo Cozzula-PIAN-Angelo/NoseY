@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Mappa, type Coordinate } from '@/components/mappa'
 import { Button, DateTimeField, Icon, TextArea, TextField } from '@/components/ui'
 import { nelFuturo } from '@/lib/date'
@@ -19,6 +19,8 @@ export type ValoriEvento = {
 }
 
 export type ErroriEvento = Partial<Record<keyof ValoriEvento, string>>
+
+const NESSUN_ERRORE: ErroriEvento = {}
 
 export const VALORI_VUOTI: ValoriEvento = { titolo: '', descrizione: '', inizio: '', fine: '', posizione: null }
 
@@ -60,7 +62,7 @@ export function FormEvento({
   iniziali = VALORI_VUOTI,
   testoInvio,
   inCorso = false,
-  erroriServer = {},
+  erroriServer = NESSUN_ERRORE,
   inizioBloccato = false,
   onInvia,
 }: FormEventoProps) {
@@ -73,8 +75,13 @@ export function FormEvento({
     setErrori((e) => ({ ...e, [campo]: undefined }))
   }
 
-  // Gli errori del backend valgono finche' l'utente non cambia quel campo
-  const errore = (campo: keyof ValoriEvento) => errori[campo] ?? (valori[campo] === iniziali[campo] ? erroriServer[campo] : undefined)
+  // Gli errori del backend si mostrano sui campi quando arrivano e spariscono quando l'utente
+  // cambia quel campo (cambia() li toglie), come quelli trovati prima dell'invio
+  useEffect(() => {
+    if (Object.keys(erroriServer).length) setErrori((e) => ({ ...e, ...erroriServer }))
+  }, [erroriServer])
+
+  const errore = (campo: keyof ValoriEvento) => errori[campo]
 
   function invia(e: FormEvent) {
     e.preventDefault()
