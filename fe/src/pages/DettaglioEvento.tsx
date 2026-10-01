@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { BadgeStato } from '@/components/eventi'
-import { Caricamento, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
+import { Caricamento, ConfirmDialog, Icon, MessaggioErrore, StatoVuoto } from '@/components/ui'
 import { useMiaPartecipazioneQuery, useVediEventoQuery } from '@/features/eventi/apiEventi'
 import { ArtistiEvento } from '@/features/eventi/ArtistiEvento'
 import { AzioniEvento } from '@/features/eventi/AzioniEvento'
@@ -68,6 +69,7 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
   // currentData (non data): passando a un altro evento non si vede, nemmeno per un attimo, quello di prima
   const { currentData: evento, isFetching, error, refetch } = useVediEventoQuery(id)
   const iscrizione = useIscrizione(id)
+  const [confermaAnnullamento, setConfermaAnnullamento] = useState(false)
   // Il ticket si chiede solo se sono iscritto: altrimenti il backend risponderebbe 404
   const { currentData: ticket } = useMiaPartecipazioneQuery(id, { skip: !evento?.sonoIscritto })
 
@@ -132,7 +134,8 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
             <AzioniEvento
               evento={evento}
               onIscriviti={iscrizione.iscrivi}
-              inCorso={iscrizione.inCorso ? 'iscrizione' : undefined}
+              onAnnullaIscrizione={() => setConfermaAnnullamento(true)}
+              inCorso={iscrizione.iscrizioneInCorso ? 'iscrizione' : undefined}
             />
           </div>
           {evento.sonoIscritto && ticket && (
@@ -142,6 +145,24 @@ export default function DettaglioEvento({ id }: { id: Uuid }) {
           )}
         </aside>
       </div>
+
+      <ConfirmDialog
+        aperta={confermaAnnullamento}
+        titolo="Annullare l'iscrizione?"
+        icona="event_busy"
+        variante="danger"
+        testoConferma="Annulla iscrizione"
+        testoAnnulla="Tieni il ticket"
+        inCorso={iscrizione.annullamentoInCorso}
+        onConferma={async () => {
+          await iscrizione.annulla()
+          setConfermaAnnullamento(false)
+        }}
+        onAnnulla={() => setConfermaAnnullamento(false)}
+      >
+        Il tuo ticket per «{evento.titolo}» non sarà più valido. Potrai iscriverti di nuovo finché
+        l'evento non inizia, con un nuovo ticket.
+      </ConfirmDialog>
     </article>
   )
 }
