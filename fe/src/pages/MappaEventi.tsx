@@ -3,6 +3,7 @@ import { Button, Icon, MessaggioErrore, Scheletro, StatoVuoto } from '@/componen
 import { Mappa, type Coordinate, type MarkerMappa } from '@/components/mappa'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { AnteprimaEvento } from '@/features/eventi/AnteprimaEvento'
+import { TESTI_POSIZIONE } from '@/features/eventi/filtriEventi'
 import { ListaEventiMappa } from '@/features/eventi/ListaEventiMappa'
 import { usePosizioneUtente } from '@/features/eventi/usePosizioneUtente'
 import type { Uuid } from '@/types/api'
@@ -13,14 +14,6 @@ import type { Uuid } from '@/types/api'
 
 /** Centro della mappa finche' non c'e' una posizione: Roma */
 const CENTRO_PREDEFINITO = { lat: 41.8967, lng: 12.4822 }
-
-const testiPosizione = {
-  'non-chiesta': 'Eventi in ordine di data. Condividi la posizione per vederli dal più vicino.',
-  'in-attesa': 'Sto cercando la tua posizione…',
-  concessa: 'Eventi dal più vicino al più lontano. La posizione resta nel tuo browser.',
-  negata: 'Hai negato la posizione: eventi in ordine di data. Puoi riattivarla dalle impostazioni del browser.',
-  'non-disponibile': 'Posizione non disponibile: eventi in ordine di data.',
-} as const
 
 export default function MappaEventi() {
   const { stato, posizione, chiedi, dimentica } = usePosizioneUtente()
@@ -85,7 +78,7 @@ export default function MappaEventi() {
       >
         <div className="flex items-start gap-space-sm">
           <Icon nome={stato === 'concessa' ? 'my_location' : 'location_searching'} size={24} className="mt-0.5 text-secondary" />
-          <p className="font-body-md text-body-md text-on-surface-variant">{testiPosizione[stato]}</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">{TESTI_POSIZIONE[stato]}</p>
         </div>
         {stato === 'concessa' ? (
           <Button variant="secondary" size="sm" icona="calendar_month" onClick={dimentica}>

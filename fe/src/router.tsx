@@ -9,6 +9,7 @@ import Chat from '@/pages/Chat'
 import Componenti from '@/pages/Componenti'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
+import EsploraEventi from '@/pages/EsploraEventi'
 import MappaEventi from '@/pages/MappaEventi'
 import MieiEventi from '@/pages/MieiEventi'
 import MieiTicket from '@/pages/MieiTicket'
@@ -32,7 +33,7 @@ export const router = createBrowserRouter([
     children: [
       // ---------- Pubbliche ----------
       { index: true, element: <PaginaProvvisoria titolo="Home" card="FE1-04" /> },
-      { path: 'events', element: <PaginaProvvisoria titolo="Esplora eventi" card="FE1-04" /> },
+      { path: 'events', element: <EsploraEventi /> },
       { path: 'map', element: <MappaEventi /> },
       { path: 'events/:id', element: <DettaglioEvento /> },
       { path: 'artists', element: <PaginaProvvisoria titolo="Catalogo artisti" card="FE1-11" /> },
