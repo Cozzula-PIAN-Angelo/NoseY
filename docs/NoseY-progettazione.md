@@ -1224,6 +1224,8 @@ Resto della configurazione
     MethodArgumentTypeMismatchException (es. un id che non è un UUID)   → 400 VALIDAZIONE
     MaxUploadSizeExceededException                                      → 400 FILE_NON_VALIDO
     NoResourceFoundException                                            → 404 NON_TROVATO
+    HttpRequestMethodNotSupportedException (percorso che esiste, ma non
+    con quel metodo, es. GET su un percorso solo POST/PATCH/DELETE)      → 405 METODO_NON_SUPPORTATO
     DataIntegrityViolationException                                     → 409 (sezione 0, Concorrenza)
     Exception                                                           → 500 ERRORE_INTERNO
                                                                           (dettagli solo nel log)
