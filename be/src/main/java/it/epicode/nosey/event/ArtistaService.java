@@ -10,9 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * ListaArtisti, VediArtista, AggiungiArtistaEvento, RimuoviArtistaEvento (progettazione v4, sezione 6).
@@ -25,6 +29,7 @@ public class ArtistaService {
 	private final ArtistaRepository artistaRepository;
 	private final EventoRepository eventoRepository;
 	private final ArtistaEventoRepository artistaEventoRepository;
+	private final FotoEventoRepository fotoEventoRepository;
 	private final NotificheService notificheService;
 	private final Clock clock;
 
@@ -95,6 +100,27 @@ public class ArtistaService {
 		}
 		return new ImmagineContenuto(artista.getImmagine(), artista.getImmagineContentType(),
 				artista.getImmagineVersione());
+	}
+
+	// EventiArtista (sezione 6): eventi PROGRAMMATO e IN_CORSO dove suona l'artista, per dataEvento
+	// crescente. Vale anche per gli artisti disattivati (restano negli eventi in cui compaiono).
+	@Transactional(readOnly = true)
+	public List<EventoMappaResponse> eventi(UUID artistaId) {
+		if (!artistaRepository.existsById(artistaId)) {
+			throw new ApplicazioneException(CodiceErrore.NON_TROVATO, "Artista non trovato");
+		}
+		Instant adesso = clock.instant();
+		List<Evento> eventi = eventoRepository
+				.findByArtistaIdAndStatoAndDataFineGreaterThanEqual(artistaId, StatoEventoDb.PROGRAMMATO, adesso);
+		if (eventi.isEmpty()) {
+			return List.of();
+		}
+		List<UUID> ids = eventi.stream().map(Evento::getId).toList();
+		Map<UUID, FotoEvento> copertine = fotoEventoRepository.findByEventoIdInAndCopertinaTrue(ids).stream()
+				.collect(Collectors.toMap(foto -> foto.getEvento().getId(), Function.identity()));
+		return eventi.stream()
+				.map(evento -> EventoMappaResponse.da(evento, copertine.get(evento.getId()), null, adesso))
+				.toList();
 	}
 
 	private Artista trovaArtista(UUID artistaId) {

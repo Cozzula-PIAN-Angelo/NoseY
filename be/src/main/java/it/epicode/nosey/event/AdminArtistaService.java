@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,6 +26,16 @@ public class AdminArtistaService {
 	private final ArtistaRepository artistaRepository;
 	private final ArtistaEventoRepository artistaEventoRepository;
 	private final StorageService storageService;
+
+	// ListaArtisti ADMIN (sezione 12): anche i disattivati, in ordine alfabetico - altrimenti un
+	// artista disattivato non si potrebbe piu' riattivare dal pannello admin.
+	@Transactional(readOnly = true)
+	public List<ArtistaResponse> lista(String search) {
+		List<Artista> artisti = (search == null || search.isBlank())
+				? artistaRepository.findByOrderByNomeAsc()
+				: artistaRepository.findByNomeContainingIgnoreCaseOrderByNomeAsc(search.strip());
+		return artisti.stream().map(ArtistaResponse::da).toList();
+	}
 
 	@Transactional
 	public ArtistaResponse crea(String nome, MultipartFile file) {

@@ -706,6 +706,12 @@ VediArtista              GET /api/artists/{artistaId}
   - DTO resp: ArtistaResponse (anche se disattivato: resta negli eventi in cui compare)
   - Errori: 404 NON_TROVATO
 
+EventiArtista            GET /api/artists/{artistaId}/events
+  - Accesso: pubblico
+  - DTO resp: List<EventoMappaResponse>, eventi PROGRAMMATO e IN_CORSO dove suona l'artista,
+              per dataEvento crescente (per le "prossime date" nella scheda artista)
+  - Errori: 404 NON_TROVATO (anche se l'artista e' disattivato, vale lo stesso)
+
 AggiungiArtistaEvento    POST /api/events/{id}/artists/{artistaId}
   - Accesso: proprietario dell'evento
   - Resp: 201 Created + ArtistaResponse
@@ -1100,6 +1106,13 @@ CambiaStatoUtente        PATCH /api/admin/users/{utenteId}/status
             403 RUOLO_INSUFFICIENTE (ruolo uguale o superiore al tuo, o sei tu), 409 UTENTE_ANONIMIZZATO
   - Effetti: SOSPESO → revoca tutti i token dell'utente · i suoi eventi restano (decisione D14)
 
+ListaArtistiAdmin        GET /api/admin/artists?search=
+  - Accesso: ADMIN
+  - Query: search @Size(max = 100), facoltativo (contiene, senza distinzione di maiuscole)
+  - DTO resp: List<ArtistaResponse>, anche i disattivati, in ordine alfabetico
+  - Note: a differenza di ListaArtisti (sezione 6), serve per poter riattivare un artista
+          disattivato dal pannello admin
+
 CreaArtista              POST /api/admin/artists   (multipart/form-data, come CreaFoto)
   - Accesso: ADMIN
   - Parametri
@@ -1179,7 +1192,7 @@ Endpoint pubblici
   POST  /api/auth/register · /api/auth/verify · /api/auth/resend-code · /api/auth/login
         /api/auth/password/forgot · /api/auth/password/reset
   GET   /api/events · /api/events/{id} · /api/events/{id}/photos · /api/events/{id}/pois
-  GET   /api/artists · /api/artists/{artistaId}
+  GET   /api/artists · /api/artists/{artistaId} · /api/artists/{artistaId}/events
   GET   /api/stato     StatoController del template: riquadro di stato del frontend (api.stato())
                        e healthCheckPath di Render
         /ws/**         l'autenticazione avviene sul CONNECT (sezione 11)
@@ -1211,6 +1224,8 @@ Resto della configurazione
     MethodArgumentTypeMismatchException (es. un id che non è un UUID)   → 400 VALIDAZIONE
     MaxUploadSizeExceededException                                      → 400 FILE_NON_VALIDO
     NoResourceFoundException                                            → 404 NON_TROVATO
+    HttpRequestMethodNotSupportedException (percorso che esiste, ma non
+    con quel metodo, es. GET su un percorso solo POST/PATCH/DELETE)      → 405 METODO_NON_SUPPORTATO
     DataIntegrityViolationException                                     → 409 (sezione 0, Concorrenza)
     Exception                                                           → 500 ERRORE_INTERNO
                                                                           (dettagli solo nel log)
@@ -1639,6 +1654,7 @@ Frontend
 
 Variabili d'ambiente (nomi indicativi, oltre a quelle del database già presenti nel template)
   JWT_SECRET · JWT_DURATA · ALLOWED_ORIGIN (CORS e handshake /ws) · GEMINI_API_KEY (decisione 18)
-  Previste ma non ancora implementate: BREVO_API_KEY · MAIL_FROM · SUPERADMIN_EMAIL
+  Email in produzione: SPRING_PROFILES_ACTIVE=prod · BREVO_API_KEY · MAIL_FROM (mittente confermato in Brevo)
+  Prevista ma non ancora implementata: SUPERADMIN_EMAIL
   In locale anche MAIL_USERNAME e MAIL_PASSWORD (password per le app di Gmail)
 ```

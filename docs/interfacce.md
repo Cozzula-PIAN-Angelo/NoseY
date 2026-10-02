@@ -44,8 +44,9 @@ void inviaCodiceReset(String destinatario, String nome, String codice);
 void inviaPasswordCambiata(String destinatario, String nome);
 ```
 
-- Due implementazioni, scelte dal profilo Spring: `LogEmailService` (default, scrive un riepilogo
-  nel log) · `SmtpEmailService` (profilo `smtp`, Gmail SMTP + template Thymeleaf in `templates/mail/`).
+- Tre implementazioni, scelte dal profilo Spring: `LogEmailService` (default, scrive un riepilogo
+  nel log) · `SmtpEmailService` (profilo `smtp`, Gmail SMTP + template Thymeleaf in `templates/mail/`)
+  · `BrevoEmailService` (profilo `prod`, API HTTP di Brevo con timeout di 5 secondi, stessi template).
 - Chi deve inviare un'email NON chiama direttamente `EmailService`: pubblica uno dei 4 eventi
   (`CodiceVerificaEmailEvent`, `TicketEmailEvent`, `CodiceResetEmailEvent`, `PasswordCambiataEmailEvent`,
   pacchetto `mail`) con `ApplicationEventPublisher`, DENTRO la transazione. `EmailEventListener` li
