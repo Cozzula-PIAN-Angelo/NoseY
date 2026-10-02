@@ -2,14 +2,144 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="it">
 <head>
 	<meta charset="UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta name="color-scheme" content="dark light"/>
+	<meta name="supported-color-schemes" content="dark light"/>
 	<title>Il tuo ticket</title>
 </head>
-<body style="font-family: sans-serif; color: #222;">
-	<h1 style="color: #6a2fb0;">Ciao <span th:text="${nome}">nome</span>,</h1>
-	<p>Ecco il tuo ticket per <strong th:text="${titoloEvento}">Evento</strong>.</p>
-	<p>Data: <span th:text="${dataEvento}">01/01/2026 00:00</span></p>
-	<p>Codice del ticket:</p>
-	<p style="font-size: 22px; font-weight: bold; letter-spacing: 2px;" th:text="${codiceTicket}">codice</p>
-	<p>Mostra questo codice all'ingresso dell'evento.</p>
+<body style="margin:0; padding:0; background-color:#0f131d;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0f131d" style="background-color:#0f131d; width:100%;">
+	<tr>
+		<td align="center" style="padding:32px 16px;">
+			<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#111827" style="max-width:600px; width:100%; background-color:#111827; border:1px solid rgba(255,255,255,0.08); border-radius:12px;">
+				<tr>
+					<td align="center" style="padding:28px 24px 20px 24px; border-bottom:1px solid rgba(255,255,255,0.08);">
+						<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+							<tr>
+								<td valign="middle" style="padding-right:10px;">
+									<img src="https://nosey-fe.onrender.com/logo-nosey.png" alt="" width="32" height="32" style="display:block; width:32px; height:32px;"/>
+								</td>
+								<td valign="middle">
+									<span style="font-family:Inter,'Segoe UI',Arial,sans-serif; font-size:24px; font-weight:800; letter-spacing:0.5px; color:#dfe2f1;">Nose<span style="color:#f59e0b;">Y</span></span>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:32px 32px 8px 32px; font-family:Inter,'Segoe UI',Arial,sans-serif;">
+						<p style="margin:0 0 16px 0; font-size:20px; font-weight:700; color:#dfe2f1;">Ciao <span th:text="${nome}">nome</span>,</p>
+						<p style="margin:0 0 24px 0; font-size:15px; line-height:1.6; color:#c7c4d7;">Ecco il tuo ticket per <strong style="color:#dfe2f1;" th:text="${titoloEvento}">Evento</strong>.</p>
+					</td>
+				</tr>
+				<!-- Ticket: corpo a sinistra (dati + QR fittizio + codice), matrice "Ingresso" a destra con sfondo
+				     sfumato, separati da una linea tratteggiata con due semicerchi a simulare lo strappo -->
+				<tr>
+					<td style="padding:0 32px 32px 32px;">
+						<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid rgba(255,255,255,0.08); border-radius:12px;">
+							<tr>
+								<td bgcolor="#152753" style="background-color:#152753; height:14px; border-radius:12px 0 0 0; line-height:1px; font-size:1px;">&nbsp;</td>
+								<td width="104" bgcolor="#494bd6" style="background-color:#494bd6; background-image:linear-gradient(160deg,#494bd6,#8083ff); border-radius:0 12px 0 0; border-left:2px dashed rgba(255,255,255,0.4);">
+									<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+										<tr>
+											<td align="center" style="padding-top:4px; line-height:1px; font-size:1px;">
+												<div style="width:14px; height:14px; border-radius:50%; background-color:#0f131d;">&nbsp;</div>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td bgcolor="#152753" style="background-color:#152753; padding:24px; font-family:Inter,'Segoe UI',Arial,sans-serif;">
+									<p style="margin:0 0 4px 0; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#ddb374;">Ticket</p>
+									<p style="margin:0 0 16px 0; font-size:18px; font-weight:700; color:#f6dca0;" th:text="${titoloEvento}">Evento</p>
+									<p style="margin:0 0 2px 0; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#ddb374;">Data</p>
+									<p style="margin:0 0 14px 0; font-size:15px; color:#f6dca0;" th:text="${dataEvento}">01/01/2026 00:00</p>
+									<p style="margin:0 0 2px 0; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#ddb374;">Titolare</p>
+									<p style="margin:0 0 18px 0; font-size:15px; color:#f6dca0;" th:text="${nome}">nome</p>
+
+									<!-- QR fittizio: solo decorativo, una griglia statica disegnata a celle di tabella,
+									     NON codifica il codice ticket vero ne' e' generato da alcun servizio. -->
+									<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+										<tr>
+											<td valign="middle" style="padding-right:16px;">
+												<table role="presentation" cellpadding="0" cellspacing="0" border="0" bgcolor="#f6dca0" style="background-color:#f6dca0; border-radius:6px;">
+													<tr><td style="padding:6px;">
+														<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+															<tr>
+																<td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td>
+															</tr>
+															<tr>
+																<td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#1000a9" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td><td bgcolor="#f6dca0" width="8" height="8"></td>
+															</tr>
+														</table>
+													</td></tr>
+												</table>
+											</td>
+											<td valign="middle">
+												<p style="margin:0 0 4px 0; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#ddb374;">Codice del ticket</p>
+												<p style="margin:0; font-size:13px; font-family:'Courier New',Courier,monospace; letter-spacing:0.5px; color:#f6dca0; word-break:break-all;" th:text="${codiceTicket}">codice</p>
+											</td>
+										</tr>
+									</table>
+								</td>
+								<td width="104" valign="middle" bgcolor="#8083ff" style="background-color:#8083ff; background-image:linear-gradient(160deg,#494bd6,#8083ff); border-left:2px dashed rgba(255,255,255,0.4);">
+									<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+										<tr>
+											<td align="center" style="font-family:Inter,'Segoe UI',Arial,sans-serif; font-size:13px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#ffffff; padding:0 6px;">Ingresso</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+							<tr>
+								<td bgcolor="#152753" style="background-color:#152753; height:14px; border-radius:0 0 0 12px; line-height:1px; font-size:1px;">&nbsp;</td>
+								<td width="104" bgcolor="#8083ff" style="background-color:#8083ff; background-image:linear-gradient(160deg,#494bd6,#8083ff); border-radius:0 0 12px 0; border-left:2px dashed rgba(255,255,255,0.4);">
+									<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+										<tr>
+											<td align="center" style="padding-bottom:4px; line-height:1px; font-size:1px;">
+												<div style="width:14px; height:14px; border-radius:50%; background-color:#0f131d;">&nbsp;</div>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding:0 32px 32px 32px; font-family:Inter,'Segoe UI',Arial,sans-serif;">
+						<p style="margin:0; font-size:14px; line-height:1.6; color:#c7c4d7;">Mostra questo codice all'ingresso dell'evento.</p>
+					</td>
+				</tr>
+				<tr>
+					<td align="center" style="padding:20px 24px; border-top:1px solid rgba(255,255,255,0.08);">
+						<p style="margin:0; font-family:Inter,'Segoe UI',Arial,sans-serif; font-size:12px; color:#908fa0;" th:text="${'© ' + #temporals.format(#temporals.createNow(), 'yyyy') + ' NoseY Live Experience System. Tutti i diritti riservati.'}">© 2026 NoseY Live Experience System. Tutti i diritti riservati.</p>
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+</table>
 </body>
 </html>
