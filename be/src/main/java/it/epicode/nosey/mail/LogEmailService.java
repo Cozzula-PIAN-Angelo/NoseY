@@ -9,10 +9,10 @@ import java.time.Instant;
 /**
  * Versione finta di EmailService: scrive un riepilogo nel log invece di
  * inviare davvero, per poter sviluppare senza credenziali SMTP (decisione 3).
- * E' il default: si disattiva solo con il profilo "smtp" (SmtpEmailService).
+ * E' il default: si disattiva con il profilo "smtp" (SmtpEmailService) o "prod" (BrevoEmailService).
  */
 @Service
-@Profile("!smtp")
+@Profile("!smtp & !prod")
 @Slf4j
 public class LogEmailService implements EmailService {
 

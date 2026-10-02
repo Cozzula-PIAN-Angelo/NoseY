@@ -76,6 +76,13 @@ app:
     # In locale va impostato nella configurazione di avvio (variabile d'ambiente JWT_SECRET).
     secret: ${JWT_SECRET}
     durata: ${JWT_DURATA:24h}
+  # Email in produzione (profilo "prod", BrevoEmailService, decisione 12). MAIL_FROM deve essere
+  # un mittente confermato nell'account Brevo. Senza chiave o mittente l'email non parte e si scrive nel log.
+  mail:
+    from: ${MAIL_FROM:}
+    brevo:
+      api-key: ${BREVO_API_KEY:}
+      url: https://api.brevo.com/v3
   # Miglioramento della descrizione con Google Gemini (decisione 18). Senza chiave l'endpoint
   # risponde 502 SERVIZIO_ESTERNO. Chiave da https://aistudio.google.com/apikey
   ai:
