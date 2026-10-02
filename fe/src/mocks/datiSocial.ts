@@ -233,12 +233,16 @@ export function haTicket(utenteId: Uuid, eventoId: Uuid) {
  */
 export const onlineFinti = new Set<Uuid>(['u-0001-sofia'])
 
-/** Amici di "io" (amicizia ACCETTATA, account attivo) collegati adesso */
-export function amiciOnline(io: Uuid): Uuid[] {
+/** Amici di un utente: amicizia ACCETTATA (sono loro a vedere la sua presenza) */
+export function amiciDi(utenteId: Uuid): Uuid[] {
   return amicizie
-    .filter((a) => a.stato === 'ACCETTATA' && (a.richiedenteId === io || a.riceventeId === io))
-    .map((a) => altroDella(a, io))
-    .filter((id) => onlineFinti.has(id) && trovaAccount(id)?.stato === 'ATTIVO')
+    .filter((a) => a.stato === 'ACCETTATA' && (a.richiedenteId === utenteId || a.riceventeId === utenteId))
+    .map((a) => altroDella(a, utenteId))
+}
+
+/** Amici di "io" collegati adesso; un account sospeso o anonimizzato non risulta mai online */
+export function amiciOnline(io: Uuid): Uuid[] {
+  return amiciDi(io).filter((id) => onlineFinti.has(id) && trovaAccount(id)?.stato === 'ATTIVO')
 }
 
 // ---------------------------------------------------------------- Chat e messaggi

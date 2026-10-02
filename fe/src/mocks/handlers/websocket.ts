@@ -1,14 +1,15 @@
 // Finto server STOMP su /ws (FE2-11): con i dati finti il token e' finto e il backend vero lo
 // rifiuterebbe, quindi anche il WebSocket risponde da qui. Stesse regole della sezione 11:
 // CONNECT con un token finto valido, SEND solo verso /app/**, SUBSCRIBE solo alle quattro code
-// (la quarta, /user/queue/presence, e' della card "Extra: presenza online degli amici").
+// (la quarta, /user/queue/presence, e' della card "Extra: presenza online degli amici": Sofia si
+// collega e si scollega da sola, per vedere il pallino cambiare senza un secondo browser).
 // Per far arrivare qualcosa live (chat, notifiche): pubblicaFinto(utenteId, 'messages', corpo).
 // InviaMessaggio (FE2-12) salva il messaggio nei dati finti e lo recapita a tutti e due i membri.
 import { ws } from 'msw'
 import type { ErroreWebSocket } from '@/lib/errori'
 import { LIMITI_SOCIAL, type MessaggioResponse, type Uuid } from '@/types/api'
 import { nuovoId } from '../dati'
-import { accountDaRichiesta, inChatResponse, messaggi, trovaChat, type ChatFinta } from '../datiSocial'
+import { accountDaRichiesta, amiciDi, inChatResponse, messaggi, onlineFinti, trovaChat, type ChatFinta } from '../datiSocial'
 
 type Frame = { comando: string; header: Record<string, string>; corpo: string }
 
@@ -142,6 +143,37 @@ function inviaMessaggio(connessione: Connessione, chatId: string, corpo: string)
   )
 }
 
+// ---------------------------------------------------------------- Presenza online (Extra)
+
+/** Amica di Valentina che si collega e si scollega da sola */
+const UTENTE_ALTALENANTE = 'u-0001-sofia'
+const DURATA_ONLINE_MS = 20_000
+const DURATA_OFFLINE_MS = 8_000
+let timerPresenza: ReturnType<typeof setTimeout> | null = null
+
+/** Come il backend: cambia lo stato e avvisa ogni amico su /user/queue/presence */
+function pubblicaPresenza(utenteId: Uuid, online: boolean) {
+  if (online) onlineFinti.add(utenteId)
+  else onlineFinti.delete(utenteId)
+  for (const amico of amiciDi(utenteId)) pubblicaFinto(amico, 'presence', { utenteId, online })
+}
+
+/** Gira finche' c'e' almeno una connessione: online 20 s, offline 8 s, e cosi' via */
+function avviaAltalena() {
+  if (timerPresenza) return
+  const giro = () => {
+    const online = !onlineFinti.has(UTENTE_ALTALENANTE)
+    pubblicaPresenza(UTENTE_ALTALENANTE, online)
+    timerPresenza = setTimeout(giro, online ? DURATA_ONLINE_MS : DURATA_OFFLINE_MS)
+  }
+  timerPresenza = setTimeout(giro, onlineFinti.has(UTENTE_ALTALENANTE) ? DURATA_ONLINE_MS : DURATA_OFFLINE_MS)
+}
+
+function fermaAltalena() {
+  if (timerPresenza) clearTimeout(timerPresenza)
+  timerPresenza = null
+}
+
 const servizio = ws.link('*/ws')
 
 export const handlerWebSocket = [
@@ -166,6 +198,7 @@ export const handlerWebSocket = [
           }
           connessione = { utenteId, token, iscrizioni: new Map(), manda }
           connessioni.add(connessione)
+          avviaAltalena()
           // Niente heartbeat, come il simple broker di Spring senza scheduler
           manda({ comando: 'CONNECTED', header: { version: '1.2', 'heart-beat': '0,0' }, corpo: '' })
           continue
@@ -196,6 +229,7 @@ export const handlerWebSocket = [
 
     client.addEventListener('close', () => {
       if (connessione) connessioni.delete(connessione)
+      if (connessioni.size === 0) fermaAltalena()
     })
   }),
 ]
