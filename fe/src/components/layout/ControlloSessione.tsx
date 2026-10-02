@@ -1,8 +1,12 @@
 import { useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { useVediProfiloQuery } from '@/features/utenti/apiUtenti'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import { apiSlice } from '@/store/apiSlice'
-import { CHIAVE_SESSIONE, selezionaToken, sessioneDaAltraScheda, sessioneScaduta } from '@/store/sessioneSlice'
+import { CHIAVE_SESSIONE, selezionaToken, sessioneDaAltraScheda, sessioneScaduta, uscita } from '@/store/sessioneSlice'
+
+/** State della navigazione verso la home che chiude la sessione (vedi sotto) */
+export type StatoUscita = { uscita: true }
 
 // Tiene la sessione allineata col backend finche' l'app e' aperta (FE2-02, passi 4 e 5):
 // - all'avvio (e dopo ogni login) GET /api/users/me: ruolo, nome o avatar possono essere
@@ -11,6 +15,7 @@ import { CHIAVE_SESSIONE, selezionaToken, sessioneDaAltraScheda, sessioneScaduta
 // - alla scadenza del token (24 ore, niente refresh) si esce come per un 401, senza
 //   aspettare la prossima chiamata.
 // - login o uscita in un'altra scheda dello stesso browser: questa scheda si allinea
+// - dopo l'eliminazione dell'account (FE2-14) chiude la sessione arrivati alla home
 
 // setTimeout accetta al massimo ~24,8 giorni: oltre, il timer scatterebbe subito
 const ATTESA_MASSIMA = 2 ** 31 - 1
@@ -54,6 +59,22 @@ export function ControlloSessione() {
     window.addEventListener('storage', cambiata)
     return () => window.removeEventListener('storage', cambiata)
   }, [dispatch])
+
+  // Uscita dopo l'eliminazione dell'account (FE2-14): il token e' gia' revocato dal backend.
+  // Come "Esci" (MenuUtente) prima si arriva alla home, poi si chiude la sessione: chiudendola
+  // sulla pagina protetta /profile, la sua rotta rimanderebbe al login. EliminaAccount pero'
+  // sparisce con la pagina, quindi l'uscita la fa questo componente, che resta sempre montato:
+  // la pagina naviga a "/" con state { uscita: true }, qui si esce e si toglie lo state
+  // (cosi' tornando indietro a quella voce della cronologia non si esce di nuovo).
+  const { pathname, state } = useLocation()
+  const naviga = useNavigate()
+  const daChiudere = pathname === '/' && (state as StatoUscita | null)?.uscita === true
+  useEffect(() => {
+    if (!daChiudere) return
+    dispatch(uscita())
+    dispatch(apiSlice.util.resetApiState())
+    naviga('/', { replace: true, state: null })
+  }, [daChiudere, dispatch, naviga])
 
   return null
 }

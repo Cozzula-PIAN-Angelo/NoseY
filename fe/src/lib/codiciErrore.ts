@@ -126,9 +126,11 @@ export const TESTI_ERRORE: Record<CodiceErrore, TestoErrore> = {
 
   // Utente
   PASSWORD_UGUALE: { titolo: 'Password uguale', messaggio: 'La nuova password deve essere diversa da quella attuale.' },
+  // SUPERADMIN non si assegna dall'app (progettazione v4, sezione 13): solo con SUPERADMIN_EMAIL sul server
   ULTIMO_SUPERADMIN: {
-    titolo: 'Operazione non consentita',
-    messaggio: 'Il tuo è l’unico account superadmin: nominane un altro prima di eliminare il tuo.',
+    titolo: 'Non puoi eliminare l’account',
+    messaggio:
+      'Sei l’unico superadmin attivo: la piattaforma resterebbe senza nessuno che la gestisce. Un altro superadmin si nomina solo dalla configurazione del server.',
   },
 
   // Eventi

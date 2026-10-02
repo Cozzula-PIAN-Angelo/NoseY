@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Caricamento, Icon, MessaggioErrore } from '@/components/ui'
+import { EliminaAccount } from '@/features/profilo/EliminaAccount'
 import { FormCambioPassword } from '@/features/profilo/FormCambioPassword'
 import { FormDatiPersonali } from '@/features/profilo/FormDatiPersonali'
 import { ImmagineProfilo } from '@/features/profilo/ImmagineProfilo'
@@ -7,11 +8,12 @@ import { useVediProfiloQuery } from '@/features/utenti/apiUtenti'
 import type { Ruolo, UtenteResponse } from '@/types/api'
 
 // Profilo (FE2-07), rotta /profile (solo con login): immagine del profilo (FE2-08, nel riepilogo),
-// dati personali (ModificaProfilo) e cambio password (CambioPassword). I dati arrivano da VediProfilo, cioe' dal server e non dalla copia
+// dati personali (ModificaProfilo), cambio password (CambioPassword) ed eliminazione dell'account
+// (Anonimizzazione, FE2-14). I dati arrivano da VediProfilo, cioe' dal server e non dalla copia
 // della sessione, che VediProfilo intanto aggiorna (apiUtenti).
 // Non c'e' una schermata Stitch dedicata: la pagina segue "NoseY - Registrazione Account"
 // (docs/stitch/registrazione-account.png): pannello a sinistra, card dei form a destra con la
-// barra sfumata, stessi campi. L'eliminazione dell'account va aggiunta qui dalla sua card.
+// barra sfumata, stessi campi.
 
 const NOME_RUOLO: Record<Ruolo, string> = { USER: 'Utente', ADMIN: 'Admin', SUPERADMIN: 'Superadmin' }
 
@@ -28,7 +30,7 @@ export default function Profilo() {
       <header className="flex flex-col gap-space-xs">
         <h1 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg">Il tuo profilo</h1>
         <p className="max-w-xl font-body-md text-body-md text-on-surface-variant">
-          Aggiorna immagine del profilo, dati personali e password dell’account.
+          Aggiorna immagine del profilo, dati personali e password, oppure elimina l’account.
         </p>
       </header>
 
@@ -68,6 +70,9 @@ export default function Profilo() {
             </Sezione>
             <Sezione titolo="Cambia password" testo="Serve la password attuale. Ti mandiamo un’email quando la cambi.">
               <FormCambioPassword email={utente.email} />
+            </Sezione>
+            <Sezione titolo="Elimina account" testo="Cancella i tuoi dati personali e chiude l’account per sempre.">
+              <EliminaAccount email={utente.email} ruolo={utente.ruolo} />
             </Sezione>
           </div>
         </div>
