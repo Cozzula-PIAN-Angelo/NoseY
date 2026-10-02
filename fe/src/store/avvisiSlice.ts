@@ -13,6 +13,13 @@ export type Avviso = {
   messaggio?: string
   /** Millisecondi prima che sparisca da solo; 0 = resta finche' non lo si chiude */
   durata: number
+  /** Pagina interna da aprire cliccando l'avviso (es. "/chat/c-01"); senza, non e' cliccabile */
+  link?: string
+  /**
+   * Un avviso con la stessa chiave ancora a schermo viene sostituito (es. "chat-c-01": un solo
+   * avviso per chat, con l'ultimo messaggio, invece di uno per messaggio)
+   */
+  chiave?: string
 }
 
 type NuovoAvviso = Omit<Avviso, 'id' | 'durata'> & { durata?: number }
@@ -26,6 +33,12 @@ const avvisiSlice = createSlice({
   reducers: {
     mostraAvviso: {
       reducer(stato, azione: PayloadAction<Avviso>) {
+        // Stessa chiave: il vecchio sparisce, il nuovo arriva in fondo con il tempo che riparte.
+        // Solo modifiche alla bozza di Immer, senza restituire un array nuovo (le due cose insieme
+        // Immer non le permette)
+        const { chiave } = azione.payload
+        const vecchio = chiave ? stato.findIndex((a) => a.chiave === chiave) : -1
+        if (vecchio !== -1) stato.splice(vecchio, 1)
         stato.push(azione.payload)
         if (stato.length > MASSIMO_AVVISI) stato.shift()
       },
