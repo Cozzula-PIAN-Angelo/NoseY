@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,6 +25,11 @@ public interface UtenteRepository extends JpaRepository<Utente, UUID>, JpaSpecif
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select u from Utente u where u.email = :email")
 	Optional<Utente> findConLockByEmail(String email);
+
+	// Anonimizzazione (sezione 2): i SUPERADMIN attivi, con lock, per il controllo ULTIMO_SUPERADMIN.
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select u from Utente u where u.ruolo.nome = :ruolo and u.stato = :stato")
+	List<Utente> trovaConLockPerRuoloEStato(String ruolo, StatoUtente stato);
 
 	/**
 	 * Consuma un tentativo sul codice PRIMA del confronto, in modo atomico (sezione 1):

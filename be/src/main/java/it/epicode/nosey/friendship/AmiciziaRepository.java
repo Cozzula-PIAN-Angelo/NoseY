@@ -43,10 +43,21 @@ public interface AmiciziaRepository extends JpaRepository<Amicizia, UUID> {
 		return trovaInviate(utenteId, StatoAmicizia.PENDENTE, StatoAmicizia.RIFIUTATA);
 	}
 
+	// Anonimizzazione (sezione 2): le PENDENTE dell'utente, inviate e ricevute, da ritirare.
+	default List<Amicizia> trovaPendentiConLock(UUID utenteId) {
+		return trovaConLockPerUtenteEStato(utenteId, StatoAmicizia.PENDENTE);
+	}
+
 	@Query("""
 			select a from Amicizia a join fetch a.richiedente join fetch a.ricevente
 			where a.stato = :stato and (a.richiedente.id = :utenteId or a.ricevente.id = :utenteId)""")
 	List<Amicizia> trovaPerUtenteEStato(UUID utenteId, StatoAmicizia stato);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("""
+			select a from Amicizia a
+			where a.stato = :stato and (a.richiedente.id = :utenteId or a.ricevente.id = :utenteId)""")
+	List<Amicizia> trovaConLockPerUtenteEStato(UUID utenteId, StatoAmicizia stato);
 
 	@Query("""
 			select a from Amicizia a join fetch a.richiedente

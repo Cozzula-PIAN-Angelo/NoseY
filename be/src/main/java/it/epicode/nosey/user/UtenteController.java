@@ -34,6 +34,7 @@ import java.util.UUID;
 public class UtenteController {
 
 	private final UtenteService utenteService;
+	private final AnonimizzazioneService anonimizzazioneService;
 	private final EventoService eventoService;
 	private final PartecipanteService partecipanteService;
 
@@ -53,6 +54,13 @@ public class UtenteController {
 	public void cambiaPassword(@AuthenticationPrincipal UtenteAutenticato utente,
 			@RequestBody @Valid CambioPasswordRequest richiesta) {
 		utenteService.cambiaPassword(utente, richiesta);
+	}
+
+	@PostMapping("/me/anonymize")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void anonimizza(@AuthenticationPrincipal UtenteAutenticato utente,
+			@RequestBody @Valid AnonimizzazioneRequest richiesta) {
+		anonimizzazioneService.anonimizza(utente, richiesta);
 	}
 
 	// required = false: il file mancante lo segnala StorageService con FILE_NON_VALIDO.

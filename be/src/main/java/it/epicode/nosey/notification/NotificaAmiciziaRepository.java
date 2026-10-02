@@ -34,4 +34,9 @@ public interface NotificaAmiciziaRepository extends JpaRepository<NotificaAmiciz
 	@Modifying(flushAutomatically = true)
 	@Query("update NotificaAmicizia n set n.letta = true where n.destinatario.id = :destinatarioId and n.letta = false")
 	int segnaTutteLette(UUID destinatarioId);
+
+	// Anonimizzazione (sezione 2): le notifiche ricevute si cancellano.
+	@Modifying(flushAutomatically = true)
+	@Query("delete from NotificaAmicizia n where n.destinatario.id = :destinatarioId")
+	int cancellaPerDestinatario(UUID destinatarioId);
 }
