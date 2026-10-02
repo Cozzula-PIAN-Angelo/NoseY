@@ -6,15 +6,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface PartecipanteRepository extends JpaRepository<Partecipante, UUID> {
 
+	// Anonimizzazione (sezione 2): solo i ticket di eventi davvero futuri, PROGRAMMATO anche dalle date.
 	@Modifying(flushAutomatically = true)
-	@Query("delete from Partecipante p where p.utente.id = :utenteId and p.evento.stato = :statoEvento")
-	void cancellaPerUtenteEStatoEvento(UUID utenteId, StatoEventoDb statoEvento);
+	@Query("delete from Partecipante p where p.utente.id = :utenteId and p.evento.stato = :statoEvento"
+			+ " and p.evento.dataEvento > :adesso")
+	void cancellaPerUtenteEventiFuturi(UUID utenteId, StatoEventoDb statoEvento, Instant adesso);
 
 	long countByEventoId(UUID eventoId);
 
