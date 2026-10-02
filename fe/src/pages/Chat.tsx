@@ -4,6 +4,7 @@ import { Button, Caricamento, Icon, MessaggioErrore, StatoVuoto, TextField, stil
 import { useListaChatQuery } from '@/features/social/apiSocial'
 import { Conversazione } from '@/features/social/Conversazione'
 import { ElencoChat } from '@/features/social/ElencoChat'
+import { EventoChat } from '@/features/social/EventoChat'
 import { STATO_CONNESSIONE } from '@/features/social/statoConnessione'
 import { cx } from '@/lib/cx'
 import { useStatoConnessione, type StatoConnessione } from '@/lib/websocket'
@@ -11,7 +12,8 @@ import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 
 // Chat (FE2-12), rotte /chat e /chat/:chatId (solo con il login), come la schermata Stitch
 // "Community, Amicizie & Chat Live": a sinistra l'elenco delle chat con il filtro per nome, al centro
-// la conversazione aperta. Su schermi stretti si vede una cosa per volta: /chat l'elenco,
+// la conversazione aperta, a destra (da lg, con una chat aperta) l'evento in cui ci si e' conosciuti
+// (card "Extra: chat a tre colonne", passo 2). Su schermi stretti si vede una cosa per volta: /chat l'elenco,
 // /chat/:chatId la conversazione (con la freccia per tornare all'elenco).
 // Una chat che non e' nell'elenco non e' dell'utente (ListaChat le restituisce tutte, anche quelle
 // in sola lettura): pagina 404. L'elenco si ricarica a ogni apertura della pagina, cosi' una chat
@@ -113,7 +115,7 @@ export default function Chat() {
         <section
           aria-label="Le tue chat"
           className={cx(
-            'flex-col gap-space-sm rounded-xl bg-surface-glass p-space-sm shadow-xl backdrop-blur-2xl lg:col-span-4',
+            'flex-col gap-space-sm rounded-xl bg-surface-glass p-space-sm shadow-xl backdrop-blur-2xl lg:col-span-3',
             chatId ? 'hidden lg:flex' : 'flex',
           )}
         >
@@ -129,7 +131,13 @@ export default function Chat() {
           <div className="lg:max-h-[680px] lg:overflow-y-auto">{elenco}</div>
         </section>
 
-        <div className={cx('lg:col-span-8', chatId ? 'block' : 'hidden lg:block')}>{conversazione}</div>
+        <div className={cx(aperta ? 'lg:col-span-6' : 'lg:col-span-9', chatId ? 'block' : 'hidden lg:block')}>{conversazione}</div>
+
+        {aperta && (
+          <aside aria-label="Evento in comune" className="hidden lg:col-span-3 lg:block">
+            <EventoChat chat={aperta} />
+          </aside>
+        )}
       </div>
     </div>
   )
