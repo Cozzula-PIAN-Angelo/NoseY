@@ -6,6 +6,7 @@ import { useAppSelector } from '@/hooks/redux'
 import { cx } from '@/lib/cx'
 import { urlLogin } from '@/lib/dopoLogin'
 import { selezionaUtente } from '@/store/sessioneSlice'
+import { Marchio } from './Marchio'
 import { MenuUtente } from './MenuUtente'
 
 // Header fisso di tutte le pagine, copiato dalle schermate Stitch (stesse classi).
@@ -57,13 +58,11 @@ export function BarraNavigazione() {
           <Link to="/" className="group flex items-center gap-space-sm focus:outline-none">
             <img
               src="/logo-nosey.png"
-              alt="Logo NoseY"
-              className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
+              alt=""
+              className="h-10 w-auto object-contain transition-transform group-hover:scale-105"
             />
             <div className="flex items-center gap-space-xs">
-              <span className="font-headline-md text-headline-md tracking-tight text-on-surface transition-colors group-hover:text-primary">
-                NoseY
-              </span>
+              <Marchio className="text-[28px] text-on-surface transition-colors group-hover:text-primary" />
               <span className="hidden items-center gap-1 rounded-full bg-surface-container px-space-xs py-0.5 font-label-code-status text-label-code-status uppercase tracking-wider text-status-in-corso sm:flex">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-status-in-corso" />
                 Live Hub
