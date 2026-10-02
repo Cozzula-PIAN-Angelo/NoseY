@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +39,44 @@ class AdminArtistaTest {
 	private UtenteRepository utenteRepository;
 	@Autowired
 	private RuoloRepository ruoloRepository;
+
+	// --- ListaArtisti ADMIN ---
+
+	@Test
+	void listaComprendeAncheGliArtistiDisattivati() {
+		ArtistaResponse attivo = adminArtistaService.crea("Fabrizio De Andre " + UUID.randomUUID(), null);
+		ArtistaResponse disattivato = adminArtistaService.crea("Luciano Ligabue " + UUID.randomUUID(), null);
+		adminArtistaService.modifica(disattivato.id(), null, false, null, false);
+
+		List<ArtistaResponse> lista = adminArtistaService.lista(null);
+
+		assertThat(lista).extracting(ArtistaResponse::id).contains(attivo.id(), disattivato.id());
+		assertThat(lista).filteredOn(a -> a.id().equals(disattivato.id()))
+				.extracting(ArtistaResponse::attivo).containsExactly(false);
+	}
+
+	@Test
+	void listaInOrdineAlfabetico() {
+		String prefisso = UUID.randomUUID().toString();
+		adminArtistaService.crea("Zucchero " + prefisso, null);
+		adminArtistaService.crea("Alice " + prefisso, null);
+
+		List<ArtistaResponse> lista = adminArtistaService.lista(prefisso);
+
+		assertThat(lista).extracting(ArtistaResponse::nome)
+				.containsExactly("Alice " + prefisso, "Zucchero " + prefisso);
+	}
+
+	@Test
+	void listaConSearchFiltraSenzaDistinguereLeMaiuscole() {
+		String nome = "Caparezza " + UUID.randomUUID();
+		adminArtistaService.crea(nome, null);
+		adminArtistaService.crea("Altro artista " + UUID.randomUUID(), null);
+
+		List<ArtistaResponse> lista = adminArtistaService.lista(nome.toUpperCase());
+
+		assertThat(lista).extracting(ArtistaResponse::nome).containsExactly(nome);
+	}
 
 	@Test
 	void creaArtistaConNomeNuovo() {

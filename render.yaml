@@ -44,10 +44,20 @@ services:
       # Chiave di Google Gemini per il miglioramento della descrizione (decisione 18).
       - key: GEMINI_API_KEY
         sync: false
-      # Email: nessuna variabile. Senza il profilo "smtp" gira LogEmailService, che scrive
-      # nel log di nosey-be i codici di verifica e di reset ("[EMAIL FINTA] ... codice=").
-      # Per leggerli: Render > nosey-be > Logs. Le immagini stanno nel database (decisione 4):
-      # niente Cloudinary. BREVO_API_KEY, MAIL_FROM e SUPERADMIN_EMAIL non esistono ancora.
+      # Email (decisione 12): con il profilo "prod" gira BrevoEmailService, che invia via API HTTP
+      # (Render gratuito blocca SMTP). Senza il profilo gira LogEmailService, che scrive i codici
+      # nel log ("[EMAIL FINTA] ... codice="): serve solo per provare in locale.
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # Chiave API di Brevo (SMTP e API > Chiavi API): una API key, non una SMTP key.
+      - key: BREVO_API_KEY
+        sync: false
+      # Mittente delle email: deve essere un indirizzo confermato in Brevo (Mittenti), identico.
+      # Con "prod" attivo e queste due vuote l'email non parte e si scrive un errore nel log.
+      - key: MAIL_FROM
+        sync: false
+      # Le immagini stanno nel database (decisione 4): niente Cloudinary.
+      # SUPERADMIN_EMAIL non esiste ancora.
 
   # ---------- Frontend: build Vite statica ----------
   - type: web

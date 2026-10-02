@@ -1654,6 +1654,7 @@ Frontend
 
 Variabili d'ambiente (nomi indicativi, oltre a quelle del database già presenti nel template)
   JWT_SECRET · JWT_DURATA · ALLOWED_ORIGIN (CORS e handshake /ws) · GEMINI_API_KEY (decisione 18)
-  Previste ma non ancora implementate: BREVO_API_KEY · MAIL_FROM · SUPERADMIN_EMAIL
+  Email in produzione: SPRING_PROFILES_ACTIVE=prod · BREVO_API_KEY · MAIL_FROM (mittente confermato in Brevo)
+  Prevista ma non ancora implementata: SUPERADMIN_EMAIL
   In locale anche MAIL_USERNAME e MAIL_PASSWORD (password per le app di Gmail)
 ```
