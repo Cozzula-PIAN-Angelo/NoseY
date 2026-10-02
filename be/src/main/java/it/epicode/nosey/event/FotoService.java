@@ -108,6 +108,13 @@ public class FotoService {
 				.orElseThrow(() -> new ApplicazioneException(CodiceErrore.NON_TROVATO, "Foto non trovata"));
 		StatoEvento.controllaScrivibile(evento, clock.instant());
 
+		eliminaFoto(evento, foto);
+	}
+
+	// Usato anche da AdminEventoService (RimuoviFotoModerazione, sezione 12), che non passa da
+	// controllaScrivibile: vale anche su eventi conclusi o annullati.
+	@Transactional
+	void eliminaFoto(Evento evento, FotoEvento foto) {
 		boolean eraCopertina = foto.isCopertina();
 		// flush() subito: senza, Hibernate eseguirebbe questa DELETE per ultima (dopo gli UPDATE),
 		// e la nuova copertina verrebbe scritta prima della cancellazione (sezione 4).
