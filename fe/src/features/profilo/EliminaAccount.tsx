@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router'
+import type { StatoUscita } from '@/components/layout/ControlloSessione'
 import { Button, CampoPassword, ConfirmDialog, Icon, useAvviso } from '@/components/ui'
 import { useAnonimizzazioneMutation } from '@/features/utenti/apiUtenti'
 import { leggiErrore } from '@/lib/errori'
@@ -9,6 +11,7 @@ import { leggiErrore } from '@/lib/errori'
 // Stessi colori degli errori (status-annullato), come MessaggioErrore e ConfirmDialog "danger".
 // Si conferma con la password (il backend la richiede), poi con la finestra di conferma "danger":
 // una password sbagliata e' 400 PASSWORD_ERRATA, non 401, quindi la sessione resta.
+// Dopo il 204 il backend ha revocato il token: si va alla home e si esce (ControlloSessione).
 
 const EFFETTI = [
   { icona: 'person_off', testo: 'Nome, email, indirizzo, data di nascita e immagine del profilo vengono cancellati.' },
@@ -24,6 +27,7 @@ const focusPassword = () => document.getElementById('elimina-password')?.focus()
 export function EliminaAccount({ email }: { email: string }) {
   const [anonimizzazione, { isLoading }] = useAnonimizzazioneMutation()
   const avviso = useAvviso()
+  const naviga = useNavigate()
   const [password, setPassword] = useState('')
   const [errore, setErrore] = useState<string>()
   const [conferma, setConferma] = useState(false)
@@ -44,6 +48,10 @@ export function EliminaAccount({ email }: { email: string }) {
     try {
       await anonimizzazione({ password }).unwrap()
       setConferma(false)
+      avviso.successo('Account eliminato', 'I tuoi dati personali sono stati cancellati. Grazie per aver usato NoseY.')
+      // Il token e' gia' revocato: la sessione la chiude ControlloSessione arrivati alla home
+      const stato: StatoUscita = { uscita: true }
+      naviga('/', { replace: true, state: stato })
     } catch (err) {
       setConferma(false)
       const letto = leggiErrore(err)
