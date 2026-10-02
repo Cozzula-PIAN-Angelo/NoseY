@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router'
 import type { StatoUscita } from '@/components/layout/ControlloSessione'
-import { Button, CampoPassword, ConfirmDialog, Icon, useAvviso } from '@/components/ui'
+import { Button, CampoPassword, ConfirmDialog, Icon, MessaggioErrore, useAvviso } from '@/components/ui'
 import { useAnonimizzazioneMutation } from '@/features/utenti/apiUtenti'
-import { leggiErrore } from '@/lib/errori'
+import { leggiErrore, type ErroreLeggibile } from '@/lib/errori'
+import type { Ruolo } from '@/types/api'
 
 // Eliminazione dell'account dal profilo (FE2-14) → Anonimizzazione (POST /api/users/me/anonymize).
 // Prima di tutto un avviso chiaro: l'operazione e' irreversibile. L'elenco riassume gli effetti
@@ -12,6 +13,8 @@ import { leggiErrore } from '@/lib/errori'
 // Si conferma con la password (il backend la richiede), poi con la finestra di conferma "danger":
 // una password sbagliata e' 400 PASSWORD_ERRATA, non 401, quindi la sessione resta.
 // Dopo il 204 il backend ha revocato il token: si va alla home e si esce (ControlloSessione).
+// Un SUPERADMIN viene avvisato prima: se e' l'unico attivo il backend risponde 409
+// ULTIMO_SUPERADMIN, che resta scritto nella sezione (il frontend non sa quanti ce ne sono).
 
 const EFFETTI = [
   { icona: 'person_off', testo: 'Nome, email, indirizzo, data di nascita e immagine del profilo vengono cancellati.' },
@@ -24,13 +27,15 @@ const EFFETTI = [
 
 const focusPassword = () => document.getElementById('elimina-password')?.focus()
 
-export function EliminaAccount({ email }: { email: string }) {
+export function EliminaAccount({ email, ruolo }: { email: string; ruolo: Ruolo }) {
   const [anonimizzazione, { isLoading }] = useAnonimizzazioneMutation()
   const avviso = useAvviso()
   const naviga = useNavigate()
   const [password, setPassword] = useState('')
   const [errore, setErrore] = useState<string>()
   const [conferma, setConferma] = useState(false)
+  /** 409 ULTIMO_SUPERADMIN: riquadro fisso nella sezione, non un avviso che sparisce */
+  const [bloccato, setBloccato] = useState<ErroreLeggibile | null>(null)
 
   function segnala(messaggio: string) {
     setErrore(messaggio)
@@ -64,6 +69,11 @@ export function EliminaAccount({ email }: { email: string }) {
           if (letto.campi.password) segnala(letto.campi.password)
           else avviso.erroreApi(err)
           break
+        case 'ULTIMO_SUPERADMIN':
+          // La password era giusta ma non serve piu': riprovare darebbe lo stesso errore
+          setPassword('')
+          setBloccato(letto)
+          break
         default:
           avviso.erroreApi(err)
       }
@@ -89,7 +99,15 @@ export function EliminaAccount({ email }: { email: string }) {
             <span>{e.testo}</span>
           </li>
         ))}
+        {ruolo === 'SUPERADMIN' && (
+          <li className="flex items-start gap-space-sm font-body-md text-body-md text-on-surface-variant">
+            <Icon nome="shield_person" size={20} className="mt-0.5 shrink-0 text-accent-gold-piercing" />
+            <span>Il ruolo di superadmin si perde. Se sei l’unico superadmin attivo, l’account non si può eliminare.</span>
+          </li>
+        )}
       </ul>
+
+      {bloccato && <MessaggioErrore errore={bloccato} />}
 
       <form onSubmit={chiediConferma} noValidate className="flex flex-col gap-space-md border-t border-outline-variant/30 pt-space-md">
         {/* Per i gestori di password: capiscono a quale account appartiene la password */}
@@ -103,6 +121,7 @@ export function EliminaAccount({ email }: { email: string }) {
           onChange={(e) => {
             setPassword(e.target.value)
             setErrore(undefined)
+            setBloccato(null)
           }}
           id="elimina-password"
           errore={errore}
