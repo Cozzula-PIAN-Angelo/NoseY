@@ -34,6 +34,12 @@ public class ArtistaController {
 		return artistaService.vedi(artistaId);
 	}
 
+	// Per le "prossime date" nella scheda artista. Pubblico, vale anche per gli artisti disattivati.
+	@GetMapping("/{artistaId}/events")
+	public List<EventoMappaResponse> eventi(@PathVariable UUID artistaId) {
+		return artistaService.eventi(artistaId);
+	}
+
 	/**
 	 * Pubblico (decisione 9): un tag img non puo' mandare il token. no-cache + ETag: il browser
 	 * ricontrolla ogni volta, e se l'immagine non e' cambiata Spring risponde 304 senza corpo.

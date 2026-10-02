@@ -706,6 +706,12 @@ VediArtista              GET /api/artists/{artistaId}
   - DTO resp: ArtistaResponse (anche se disattivato: resta negli eventi in cui compare)
   - Errori: 404 NON_TROVATO
 
+EventiArtista            GET /api/artists/{artistaId}/events
+  - Accesso: pubblico
+  - DTO resp: List<EventoMappaResponse>, eventi PROGRAMMATO e IN_CORSO dove suona l'artista,
+              per dataEvento crescente (per le "prossime date" nella scheda artista)
+  - Errori: 404 NON_TROVATO (anche se l'artista e' disattivato, vale lo stesso)
+
 AggiungiArtistaEvento    POST /api/events/{id}/artists/{artistaId}
   - Accesso: proprietario dell'evento
   - Resp: 201 Created + ArtistaResponse
@@ -1179,7 +1185,7 @@ Endpoint pubblici
   POST  /api/auth/register · /api/auth/verify · /api/auth/resend-code · /api/auth/login
         /api/auth/password/forgot · /api/auth/password/reset
   GET   /api/events · /api/events/{id} · /api/events/{id}/photos · /api/events/{id}/pois
-  GET   /api/artists · /api/artists/{artistaId}
+  GET   /api/artists · /api/artists/{artistaId} · /api/artists/{artistaId}/events
   GET   /api/stato     StatoController del template: riquadro di stato del frontend (api.stato())
                        e healthCheckPath di Render
         /ws/**         l'autenticazione avviene sul CONNECT (sezione 11)
