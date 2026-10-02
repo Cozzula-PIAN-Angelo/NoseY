@@ -16,6 +16,7 @@ import {
   type MessaggioResponse,
   type NotificaResponse,
   type PaginaResponse,
+  type PresenzaEvento,
   type RichiediAmiciziaRequest,
   type Uuid,
 } from '@/types/api'
@@ -28,7 +29,7 @@ const INVIATE = 'INVIATE'
 const LISTA = 'LISTA'
 
 const apiConEtichette = apiSlice.enhanceEndpoints({
-  addTagTypes: ['Amicizia', 'Chat', 'Messaggi', 'Notifica', 'NonLette', 'Partecipanti'],
+  addTagTypes: ['Amicizia', 'Chat', 'Messaggi', 'Notifica', 'NonLette', 'Partecipanti', 'Presenza'],
 })
 
 /** Dopo ogni azione su un'amicizia: liste, chat, notifiche e stato nei partecipanti degli eventi */
@@ -40,6 +41,8 @@ const dopoAmicizia = [
   { type: 'Notifica' as const, id: 'friendships' },
   'NonLette' as const,
   'Partecipanti' as const,
+  // Un'amicizia accettata o rimossa cambia di chi si vede la presenza
+  'Presenza' as const,
 ]
 
 /** Notifiche paginate di una categoria (le chat hanno la loro lista, senza pagine) */
@@ -53,6 +56,31 @@ export type ParametriListaNotifiche = {
 export const apiSocial = apiConEtichette.injectEndpoints({
   endpoints: (build) => ({
     // ---------------------------------------------------------------- Amicizie (sezione 8)
+
+    /**
+     * Amici collegati adesso (pallino "online"): si aggiorna live da /user/queue/presence finche' e'
+     * in cache. Dopo una riconnessione si ricarica (ConnessioneLive): gli eventi persi non tornano.
+     */
+    amiciOnline: build.query<Uuid[], void>({
+      query: () => '/api/friendships/online',
+      providesTags: ['Presenza'],
+      async onCacheEntryAdded(_arg, { cacheDataLoaded, cacheEntryRemoved, updateCachedData }) {
+        try {
+          await cacheDataLoaded
+        } catch {
+          return
+        }
+        const annulla = iscriviti<PresenzaEvento>(CODE_WEBSOCKET.presenza, ({ utenteId, online }) => {
+          updateCachedData((lista) => {
+            const i = lista.indexOf(utenteId)
+            if (online && i < 0) lista.push(utenteId)
+            if (!online && i >= 0) lista.splice(i, 1)
+          })
+        })
+        await cacheEntryRemoved
+        annulla()
+      },
+    }),
 
     /** ListaAmici: stato AMICI, con chatId, per nome */
     listaAmici: build.query<AmiciziaResponse[], void>({
@@ -232,6 +260,7 @@ export const apiSocial = apiConEtichette.injectEndpoints({
 })
 
 export const {
+  useAmiciOnlineQuery,
   useListaAmiciQuery,
   useRichiesteRicevuteQuery,
   useRichiesteInviateQuery,

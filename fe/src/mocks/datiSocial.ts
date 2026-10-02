@@ -225,6 +225,26 @@ export function haTicket(utenteId: Uuid, eventoId: Uuid) {
   return !!e && (e.proprietarioId === utenteId || e.partecipanti.some((p) => p.utenteId === utenteId))
 }
 
+// ---------------------------------------------------------------- Presenza online
+
+/**
+ * Chi e' collegato adesso (card "Extra: presenza online degli amici"): nei dati finti Sofia, amica
+ * di Valentina. Il backend vero conta le connessioni WebSocket aperte di ogni utente.
+ */
+export const onlineFinti = new Set<Uuid>(['u-0001-sofia'])
+
+/** Amici di un utente: amicizia ACCETTATA (sono loro a vedere la sua presenza) */
+export function amiciDi(utenteId: Uuid): Uuid[] {
+  return amicizie
+    .filter((a) => a.stato === 'ACCETTATA' && (a.richiedenteId === utenteId || a.riceventeId === utenteId))
+    .map((a) => altroDella(a, utenteId))
+}
+
+/** Amici di "io" collegati adesso; un account sospeso o anonimizzato non risulta mai online */
+export function amiciOnline(io: Uuid): Uuid[] {
+  return amiciDi(io).filter((id) => onlineFinti.has(id) && trovaAccount(id)?.stato === 'ATTIVO')
+}
+
 // ---------------------------------------------------------------- Chat e messaggi
 
 export type ChatFinta = { id: Uuid; membri: [Uuid, Uuid]; creataIl: IstanteIso }

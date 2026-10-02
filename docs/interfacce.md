@@ -184,9 +184,9 @@ public record PartecipanteResponse(UtentePubblicoResponse utente, boolean propri
 
 # Frontend (TEAM-02, passi 5 e 6)
 
-**Stato: proposta di FE1, da approvare con FE2 e il team.** Dopo l'approvazione le rotte
-diventano la base di FE2-01 (router) e i componenti si importano sempre da qui: nessuno ne
-scrive una propria versione.
+**Stato: concordata.** Le rotte sono quelle del router (`fe/src/router.tsx`, FE2-01) e tutte
+hanno la loro pagina; i componenti si importano sempre da qui: nessuno ne scrive una propria
+versione.
 
 ## Rotte delle pagine
 
@@ -206,10 +206,10 @@ Convenzioni:
 | `/` | Home: hero, carosello, eventi in evidenza | pubblica | ListaEventiMappa | Esplora Eventi & Hero Live |
 | `/events` | Esplora eventi: lista, ricerca, "vicino a te" | pubblica | ListaEventiMappa | Esplora Eventi (Lista & Modale Mappa) |
 | `/map` | Mappa radar degli eventi | pubblica | ListaEventiMappa | Esplora Eventi & Mappa Radar POI |
-| `/events/:id` | Dettaglio evento: foto, line-up, POI, iscrizione | pubblica | VediEvento, IscrizioneEvento | (pannello della Mappa Radar) |
+| `/events/:id` | Dettaglio evento: foto, line-up, POI, iscrizione; per chi organizza notifica manuale e annullamento; per gli admin la moderazione | pubblica | VediEvento, IscrizioneEvento, InviaNotificaManuale, AnnullaEvento | (pannello della Mappa Radar) |
 | `/events/:id/participants` | Partecipanti, con il pulsante amicizia | login (ticket o proprietario) | ListaPartecipanti | Community (colonna Partecipanti) |
 | `/events/new` | Crea evento (poi foto, POI, artisti, AI) | login | CreaEvento, CreaFoto, CreaPOI, MiglioraDescrizioneAI | — |
-| `/events/:id/edit` | Modifica evento, foto, POI, artisti, notifica manuale, annulla | login (proprietario) | ModificaEvento e sotto-risorse | — |
+| `/events/:id/edit` | Modifica evento, foto, POI, artisti, descrizione con l'AI | login (proprietario) | ModificaEvento e sotto-risorse, MiglioraDescrizioneAI | — |
 | `/my-events` | I miei eventi, anche conclusi e annullati | login | MieiEventi | — |
 | `/tickets` | I miei ticket e pass | login | MieiTicket | I Miei Ticket (Snella & Ordinata) |
 | `/artists` | Catalogo artisti | pubblica | ListaArtisti | Lineup & Catalogo Artisti |
@@ -230,8 +230,9 @@ Convenzioni:
 Barra di navigazione (FE2-01): Esplora eventi, Mappa, Artisti, Community (amici e chat),
 I miei ticket · a destra campanella (`/notifications`, con ContaNonLette), "Crea evento",
 menu utente (profilo, i miei eventi, admin se il ruolo lo consente, esci).
-La moderazione (annulla evento, rimuovi foto) sta nel dettaglio e nella modifica
-dell'evento, visibile solo agli ADMIN: non ha pagine proprie.
+La moderazione (annulla evento, rimuovi foto) sta nel dettaglio dell'evento (riquadro
+"Moderazione", FE1-16), visibile solo agli ADMIN e mai sui propri eventi: non ha pagine proprie.
+Notifica manuale e annullamento di chi organizza stanno anch'essi nel dettaglio (FE1-13).
 
 ## Componenti condivisi
 

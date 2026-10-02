@@ -6,6 +6,7 @@ import { LIMITI_SOCIAL, type AmiciziaResponse, type CategoriaNotifica, type Cont
 import { nuovoId, trovaEvento, utenti } from '../dati'
 import {
   allineaAmicizieCorrente,
+  amiciOnline,
   amiciziaDellaCoppia,
   amicizie,
   CATEGORIE,
@@ -86,6 +87,13 @@ export const handlerSocial = [
     }
     notificheAmicizie.push({ id: nuovoId('na'), destinatarioId: altro, tipo: 'RICHIESTA', amiciziaId: a.id, letta: false, creataIl: adesso() })
     return dopoCambio(HttpResponse.json(inAmiciziaResponse(a, io), { status: 201 }))
+  }),
+
+  // Amici collegati adesso (card "Extra: presenza online"): Uuid[] degli amici con il WebSocket aperto
+  http.get(api('/friendships/online'), async ({ request }) => {
+    await delay(RITARDO)
+    const { account: me, risposta } = conLogin(request)
+    return risposta ?? HttpResponse.json(amiciOnline(me.id))
   }),
 
   // ListaAmici: per nome dell'amico

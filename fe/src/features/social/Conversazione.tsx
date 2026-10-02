@@ -5,6 +5,7 @@ import { useSessione } from '@/hooks/useSessione'
 import { cx } from '@/lib/cx'
 import type { ChatResponse, MessaggioResponse } from '@/types/api'
 import { useListaMessaggiInfiniteQuery, useSegnaChatLettaMutation } from './apiSocial'
+import { AvatarAmico } from './AvatarAmico'
 import { FormMessaggio } from './FormMessaggio'
 import { etichettaGiorno, ora, stessoGiorno } from './tempiChat'
 
@@ -125,7 +126,7 @@ export function Conversazione({ chat }: { chat: ChatResponse }) {
         >
           <Icon nome="arrow_back" size={22} />
         </Link>
-        <Avatar utente={amico} className={amico.attivo ? undefined : 'opacity-60'} />
+        <AvatarAmico amico={amico} anello="ring-surface-container" />
         <div className="flex min-w-0 flex-col">
           <div className="flex items-center gap-space-xs">
             <h2 className="truncate font-headline-sm text-headline-sm text-on-surface">{nome}</h2>

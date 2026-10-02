@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { Avatar, Button, ConfirmDialog, Icon, useAvviso } from '@/components/ui'
+import { Button, ConfirmDialog, Icon, useAvviso } from '@/components/ui'
 import { useVediEventoQuery } from '@/features/eventi/apiEventi'
 import type { AmiciziaResponse } from '@/types/api'
 import { useRimuoviAmiciziaMutation } from './apiSocial'
+import { AvatarAmico } from './AvatarAmico'
 import { PulsanteAmicizia } from './PulsanteAmicizia'
 
 // Una riga delle liste di /friends (FE2-10): amici, richieste ricevute e inviate, come le righe della
@@ -46,7 +47,7 @@ export function RigaAmicizia({ amicizia }: { amicizia: AmiciziaResponse }) {
   return (
     <li className="flex flex-wrap items-center justify-between gap-space-sm rounded-lg bg-surface-container-low p-space-sm">
       <div className="flex min-w-0 flex-1 items-center gap-space-sm">
-        <Avatar utente={utente} className={utente.attivo ? undefined : 'opacity-60'} />
+        <AvatarAmico amico={utente} anello="ring-surface-container-low" />
         <div className="flex min-w-0 flex-col">
           <span className="truncate font-label-btn text-label-btn text-on-surface">{nome}</span>
           {!utente.attivo && (

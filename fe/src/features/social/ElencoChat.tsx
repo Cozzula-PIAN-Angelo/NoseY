@@ -1,8 +1,9 @@
 import { Link } from 'react-router'
-import { Avatar, Icon } from '@/components/ui'
+import { Icon } from '@/components/ui'
 import { useSessione } from '@/hooks/useSessione'
 import { cx } from '@/lib/cx'
 import type { ChatResponse, Uuid } from '@/types/api'
+import { AvatarAmico } from './AvatarAmico'
 import { quandoBreve } from './tempiChat'
 
 // Elenco delle chat (FE2-12), come le righe della colonna "Social Radar" della schermata Stitch
@@ -35,7 +36,7 @@ export function ElencoChat({ chat, aperta }: ElencoChatProps) {
                 selezionata ? 'bg-surface-container/90 shadow-sm' : 'hover:bg-surface-container-low',
               )}
             >
-              <Avatar utente={c.amico} className={c.amico.attivo ? undefined : 'opacity-60'} />
+              <AvatarAmico amico={c.amico} anello={selezionata ? 'ring-surface-container' : 'ring-surface-card'} />
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-center justify-between gap-space-xs">
                   <span className="truncate font-label-btn text-label-btn text-on-surface transition-colors group-hover:text-primary">
