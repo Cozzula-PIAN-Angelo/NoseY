@@ -61,10 +61,14 @@ export default function EsploraEventi() {
   let contenuto
   if (isLoading) {
     contenuto = (
-      <div role="status" aria-label="Caricamento degli eventi" className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }, (_, i) => (
-          <Scheletro key={i} className="aspect-[4/3]" />
-        ))}
+      // Come la pagina vera: la card grande del principale, poi una riga piena della griglia
+      <div role="status" aria-label="Caricamento degli eventi" className="flex flex-col gap-space-md">
+        <Scheletro className="aspect-[16/9] md:aspect-auto md:h-80" />
+        <div className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: perPagina === PER_PAGINA_TABLET ? 4 : 3 }, (_, i) => (
+            <Scheletro key={i} className="aspect-[4/3]" />
+          ))}
+        </div>
       </div>
     )
   } else if (error) {
@@ -108,21 +112,24 @@ export default function EsploraEventi() {
             }
           />
         )}
-        <ul className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-3">
-          {visibili.map((e) => (
-            <li key={e.id} className="flex">
-              <CardEvento
-                evento={e}
-                azioni={
-                  <Link to={`/events/${e.id}`} className={stilePulsante({ size: 'sm' })}>
-                    <Icon nome="visibility" size={16} />
-                    Vedi evento
-                  </Link>
-                }
-              />
-            </li>
-          ))}
-        </ul>
+        {/* Con un solo evento trovato c'e' solo il principale: niente griglia vuota sotto */}
+        {visibili.length > 0 && (
+          <ul className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-3">
+            {visibili.map((e) => (
+              <li key={e.id} className="flex">
+                <CardEvento
+                  evento={e}
+                  azioni={
+                    <Link to={`/events/${e.id}`} className={stilePulsante({ size: 'sm' })}>
+                      <Icon nome="visibility" size={16} />
+                      Vedi evento
+                    </Link>
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        )}
         <Paginazione
           contenuto={visibili}
           pagina={pagina}
