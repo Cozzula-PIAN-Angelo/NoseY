@@ -16,7 +16,8 @@ public interface EventoRepository extends JpaRepository<Evento, UUID> {
 	@Query("select e from Evento e where e.id = :id")
 	Optional<Evento> findConLockById(UUID id);
 
-	List<Evento> findByProprietarioIdAndStato(UUID proprietarioId, StatoEventoDb stato);
+	// Anonimizzazione (sezione 2): solo gli eventi davvero futuri, PROGRAMMATO anche dalle date.
+	List<Evento> findByProprietarioIdAndStatoAndDataEventoAfter(UUID proprietarioId, StatoEventoDb stato, Instant adesso);
 
 	// MieiEventi (sezione 2): tutti, anche conclusi e annullati, per dataEvento decrescente.
 	List<Evento> findByProprietarioIdOrderByDataEventoDesc(UUID proprietarioId);

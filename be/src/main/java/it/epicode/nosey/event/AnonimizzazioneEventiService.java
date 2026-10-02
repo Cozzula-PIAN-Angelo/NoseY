@@ -6,6 +6,7 @@ import java.util.UUID;
  * Contratto TEAM-02 per l'anonimizzazione (progettazione v4, sezione 2):
  * il lato utenti (BE2) chiama questi due metodi, senza dover conoscere
  * come sono fatti Evento o Partecipante.
+ * PROGRAMMATO qui e' lo stato calcolato (StatoEvento): non annullato e con dataEvento futura.
  */
 public interface AnonimizzazioneEventiService {
 
