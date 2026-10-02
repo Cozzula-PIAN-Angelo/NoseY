@@ -14,7 +14,7 @@ import type { TicketResponse } from '@/types/api'
 // matrice non si strappa mai a mano: i ticket attivi restano interi, quelli di eventi conclusi
 // o annullati compaiono gia' strappati, con il timbro e la copertina in grigio.
 // Da telefono il ticket diventa verticale: in orizzontale si rimpicciolirebbe e il QR non si leggerebbe.
-// In verticale l'evento sta in alto e il QR, piu' grande, in basso sopra la matrice.
+// In verticale l'evento sta in alto e il QR, piu' grande, al centro del corpo del ticket.
 
 const ORIZZONTALE = { width: 680, height: 280, stubSize: 170 }
 const VERTICALE = { width: 340, height: 600, stubSize: 140 }
@@ -100,12 +100,12 @@ export function TicketStrappabile({ ticket }: { ticket: TicketResponse }) {
         </div>
       }
     >
-      <div className={cx('relative flex h-full gap-space-sm p-space-md', stretto ? 'flex-col items-center justify-between' : 'items-end justify-between')}>
+      <div className={cx('relative flex h-full gap-space-sm p-space-md', stretto ? 'flex-col items-center' : 'items-end justify-between')}>
         {stretto ? (
           <>
-            {/* Da telefono: prima l'evento, poi il QR in basso, piu' vicino al pollice di chi lo mostra */}
+            {/* Da telefono: l'evento in alto, il QR al centro dello spazio che resta sopra la matrice */}
             <div className="w-full">{datiEvento}</div>
-            <div className="mb-space-sm">{qr}</div>
+            <div className="flex flex-1 items-center justify-center">{qr}</div>
           </>
         ) : (
           <>
@@ -117,7 +117,11 @@ export function TicketStrappabile({ ticket }: { ticket: TicketResponse }) {
         {usato && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-12 rounded-lg border-4 border-status-annullato px-space-md py-space-xs font-headline-sm text-headline-sm uppercase tracking-widest text-status-annullato opacity-90"
+            // Da telefono il centro e' del QR: il timbro va nello spazio libero sotto, meno inclinato
+            className={cx(
+              'pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg border-4 border-status-annullato px-space-md py-space-xs font-headline-sm text-headline-sm uppercase tracking-widest text-status-annullato opacity-90',
+              stretto ? 'bottom-space-md -rotate-6' : 'top-1/2 -translate-y-1/2 -rotate-12',
+            )}
           >
             {TIMBRO[evento.stato as keyof typeof TIMBRO]}
           </span>
