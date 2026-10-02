@@ -236,6 +236,31 @@ In `SecurityConfig.java` la protezione CSRF di Spring è disattivata (`.csrf(dis
 falla**, perché quella protezione serve solo all'autenticazione basata su cookie/sessione, che qui non
 si usa. Il commento nel codice lo dichiara esplicitamente.
 
+### 9.3 Approfondimento: due difese indipendenti, non una sola
+
+Isolando i due elementi della richiesta in 9.1 (header `Origin` esterno + assenza di `Authorization`),
+il `403` si scompone in realtà in due controlli separati, ciascuno sufficiente da solo a bloccare
+l'attacco:
+
+| Variante della richiesta | Risposta | Chi la blocca |
+|---|---|---|
+| Con `Origin` esterno (come in 9.1) | **`403`**, corpo testuale `Invalid CORS request` | CORS di Spring, prima ancora del controllo di autenticazione |
+| Senza header `Origin` | **`401 NON_AUTENTICATO`** (il JSON di errore standard) | `JwtFilter` / `SecurityConfig`, per assenza di `Authorization` |
+| Con un `Cookie` finto al posto di `Authorization` | **`401 NON_AUTENTICATO`** | `JwtFilter` ignora i cookie, legge solo `Authorization` |
+
+Verificato anche che `POST /api/auth/login` non manda mai un header `Set-Cookie`, e che la stessa
+identica richiesta **riesce** (`201`, evento creato) con un token vero — a conferma che il blocco non
+è un difetto generico dell'endpoint, ma specifico alla richiesta forgiata.
+
+**Materiale di supporto**, nel repository:
+- `be/src/test/java/it/epicode/nosey/auth/AttaccoCsrfTest.java` — 5 test automatici (MockMvc, catena
+  di filtri reale) che riproducono tutte le varianti della tabella sopra, più il controllo positivo;
+- `docs/sicurezza/attacco-csrf-demo.html` — la pagina ostile vera, con un `fetch()` che tenta
+  l'attacco dal vivo in un browser; aperta con il backend locale attivo, non ha creato nessun evento
+  (verificato interrogando `GET /api/events` subito dopo, non solo leggendo l'esito a schermo);
+- `docs/sicurezza/attacco-csrf.md` — narrazione completa del tentativo, incluso il perché il primo
+  risultato (CORS, non autenticazione) non era quello atteso all'inizio.
+
 ---
 
 ## 10. Attacchi all'autenticazione
