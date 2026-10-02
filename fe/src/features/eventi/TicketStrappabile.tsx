@@ -80,7 +80,10 @@ export function TicketStrappabile({ ticket }: { ticket: TicketResponse }) {
       background="var(--color-surface-card)"
       color="var(--color-on-surface)"
       stubBackground="linear-gradient(160deg, var(--color-inverse-primary), var(--color-primary-container))"
-      ariaLabel={`Matrice del ticket per ${evento.titolo}`}
+      // Per i lettori di schermo: la matrice e' un pulsante disattivato (non si strappa), che
+      // dice cosa c'e' scritto; da strappato si annuncia il timbro (quello visibile e' aria-hidden)
+      ariaLabel={`Matrice d’ingresso del ${giorno(evento.dataEvento)}`}
+      usedLabel={usato ? TIMBRO[evento.stato as keyof typeof TIMBRO] : ''}
       stub={
         // Matrice: l'ingresso, con l'inizio e la fine del codice come nell'elenco dei pass
         <div className={cx('flex h-full items-center justify-center gap-space-sm p-space-sm text-white', stretto ? 'flex-row' : 'flex-col text-center')}>

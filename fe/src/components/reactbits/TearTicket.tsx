@@ -2,7 +2,8 @@
 // scaricata dal registro: https://reactbits.dev/r/TearTicket-TS-TW.json. Modifiche (segnate "NoseY"):
 // - "b" → "_" nella mappa dei ponti (variabile non usata, il nostro tsconfig la rifiuta);
 // - con defaultTorn/torn gia' true al montaggio la matrice restava visibile: l'effetto su "geo"
-//   chiama reset() dopo quello su "used" che la nasconde, quindi lì la si rinasconde.
+//   chiama reset() dopo quello su "used" che la nasconde, quindi lì la si rinasconde;
+// - prop usedLabel al posto del testo fisso "Used" per i lettori di schermo (default invariato).
 // L'adattamento ai ticket di NoseY sta in features/eventi. Dipendenza: motion.
 
 'use client';
@@ -59,6 +60,8 @@ export interface TearTicketProps {
   recenter?: boolean;
   disabled?: boolean;
   ariaLabel?: string;
+  /** NoseY: testo annunciato ai lettori di schermo quando la matrice e' strappata ("" = nessuno) */
+  usedLabel?: string;
   className?: string;
 }
 
@@ -249,6 +252,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
   recenter = true,
   disabled = false,
   ariaLabel = 'Tear off the stub',
+  usedLabel = 'Used',
   className = ''
 }) => {
   const reduce = useReducedMotion();
@@ -774,7 +778,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
         </motion.div>
       </div>
       <span className="absolute h-px w-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)]" role="status">
-        {used ? 'Used' : ''}
+        {used ? usedLabel : ''}
       </span>
     </div>
   );
