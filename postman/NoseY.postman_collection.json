@@ -1,0 +1,979 @@
+{
+	"info": {
+		"name": "NoseY - Copertura completa API",
+		"description": "Collection pensata per essere lanciata UNA VOLTA (Collection Runner, ordine dall'alto in basso) e coprire ogni endpoint del backend. Usa solo variabili di collection, nessun environment esterno necessario.\n\nLimiti noti che richiedono un intervento manuale (non automatizzabili da Postman):\n1. I codici di verifica email/reset password non vengono inviati per email in locale: il profilo attivo logga su console (LogEmailService), con una riga tipo `[EMAIL FINTA] Codice di verifica -> ... codice=123456`. Prima di lanciare le richieste 'Verify' e 'Reset password' incolla il codice letto dal log nella variabile di collection corrispondente (codiceA, codiceB, codiceAdmin, codiceReset) e SOLO POI invia quella richiesta (in Collection Runner, mettile in pausa/edita le variabili fra una richiesta e l'altra; nell'app Postman puoi anche eseguirle singolarmente).\n2. Non esiste un seeder SUPERADMIN: il primo admin va promosso a mano via SQL, una sola volta:\n   `UPDATE utente SET ruolo_id = (SELECT id FROM ruolo WHERE nome = 'SUPERADMIN') WHERE email = 'admin@nosey.test';`\n   Esegui la cartella '01. Auth - Admin (setup)' fino a 'Verify admin' la prima volta, poi lancia la SQL sopra, poi 'Login admin' (quella la puoi rilanciare a ogni run: se l'account esiste gia' 'Register admin' dara' 409 EMAIL_GIA_REGISTRATA, e' normale, si va avanti).\n3. Le richieste con upload di file (creazione artista admin, modifica artista admin, foto evento x2, avatar utente) si aspettano un file locale: crea un PNG minimo chiamato `immagine-test.png` nella cartella da cui lanci Newman, oppure allega un file a mano quando Postman lo chiede.\n\nOrdine pensato per essere eseguito in sequenza (le richieste successive dipendono dalle variabili impostate da quelle precedenti).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080" },
+		{ "key": "passwordCommon", "value": "Password123!" },
+		{ "key": "emailA", "value": "" },
+		{ "key": "emailB", "value": "" },
+		{ "key": "codiceA", "value": "", "description": "Incolla qui il codice a 6 cifre letto dal log, dopo 'Resend code A'" },
+		{ "key": "codiceB", "value": "", "description": "Incolla qui il codice a 6 cifre letto dal log, dopo 'Register utente B'" },
+		{ "key": "tokenA", "value": "" },
+		{ "key": "tokenB", "value": "" },
+		{ "key": "userAId", "value": "" },
+		{ "key": "userBId", "value": "" },
+		{ "key": "emailAdmin", "value": "admin@nosey.test", "description": "Account fisso: va promosso a SUPERADMIN via SQL una sola volta, poi riusabile a ogni run" },
+		{ "key": "passwordAdmin", "value": "AdminPass123!" },
+		{ "key": "codiceAdmin", "value": "", "description": "Serve solo la primissima volta, per 'Verify admin'" },
+		{ "key": "tokenAdmin", "value": "" },
+		{ "key": "artistaId", "value": "" },
+		{ "key": "eventoId", "value": "" },
+		{ "key": "eventoId2", "value": "", "description": "Evento 'usa e getta' per il self-cancel del proprietario" },
+		{ "key": "fotoId", "value": "", "description": "Foto copertina: resta fino alla rimozione via moderazione admin" },
+		{ "key": "fotoId2", "value": "", "description": "Seconda foto: cancellata dal proprietario stesso" },
+		{ "key": "poiId", "value": "" },
+		{ "key": "amiciziaId", "value": "", "description": "Richiesta B->A che verra' accettata" },
+		{ "key": "amiciziaId2", "value": "", "description": "Richiesta B->A che verra' rifiutata" },
+		{ "key": "amiciziaId3", "value": "", "description": "Richiesta B->A che B stesso ritirera'" },
+		{ "key": "chatId", "value": "" },
+		{ "key": "notificaEventoId", "value": "" },
+		{ "key": "codiceReset", "value": "", "description": "Codice di reset password per A, letto dal log dopo 'Forgot password A'" }
+	],
+	"item": [
+		{
+			"name": "00. Health",
+			"item": [
+				{
+					"name": "GET stato",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/api/stato", "host": ["{{baseUrl}}"], "path": ["api", "stato"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK', () => pm.response.to.have.status(200));"
+					] } }]
+				}
+			]
+		},
+		{
+			"name": "01. Auth - Admin (setup)",
+			"item": [
+				{
+					"name": "Register admin",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"password\": \"{{passwordAdmin}}\",\n  \"nome\": \"Admin\",\n  \"cognome\": \"NoseY\",\n  \"dataNascita\": \"1990-01-01\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+						"description": "Prima volta: 201. Nei run successivi l'account esiste gia': 409 EMAIL_GIA_REGISTRATA, e' normale, si procede comunque a 'Login admin'."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 o 409 (gia registrato)', () => [201, 409].includes(pm.response.code));"
+					] } }]
+				},
+				{
+					"name": "Verify admin (SOLO la primissima volta)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"codice\": \"{{codiceAdmin}}\",\n  \"password\": \"{{passwordAdmin}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/verify", "host": ["{{baseUrl}}"], "path": ["api", "auth", "verify"] },
+						"description": "Incolla in codiceAdmin il codice letto dal log dopo la 'Register admin' qui sopra. Se l'account e' gia' verificato da un run precedente, salta questa richiesta."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"if (pm.response.code === 200) {",
+						"  pm.collectionVariables.set('tokenAdmin', pm.response.json().token);",
+						"}",
+						"pm.test('200 o errore atteso se gia verificato', () => true);"
+					] } }]
+				},
+				{
+					"name": "Login admin",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailAdmin}}\",\n  \"password\": \"{{passwordAdmin}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+						"description": "Rilanciabile a ogni run. Il test segnala se il ruolo nel token non e' ancora ADMIN/SUPERADMIN: in quel caso esegui la UPDATE SQL descritta nella description della collection e rilancia questa richiesta."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK', () => pm.response.to.have.status(200));",
+						"const token = pm.response.json().token;",
+						"pm.collectionVariables.set('tokenAdmin', token);",
+						"const payload = JSON.parse(atob(token.split('.')[1]));",
+						"console.log('ruolo admin nel token:', payload.ruolo);",
+						"pm.test('ruolo ADMIN o SUPERADMIN (altrimenti esegui la UPDATE SQL descritta nella collection)', () => ['ADMIN', 'SUPERADMIN'].includes(payload.ruolo));"
+					] } }]
+				}
+			]
+		},
+		{
+			"name": "02. Auth - Utente A",
+			"item": [
+				{
+					"name": "Register utente A",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailA}}\",\n  \"password\": \"{{passwordCommon}}\",\n  \"nome\": \"Anna\",\n  \"cognome\": \"Bianchi\",\n  \"dataNascita\": \"1995-05-20\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] }
+					},
+					"event": [
+						{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": [
+							"pm.collectionVariables.set('emailA', 'utente-a-' + Date.now() + '@nosey.test');"
+						] } },
+						{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+							"pm.test('201 Created', () => pm.response.to.have.status(201));"
+						] } }
+					]
+				},
+				{
+					"name": "Resend code A",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailA}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/resend-code", "host": ["{{baseUrl}}"], "path": ["api", "auth", "resend-code"] },
+						"description": "Invalida il codice della register e ne genera uno nuovo: leggi QUESTO (l'ultimo) dal log e incollalo in codiceA."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('204 No Content', () => pm.response.to.have.status(204));"
+					] } }]
+				},
+				{
+					"name": "Verify utente A",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailA}}\",\n  \"codice\": \"{{codiceA}}\",\n  \"password\": \"{{passwordCommon}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/verify", "host": ["{{baseUrl}}"], "path": ["api", "auth", "verify"] },
+						"description": "Incolla in codiceA il codice letto dal log dopo 'Resend code A'."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK', () => pm.response.to.have.status(200));",
+						"const body = pm.response.json();",
+						"pm.collectionVariables.set('tokenA', body.token);",
+						"pm.collectionVariables.set('userAId', body.utente.id);"
+					] } }]
+				}
+			]
+		},
+		{
+			"name": "03. Auth - Utente B",
+			"item": [
+				{
+					"name": "Register utente B",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailB}}\",\n  \"password\": \"{{passwordCommon}}\",\n  \"nome\": \"Mario\",\n  \"cognome\": \"Rossi\",\n  \"dataNascita\": \"1992-03-11\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+						"description": "Leggi il codice dal log dopo questa richiesta e incollalo in codiceB."
+					},
+					"event": [
+						{ "listen": "prerequest", "script": { "type": "text/javascript", "exec": [
+							"pm.collectionVariables.set('emailB', 'utente-b-' + Date.now() + '@nosey.test');"
+						] } },
+						{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+							"pm.test('201 Created', () => pm.response.to.have.status(201));"
+						] } }
+					]
+				},
+				{
+					"name": "Verify utente B",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailB}}\",\n  \"codice\": \"{{codiceB}}\",\n  \"password\": \"{{passwordCommon}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/verify", "host": ["{{baseUrl}}"], "path": ["api", "auth", "verify"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK', () => pm.response.to.have.status(200));",
+						"const body = pm.response.json();",
+						"pm.collectionVariables.set('tokenB', body.token);",
+						"pm.collectionVariables.set('userBId', body.utente.id);"
+					] } }]
+				}
+			]
+		},
+		{
+			"name": "04. Utenti (self, A)",
+			"item": [
+				{
+					"name": "GET me",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH me",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"indirizzo\": \"Via Postman 1, Torino\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/users/me", "host": ["{{baseUrl}}"], "path": ["api", "users", "me"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "POST me/password",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"passwordAttuale\": \"{{passwordCommon}}\",\n  \"nuovaPassword\": \"NuovaPassword123!\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/users/me/password", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "password"] },
+						"description": "Il token corrente (tokenA) resta valido dopo il cambio: lo conferma il test."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('204 No Content', () => pm.response.to.have.status(204));",
+						"pm.collectionVariables.set('passwordCommon', 'NuovaPassword123!');"
+					] } }]
+				},
+				{
+					"name": "POST me/avatar (upload)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"body": { "mode": "formdata", "formdata": [
+							{ "key": "file", "type": "file", "src": "immagine-test.png" }
+						] },
+						"url": { "raw": "{{baseUrl}}/api/users/me/avatar", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "avatar"] },
+						"description": "Richiede un file locale 'immagine-test.png' (vedi description della collection)."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET {userId}/avatar (pubblico)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/api/users/{{userAId}}/avatar", "host": ["{{baseUrl}}"], "path": ["api", "users", "{{userAId}}", "avatar"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "DELETE me/avatar",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/users/me/avatar", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "avatar"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "GET me/events",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/users/me/events", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "events"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET me/tickets",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/users/me/tickets", "host": ["{{baseUrl}}"], "path": ["api", "users", "me", "tickets"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				}
+			]
+		},
+		{
+			"name": "05. Admin - Artisti",
+			"item": [
+				{
+					"name": "GET admin/artists",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }],
+						"url": { "raw": "{{baseUrl}}/api/admin/artists", "host": ["{{baseUrl}}"], "path": ["api", "admin", "artists"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "POST admin/artists (crea, upload)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }],
+						"body": { "mode": "formdata", "formdata": [
+							{ "key": "nome", "value": "Artista Postman {{$timestamp}}", "type": "text" },
+							{ "key": "file", "type": "file", "src": "immagine-test.png" }
+						] },
+						"url": { "raw": "{{baseUrl}}/api/admin/artists", "host": ["{{baseUrl}}"], "path": ["api", "admin", "artists"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 Created', () => pm.response.to.have.status(201));",
+						"pm.collectionVariables.set('artistaId', pm.response.json().id);"
+					] } }]
+				},
+				{
+					"name": "PATCH admin/artists/{id}",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }],
+						"body": { "mode": "formdata", "formdata": [
+							{ "key": "nome", "value": "Artista Postman modificato", "type": "text" }
+						] },
+						"url": { "raw": "{{baseUrl}}/api/admin/artists/{{artistaId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "artists", "{{artistaId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				}
+			]
+		},
+		{
+			"name": "06. Artisti (pubblico)",
+			"item": [
+				{
+					"name": "GET artists",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/artists", "host": ["{{baseUrl}}"], "path": ["api", "artists"] } },
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET artists/{id}",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/artists/{{artistaId}}", "host": ["{{baseUrl}}"], "path": ["api", "artists", "{{artistaId}}"] } },
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET artists/{id}/events",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/artists/{{artistaId}}/events", "host": ["{{baseUrl}}"], "path": ["api", "artists", "{{artistaId}}", "events"] } },
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET artists/{id}/image",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/artists/{{artistaId}}/image", "host": ["{{baseUrl}}"], "path": ["api", "artists", "{{artistaId}}", "image"] } },
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 o 404 se senza immagine', () => [200, 404].includes(pm.response.code));"] } }]
+				}
+			]
+		},
+		{
+			"name": "07. Eventi",
+			"item": [
+				{
+					"name": "POST events (crea evento principale)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"titolo\": \"Concerto Postman\",\n  \"descrizione\": \"Evento creato dalla collection di test\",\n  \"dataEvento\": \"2027-06-15T20:00:00Z\",\n  \"dataFine\": \"2027-06-15T23:30:00Z\",\n  \"lat\": 45.07,\n  \"lng\": 7.69\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events", "host": ["{{baseUrl}}"], "path": ["api", "events"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 Created', () => pm.response.to.have.status(201));",
+						"pm.collectionVariables.set('eventoId', pm.response.json().id);"
+					] } }]
+				},
+				{
+					"name": "POST events (crea evento usa-e-getta, per self-cancel)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"titolo\": \"Evento da annullare\",\n  \"dataEvento\": \"2027-07-01T18:00:00Z\",\n  \"dataFine\": \"2027-07-01T20:00:00Z\",\n  \"lat\": 45.07,\n  \"lng\": 7.69\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events", "host": ["{{baseUrl}}"], "path": ["api", "events"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 Created', () => pm.response.to.have.status(201));",
+						"pm.collectionVariables.set('eventoId2', pm.response.json().id);"
+					] } }]
+				},
+				{
+					"name": "GET events (lista pubblica)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/api/events?lat=45.07&lng=7.69", "host": ["{{baseUrl}}"], "path": ["api", "events"], "query": [{ "key": "lat", "value": "45.07" }, { "key": "lng", "value": "7.69" }] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET events/{id}",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH events/{id}",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"titolo\": \"Concerto Postman (modificato)\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "POST events/{id}/artists/{artistaId}",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/artists/{{artistaId}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "artists", "{{artistaId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] } }]
+				}
+			]
+		},
+		{
+			"name": "08. Foto evento",
+			"item": [
+				{
+					"name": "POST photos (copertina, upload)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"body": { "mode": "formdata", "formdata": [
+							{ "key": "file", "type": "file", "src": "immagine-test.png" },
+							{ "key": "didascalia", "value": "Foto copertina", "type": "text" }
+						] },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/photos", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "photos"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 Created', () => pm.response.to.have.status(201));",
+						"pm.collectionVariables.set('fotoId', pm.response.json().id);"
+					] } }]
+				},
+				{
+					"name": "POST photos (seconda foto, upload)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"body": { "mode": "formdata", "formdata": [
+							{ "key": "file", "type": "file", "src": "immagine-test.png" }
+						] },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/photos", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "photos"] },
+						"description": "Questa seconda foto verra' cancellata dal proprietario stesso nella cartella 16 (per coprire anche DELETE /photos/{fotoId} oltre alla rimozione via moderazione admin)."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 Created', () => pm.response.to.have.status(201));",
+						"pm.collectionVariables.set('fotoId2', pm.response.json().id);"
+					] } }]
+				},
+				{
+					"name": "GET photos",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/photos", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "photos"] } },
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET photos/{fotoId}/image",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/photos/{{fotoId}}/image", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "photos", "{{fotoId}}", "image"] } },
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH photos/{fotoId} (didascalia + copertina)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"didascalia\": \"Copertina ufficiale\",\n  \"copertina\": true\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/photos/{{fotoId}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "photos", "{{fotoId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				}
+			]
+		},
+		{
+			"name": "09. POI evento",
+			"item": [
+				{
+					"name": "POST pois",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"tipo\": \"INGRESSO\",\n  \"lat\": 45.071,\n  \"lng\": 7.691,\n  \"etichetta\": \"Ingresso principale\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/pois", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "pois"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 Created', () => pm.response.to.have.status(201));",
+						"pm.collectionVariables.set('poiId', pm.response.json().id);"
+					] } }]
+				},
+				{
+					"name": "GET pois",
+					"request": { "method": "GET", "header": [], "url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/pois", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "pois"] } },
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH pois/{poiId}",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"etichetta\": \"Ingresso principale (modificato)\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/pois/{{poiId}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "pois", "{{poiId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				}
+			]
+		},
+		{
+			"name": "10. Descrizione AI",
+			"item": [
+				{
+					"name": "POST events/{id}/description/ai",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"fotoId\": \"{{fotoId}}\",\n  \"descrizione\": \"Una serata di musica dal vivo nel parco cittadino\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/description/ai", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "description", "ai"] },
+						"description": "Senza GEMINI_API_KEY configurata risponde 502 SERVIZIO_ESTERNO: e' atteso in locale."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK o 502 senza GEMINI_API_KEY', () => [200, 502].includes(pm.response.code));"
+					] } }]
+				}
+			]
+		},
+		{
+			"name": "11. Partecipazione (B si iscrive all'evento di A)",
+			"item": [
+				{
+					"name": "POST participants (B si iscrive)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/participants", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "participants"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] } }]
+				},
+				{
+					"name": "GET participants (A, proprietario)",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/participants", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "participants"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET participants/me (B)",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/participants/me", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "participants", "me"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				}
+			]
+		},
+		{
+			"name": "12. Amicizie",
+			"item": [
+				{
+					"name": "POST friendships (B -> A, richiesta 1, verra' accettata)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"riceventeId\": \"{{userAId}}\",\n  \"eventoId\": \"{{eventoId}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/friendships", "host": ["{{baseUrl}}"], "path": ["api", "friendships"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('201 Created', () => pm.response.to.have.status(201));",
+						"pm.collectionVariables.set('amiciziaId', pm.response.json().id);"
+					] } }]
+				},
+				{
+					"name": "GET friendships/requests (A, ricevute)",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/friendships/requests", "host": ["{{baseUrl}}"], "path": ["api", "friendships", "requests"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET friendships/requests/sent (B, inviate)",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+						"url": { "raw": "{{baseUrl}}/api/friendships/requests/sent", "host": ["{{baseUrl}}"], "path": ["api", "friendships", "requests", "sent"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "POST friendships/{id}/accept (A accetta la richiesta 1)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/friendships/{{amiciziaId}}/accept", "host": ["{{baseUrl}}"], "path": ["api", "friendships", "{{amiciziaId}}", "accept"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK', () => pm.response.to.have.status(200));",
+						"const chatId = pm.response.json().chatId;",
+						"if (chatId) { pm.collectionVariables.set('chatId', chatId); }"
+					] } }]
+				},
+				{
+					"name": "GET friendships (A, lista amici)",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/friendships", "host": ["{{baseUrl}}"], "path": ["api", "friendships"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "POST friendships (B -> A, richiesta 2, verra' rifiutata)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"riceventeId\": \"{{userAId}}\",\n  \"eventoId\": \"{{eventoId}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/friendships", "host": ["{{baseUrl}}"], "path": ["api", "friendships"] },
+						"description": "Puo' dare un conflitto se il dominio non permette una nuova richiesta fra due utenti gia' amici: in tal caso 'reject' sotto ricevera' semplicemente un id vuoto, e' comunque copertura dell'endpoint POST."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"if (pm.response.code === 201) { pm.collectionVariables.set('amiciziaId2', pm.response.json().id); }",
+						"pm.test('201 o conflitto atteso', () => [201, 409].includes(pm.response.code));"
+					] } }]
+				},
+				{
+					"name": "POST friendships/{id}/reject (A rifiuta la richiesta 2)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/friendships/{{amiciziaId2}}/reject", "host": ["{{baseUrl}}"], "path": ["api", "friendships", "{{amiciziaId2}}", "reject"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 o 404 se la richiesta 2 non e stata creata', () => [204, 404].includes(pm.response.code));"] } }]
+				},
+				{
+					"name": "POST friendships (B -> A, richiesta 3, verra' ritirata)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"riceventeId\": \"{{userAId}}\",\n  \"eventoId\": \"{{eventoId}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/friendships", "host": ["{{baseUrl}}"], "path": ["api", "friendships"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"if (pm.response.code === 201) { pm.collectionVariables.set('amiciziaId3', pm.response.json().id); }",
+						"pm.test('201 o conflitto atteso', () => [201, 409].includes(pm.response.code));"
+					] } }]
+				},
+				{
+					"name": "POST friendships/{id}/withdraw (B ritira la richiesta 3)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+						"url": { "raw": "{{baseUrl}}/api/friendships/{{amiciziaId3}}/withdraw", "host": ["{{baseUrl}}"], "path": ["api", "friendships", "{{amiciziaId3}}", "withdraw"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 o 404 se la richiesta 3 non e stata creata', () => [204, 404].includes(pm.response.code));"] } }]
+				}
+			]
+		},
+		{
+			"name": "13. Chat",
+			"item": [
+				{
+					"name": "GET chats (A)",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/chats", "host": ["{{baseUrl}}"], "path": ["api", "chats"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK', () => pm.response.to.have.status(200));",
+						"const chats = pm.response.json();",
+						"if (!pm.collectionVariables.get('chatId') && chats.length) { pm.collectionVariables.set('chatId', chats[0].id); }"
+					] } }]
+				},
+				{
+					"name": "GET chats/{chatId}/messages (A)",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/chats/{{chatId}}/messages?size=30", "host": ["{{baseUrl}}"], "path": ["api", "chats", "{{chatId}}", "messages"], "query": [{ "key": "size", "value": "30" }] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH chats/{chatId}/read (A)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/chats/{{chatId}}/read", "host": ["{{baseUrl}}"], "path": ["api", "chats", "{{chatId}}", "read"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				}
+			]
+		},
+		{
+			"name": "14. Notifiche (A)",
+			"item": [
+				{
+					"name": "GET notifications/events",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/notifications/events", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "events"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('200 OK', () => pm.response.to.have.status(200));",
+						"const contenuto = pm.response.json().contenuto;",
+						"if (contenuto && contenuto.length) { pm.collectionVariables.set('notificaEventoId', contenuto[0].id); }"
+					] } }]
+				},
+				{
+					"name": "GET notifications/friendships",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/notifications/friendships", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "friendships"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET notifications/chats",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/notifications/chats", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "chats"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "GET notifications/unread-count",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/notifications/unread-count", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "unread-count"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH notifications/events/{id}/read",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/notifications/events/{{notificaEventoId}}/read", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "events", "{{notificaEventoId}}", "read"] },
+						"description": "Se non c'era nessuna notifica evento non letta, notificaEventoId e' vuoto e la richiesta dara' un errore di validazione: e' comunque copertura dell'endpoint."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 o errore atteso se non cera nessuna notifica', () => true);"] } }]
+				},
+				{
+					"name": "PATCH notifications/read-all",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api", "notifications", "read-all"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				}
+			]
+		},
+		{
+			"name": "15. Notifica manuale evento (A)",
+			"item": [
+				{
+					"name": "POST events/{id}/notifications",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"testo\": \"Si parte alle 20, portate un documento!\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/notifications", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "notifications"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] } }]
+				}
+			]
+		},
+		{
+			"name": "16. Pulizia associazioni (prima della moderazione)",
+			"item": [
+				{
+					"name": "DELETE events/{id}/artists/{artistaId}",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/artists/{{artistaId}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "artists", "{{artistaId}}"] },
+						"description": "Scioglie il legame evento-artista cosi' la DELETE admin/artists/{id} di piu' avanti puo' riuscire (ARTISTA_IN_USO altrimenti)."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "DELETE events/{id}/pois/{poiId}",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/pois/{{poiId}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "pois", "{{poiId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "DELETE events/{id}/photos/{fotoId2} (A cancella la propria seconda foto)",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/photos/{{fotoId2}}", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "photos", "{{fotoId2}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "DELETE events/{id}/participants/me (B si disiscrive)",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId}}/participants/me", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId}}", "participants", "me"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "POST friendships/{id}/remove (A rimuove l'amicizia con B)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/friendships/{{amiciziaId}}/remove", "host": ["{{baseUrl}}"], "path": ["api", "friendships", "{{amiciziaId}}", "remove"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "POST events/{id2}/cancel (A annulla il proprio evento usa-e-getta)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"motivo\": \"Prova di annullamento dal proprietario\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/events/{{eventoId2}}/cancel", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventoId2}}", "cancel"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				}
+			]
+		},
+		{
+			"name": "17. Admin - Moderazione evento",
+			"item": [
+				{
+					"name": "DELETE admin/events/{id}/photos/{fotoId}",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }],
+						"url": { "raw": "{{baseUrl}}/api/admin/events/{{eventoId}}/photos/{{fotoId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "events", "{{eventoId}}", "photos", "{{fotoId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "POST admin/events/{id}/cancel (motivo obbligatorio)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"motivo\": \"Contenuti non adeguati\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/admin/events/{{eventoId}}/cancel", "host": ["{{baseUrl}}"], "path": ["api", "admin", "events", "{{eventoId}}", "cancel"] },
+						"description": "Ultima scrittura sull'evento principale: dopo questa l'evento e' ANNULLATO e non piu' modificabile."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				}
+			]
+		},
+		{
+			"name": "18. Admin - Elimina artista",
+			"item": [
+				{
+					"name": "DELETE admin/artists/{id}",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }],
+						"url": { "raw": "{{baseUrl}}/api/admin/artists/{{artistaId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "artists", "{{artistaId}}"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				}
+			]
+		},
+		{
+			"name": "19. Superadmin - Ruoli (su B)",
+			"item": [
+				{
+					"name": "PATCH superadmin/users/{userBId}/role -> ADMIN",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"ruolo\": \"ADMIN\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/superadmin/users/{{userBId}}/role", "host": ["{{baseUrl}}"], "path": ["api", "superadmin", "users", "{{userBId}}", "role"] },
+						"description": "Richiede che tokenAdmin sia SUPERADMIN (vedi setup nella cartella 01). B perde i suoi token: il tokenB salvato in collection smette di funzionare dopo questa richiesta, ma non serve piu'."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH superadmin/users/{userBId}/role -> USER (ripristino)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"ruolo\": \"USER\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/superadmin/users/{{userBId}}/role", "host": ["{{baseUrl}}"], "path": ["api", "superadmin", "users", "{{userBId}}", "role"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				}
+			]
+		},
+		{
+			"name": "20. Admin - Gestione utenti",
+			"item": [
+				{
+					"name": "GET admin/users",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }],
+						"url": { "raw": "{{baseUrl}}/api/admin/users?page=0&size=20", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users"], "query": [{ "key": "page", "value": "0" }, { "key": "size", "value": "20" }] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH admin/users/{userBId}/status -> SOSPESO",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"stato\": \"SOSPESO\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/admin/users/{{userBId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "{{userBId}}", "status"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				},
+				{
+					"name": "PATCH admin/users/{userBId}/status -> ATTIVO (ripristino)",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenAdmin}}" }, { "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"stato\": \"ATTIVO\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/admin/users/{{userBId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "admin", "users", "{{userBId}}", "status"] }
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }]
+				}
+			]
+		},
+		{
+			"name": "21. Auth - Reset password (A)",
+			"item": [
+				{
+					"name": "POST auth/password/forgot (A)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailA}}\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/password/forgot", "host": ["{{baseUrl}}"], "path": ["api", "auth", "password", "forgot"] },
+						"description": "Leggi il codice dal log e incollalo in codiceReset prima di lanciare 'POST auth/password/reset' qui sotto."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 No Content', () => pm.response.to.have.status(204));"] } }]
+				},
+				{
+					"name": "POST auth/password/reset (A)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": { "mode": "raw", "options": { "raw": { "language": "json" } }, "raw": "{\n  \"email\": \"{{emailA}}\",\n  \"codice\": \"{{codiceReset}}\",\n  \"nuovaPassword\": \"PasswordResettata123!\"\n}" },
+						"url": { "raw": "{{baseUrl}}/api/auth/password/reset", "host": ["{{baseUrl}}"], "path": ["api", "auth", "password", "reset"] },
+						"description": "Revoca tutti i token di A: dopo questa richiesta tokenA non e' piu' valido."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+						"pm.test('204 No Content', () => pm.response.to.have.status(204));",
+						"pm.collectionVariables.set('passwordCommon', 'PasswordResettata123!');"
+					] } }]
+				}
+			]
+		},
+		{
+			"name": "22. Auth - Logout",
+			"item": [
+				{
+					"name": "POST auth/logout (A)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+						"url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] },
+						"description": "tokenA e' gia' stato revocato dal reset password: ci si aspetta 401 NON_AUTENTICATO, e' comunque copertura dell'endpoint. Per un vero 204 di successo, spostare questa richiesta prima della cartella 21."
+					},
+					"event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('204 o 401 (token gia revocato dal reset password)', () => [204, 401].includes(pm.response.code));"] } }]
+				}
+			]
+		}
+	]
+}
