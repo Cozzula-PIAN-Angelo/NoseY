@@ -14,3 +14,19 @@ del frontend: non sono codice dell'app.
 Nelle pagine vere si tengono layout, colori e componenti; si lasciano fuori gli elementi
 che servivano solo a provare il design (es. "Simulatore Responsi Backend", "Dev Simulation
 Matrix") e le diciture tecniche non vere (es. "AES-256 GCM", "Session hash").
+
+## Modalita' Ragnatela (easter egg, Decisione 25)
+
+Progetto Stitch a parte: **Ragnatela** (ID `7217513115593259868`). Le schermate stanno in
+`ragnatela/`; colori, font e componenti del design system "Cinematic Vigilante" sono riassunti in
+`ragnatela/design-system.md`.
+
+| File | Schermata Stitch | ID | Uso |
+|---|---|---|---|
+| `ragnatela/ragnatela-mobile.jpg` / `.html` | Ragnatela - Spider-Man Cinematic Style (mobile, 390 px) | `d1407971c50c45118948ee865ffcee9a` | layout mobile: barra in basso, card bianche, rombi sulla mappa |
+| `ragnatela/ragnatela-desktop-console.png` / `.html` | Ragnatela - Desktop Console Operativa Marvel Style | `a4806e097f9a4212823cdf5b1f24d45d` | layout desktop: header, radar a sinistra, "Dispaccio operativo" a destra, palette `spider-*` |
+| `ragnatela/ragnatela-desktop-radar.png` / `.html` | Ragnatela - Desktop Radar & Console Operativa | `08c6fe2d8bb040eeb1cfc98334911413` | solo archivio: versione precedente della Console, renderizzata senza stili |
+
+La schermata mobile Stitch la esporta in JPEG, per questo l'estensione e' `.jpg`. Come per le altre
+schermate, restano fuori gli elementi di prova: foto e nome di personaggi, statistiche finte,
+"Pattuglia 01", ricerca, distanze e voci di menu che non esistono.

@@ -1,5 +1,6 @@
 // Tipi della mappa, separati da Mappa.tsx cosi' si possono importare
 // senza caricare MapLibre (che e' pesante e arriva solo quando serve).
+import type { ReactNode } from 'react'
 import type { StatoEvento, TipoPoi } from '@/types/api'
 
 /** Punto sulla mappa, con gli stessi nomi dei DTO del backend (lat, lng) */
@@ -20,11 +21,21 @@ type MarkerBase = Coordinate & {
   onSposta?: (punto: Coordinate) => void
 }
 
-/** Marker di un evento (colore dallo stato) oppure di un POI (icona dal tipo) */
+/**
+ * Marker di un evento (colore dallo stato), di un POI (icona dal tipo) oppure personalizzato
+ * (disegno dato da chi usa la mappa, es. le segnalazioni della Modalita' Ragnatela)
+ */
 export type MarkerMappa = MarkerBase &
   (
     | { tipo: 'evento'; stato: StatoEvento; /** Evento aperto nel dettaglio */ selezionato?: boolean }
     | { tipo: TipoPoi }
+    | {
+        tipo: 'personalizzato'
+        /** Disegno del marker */
+        icona: ReactNode
+        /** Tipo letto dallo screen reader dopo l'etichetta, es. "segnalazione aperta" */
+        descrizione: string
+      }
   )
 
 export type MappaProps = {

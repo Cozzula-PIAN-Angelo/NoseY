@@ -17,7 +17,12 @@ setWorkerUrl(urlWorkerMapLibre)
 
 // Nome del marker per lo screen reader: "Chronos (in corso)", "Ingresso nord (ingresso)"
 function etichettaMarker(m: MarkerMappa): string {
-  const tipo = m.tipo === 'evento' ? STILE_STATO[m.stato].etichetta : STILE_POI[m.tipo].etichetta
+  const tipo =
+    m.tipo === 'evento'
+      ? STILE_STATO[m.stato].etichetta
+      : m.tipo === 'personalizzato'
+        ? m.descrizione
+        : STILE_POI[m.tipo].etichetta
   return m.etichetta ? `${m.etichetta} (${tipo.toLowerCase()})` : tipo
 }
 
@@ -111,7 +116,13 @@ export default function Mappa({
                 m.onSposta ? 'cursor-grab active:cursor-grabbing' : m.onClick ? 'cursor-pointer' : 'cursor-default',
               )}
             >
-              {m.tipo === 'evento' ? <IconaEvento stato={m.stato} selezionato={m.selezionato} /> : <IconaPoi tipo={m.tipo} />}
+              {m.tipo === 'evento' ? (
+                <IconaEvento stato={m.stato} selezionato={m.selezionato} />
+              ) : m.tipo === 'personalizzato' ? (
+                m.icona
+              ) : (
+                <IconaPoi tipo={m.tipo} />
+              )}
             </span>
           </Marker>
         ))}
