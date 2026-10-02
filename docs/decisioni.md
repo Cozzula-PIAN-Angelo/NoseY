@@ -214,7 +214,8 @@ non e' piu' solo `runtime`.
 Le mappe (eventi vicini, posizione dell'evento, POI interni) usano **MapLibre GL**
 (`maplibre-gl`) con il binding React **react-map-gl** (`import ... from 'react-map-gl/maplibre'`).
 Le tessere sono vettoriali e arrivano da **OpenFreeMap** (dati OpenStreetMap), con gli stili
-scuri `dark` (predefinito) e `fiord`, in tinta con la grafica Stitch:
+scuri `fiord` (predefinito dal 2026-10-02, spento con lo stesso filtro e la stessa sfumatura ai
+bordi della Modalita' Ragnatela, classe `mappa-fiord` in `mappa.css`) e `dark`, in tinta con la grafica Stitch:
 `https://tiles.openfreemap.org/styles/dark` e `https://tiles.openfreemap.org/styles/fiord`.
 Il componente comune sta in `fe/src/components/mappa/`.
 
@@ -787,3 +788,46 @@ Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
   controllo della sessione e obbligherebbe a montare un secondo `<Avvisi />`.
 - **Timer salvati invece degli istanti**: dopo un refresh andrebbero ricostruiti, e un messaggio
   "dovuto" mentre la pagina era chiusa si perderebbe o arriverebbe in ritardo.
+
+---
+
+## Decisione 26: vie al posto delle coordinate con Nominatim di OpenStreetMap
+
+### Scelta
+
+- Dove si sceglie un punto (form dell'evento, "Nuova segnalazione" della Ragnatela) si vede la
+  **via** del punto ("Via del Corso 12, Roma") invece delle coordinate, e si puo' **cercare una via
+  o un luogo** per mettere il punto senza cliccare la mappa.
+- Servizio: **Nominatim** di OpenStreetMap (`nominatim.openstreetmap.org`), chiamato dal browser:
+  `search` per la ricerca, `reverse` per la via del punto. Gratuito, senza chiave, stessi dati delle
+  tessere di OpenFreeMap (Decisione 8).
+- Codice in `fe/src/components/mappa/`: `indirizzi.ts` (chiamate, testo breve, cache per punto,
+  una richiesta al secondo al massimo), `useIndirizzo.ts` (via del punto, mezzo secondo dopo
+  l'ultimo cambio), `CercaIndirizzo.tsx` (campo + elenco dei risultati, fino a 5).
+- La ricerca parte **solo con Invio o con la freccia**, mai a ogni tasto. Invio nel campo cerca e
+  non invia il form che lo contiene.
+- Testo breve: via e **civico quando OpenStreetMap lo conosce**, poi citta'. La ricerca inversa usa
+  `zoom=18` e `layer=address`, quindi cerca edifici con civico e strade, non negozi o monumenti. Senza
+  via si mostra il quartiere ("Parione, Roma"). Cliccando in mezzo alla strada il civico non c'e'.
+- Se Nominatim non trova niente o non risponde restano le coordinate.
+- **Solo a schermo**: la via non si salva sull'evento. Backend, DTO e DDL non cambiano.
+
+### Motivazione
+
+- Le coordinate non dicono niente a chi crea un evento; una via si riconosce subito, e cercarla e'
+  piu' rapido che trovarla sulla mappa.
+- Nominatim usa gli stessi dati OpenStreetMap della mappa, non chiede account ne' chiavi e
+  l'attribuzione OSM e' gia' visibile sulla mappa.
+- Le regole d'uso di Nominatim (operations.osmfoundation.org/policies/nominatim) chiedono al
+  massimo 1 richiesta al secondo e vietano l'autocompletamento: da qui ricerca su Invio, attesa
+  prima della ricerca inversa, cache e turni da 1 secondo.
+
+### Alternative scartate
+
+- **Photon (Komoot)**: permette i suggerimenti mentre si scrive, ma e' un servizio di terzi senza
+  garanzie. Si puo' passare a Photon cambiando solo `indirizzi.ts`.
+- **Servizi a pagamento o con chiave (Google, Mapbox, MapTiler)**: account e chiave da gestire, e
+  la chiave nel frontend sarebbe pubblica.
+- **Salvare l'indirizzo sull'evento**: servirebbe un campo nuovo su `Evento` (entity, DTO, DDL,
+  progettazione). Si puo' aggiungere dopo, se il team vuole mostrare la via anche nel dettaglio e
+  nelle card.

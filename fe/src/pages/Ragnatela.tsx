@@ -293,7 +293,15 @@ export default function Ragnatela() {
                   <Icon nome="arrow_back" size={16} />
                   Annulla
                 </button>
-                <FormSegnalazione punto={punto} onInvia={invia} />
+                <FormSegnalazione
+                  punto={punto}
+                  centro={centro}
+                  onCercato={(r) => {
+                    setPunto(r.punto)
+                    setCentro(r.punto)
+                  }}
+                  onInvia={invia}
+                />
               </div>
             ) : selezionata ? (
               <DettaglioSegnalazione

@@ -53,7 +53,7 @@ export type MappaProps = {
   onScegliPunto?: (punto: Coordinate) => void
   /** Cerchio da disegnare, es. i 2 km entro cui stanno i POI di un evento */
   cerchio?: { centro: Coordinate; raggioKm: number }
-  /** Stile della mappa (default "dark") */
+  /** Stile della mappa (default "fiord", con i colori della Modalita' Ragnatela) */
   stile?: StileMappa
   /** Descrizione della mappa per gli screen reader */
   etichetta?: string

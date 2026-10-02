@@ -1,3 +1,12 @@
+/*
+ * Tessere "fiord" (blu notte) spente come la mappa della Modalita' Ragnatela: il filtro e la sfumatura
+ * verso il nero ai bordi toccano solo la tela, cosi' i marker (che stanno fuori dal canvas) restano accesi.
+ */
+.mappa-fiord .maplibregl-canvas {
+  filter: saturate(0.75) brightness(0.6) contrast(1.25);
+  mask-image: radial-gradient(ellipse at center, #000 35%, rgb(0 0 0 / 0.3) 100%);
+}
+
 /* Controlli di MapLibre (zoom +/-) nei colori di Stitch: di default sono bianchi. */
 .mappa-nosey .maplibregl-ctrl-group {
   background: var(--color-surface-card);

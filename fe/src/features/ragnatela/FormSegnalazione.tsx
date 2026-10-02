@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { Icon, Select, TextArea, TextField, type Opzione } from '@/components/ui'
-import type { Coordinate } from '@/components/mappa'
+import { CercaIndirizzo, useIndirizzo, type Coordinate, type Indirizzo } from '@/components/mappa'
 import { cx } from '@/lib/cx'
 import {
   CATEGORIE,
@@ -25,18 +25,23 @@ const eCategoria = (v: string): v is Categoria => Object.hasOwn(CATEGORIE, v)
 type FormSegnalazioneProps = {
   /** Punto scelto cliccando la mappa (lo gestisce la pagina, che passa onScegliPunto alla mappa) */
   punto: Coordinate | null
+  /** Punto che la mappa sta mostrando: la ricerca della via preferisce i risultati vicini */
+  centro: Coordinate
+  /** Via scelta dalla ricerca: la pagina ci mette il punto e ci sposta la mappa */
+  onCercato: (indirizzo: Indirizzo) => void
   onInvia: (dati: NuovaSegnalazione) => void
 }
 
-// Form "Nuova segnalazione": il punto si sceglie sulla mappa, il resto qui. Campi di components/ui,
+// Form "Nuova segnalazione": il punto si sceglie sulla mappa o cercando una via, il resto qui. Campi di components/ui,
 // con l'aspetto del design dato da ragnatela.css (.rg-campi).
-export function FormSegnalazione({ punto, onInvia }: FormSegnalazioneProps) {
+export function FormSegnalazione({ punto, centro, onCercato, onInvia }: FormSegnalazioneProps) {
   const id = useId()
   const [titolo, setTitolo] = useState('')
   const [descrizione, setDescrizione] = useState('')
   const [categoria, setCategoria] = useState<Categoria | ''>('')
   const [urgenza, setUrgenza] = useState<Urgenza>('MEDIA')
   const [errori, setErrori] = useState<Errori>({})
+  const indirizzo = useIndirizzo(punto)
 
   // Il punto scelto dopo l'errore lo toglie subito, senza aspettare un altro invio
   const erroreP = punto ? undefined : errori.punto
@@ -44,7 +49,7 @@ export function FormSegnalazione({ punto, onInvia }: FormSegnalazioneProps) {
   function invia(e: FormEvent) {
     e.preventDefault()
     const nuovi: Errori = {}
-    if (!punto) nuovi.punto = 'Tocca la mappa per indicare dove serve aiuto.'
+    if (!punto) nuovi.punto = 'Tocca la mappa o cerca una via per indicare dove serve aiuto.'
     if (!titolo.trim()) nuovi.titolo = 'Scrivi un titolo: Spider-Man deve sapere cosa succede.'
     if (!categoria) nuovi.categoria = 'Scegli una categoria.'
     setErrori(nuovi)
@@ -75,19 +80,24 @@ export function FormSegnalazione({ punto, onInvia }: FormSegnalazioneProps) {
         <Icon nome={punto ? 'where_to_vote' : 'touch_app'} size={22} className={punto ? 'text-(--rg-verde-scuro)' : 'text-(--rg-rosso)'} />
         <div className="flex min-w-0 flex-col">
           <span className="rg-titolo text-xs font-bold tracking-widest text-(--rg-oro-testo)">Punto sulla mappa *</span>
-          {punto ? (
-            <span className="font-body-sm text-body-sm tabular-nums text-(--rg-inchiostro)">
-              {punto.lat.toFixed(5)}, {punto.lng.toFixed(5)} · tocca di nuovo la mappa per spostarlo
+          {indirizzo.stato !== 'nessun-punto' ? (
+            <span aria-live="polite" className="font-body-sm text-body-sm text-(--rg-inchiostro)">
+              <strong className={cx(indirizzo.stato === 'non-trovato' && 'tabular-nums')}>{indirizzo.testo}</strong> · tocca
+              di nuovo la mappa per spostarlo
             </span>
           ) : erroreP ? (
             <span role="alert" className="font-body-sm text-body-sm font-semibold text-(--rg-rosso-scuro)">
               {erroreP}
             </span>
           ) : (
-            <span className="font-body-sm text-body-sm text-(--rg-inchiostro-tenue)">Tocca la mappa nel punto dove serve aiuto.</span>
+            <span className="font-body-sm text-body-sm text-(--rg-inchiostro-tenue)">
+              Tocca la mappa nel punto dove serve aiuto, oppure cerca la via qui sotto.
+            </span>
           )}
         </div>
       </div>
+
+      <CercaIndirizzo etichetta="Cerca la via" vicinoA={centro} onScegli={onCercato} />
 
       <TextField
         id={`${id}-titolo`}

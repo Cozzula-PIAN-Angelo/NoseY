@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import { Link } from 'react-router'
 import { useAppDispatch, useAppSelector } from '@/hooks/redux'
 import { cx } from '@/lib/cx'
 import { leggiErrore } from '@/lib/errori'
@@ -47,12 +48,8 @@ function ElementoAvviso({ avviso }: { avviso: Avviso }) {
     return () => clearTimeout(timer)
   }, [avviso.id, avviso.durata, dispatch])
 
-  return (
-    <div
-      // Gli errori interrompono lo screen reader, gli altri aspettano che finisca di leggere
-      role={avviso.tipo === 'errore' ? 'alert' : 'status'}
-      className="pointer-events-auto flex w-full items-start gap-space-sm rounded-xl bg-surface-card px-space-md py-space-sm text-on-surface shadow-2xl motion-safe:animate-[entrata-avviso_200ms_ease-out]"
-    >
+  const contenuto = (
+    <>
       <Icon nome={icona} size={22} className={cx('mt-0.5', colore)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="font-label-sm text-label-sm font-semibold">{avviso.titolo}</span>
@@ -60,6 +57,27 @@ function ElementoAvviso({ avviso }: { avviso: Avviso }) {
           <span className="font-body-sm text-body-sm text-on-surface-variant">{avviso.messaggio}</span>
         )}
       </div>
+    </>
+  )
+
+  return (
+    <div
+      // Gli errori interrompono lo screen reader, gli altri aspettano che finisca di leggere
+      role={avviso.tipo === 'errore' ? 'alert' : 'status'}
+      className="pointer-events-auto flex w-full items-start gap-space-sm rounded-xl bg-surface-card px-space-md py-space-sm text-on-surface shadow-2xl motion-safe:animate-[entrata-avviso_200ms_ease-out]"
+    >
+      {avviso.link ? (
+        // Avviso cliccabile (es. un messaggio in chat): icona e testo sono il link, "Chiudi" resta a parte
+        <Link
+          to={avviso.link}
+          onClick={() => dispatch(chiudiAvviso(avviso.id))}
+          className="-m-1 flex min-w-0 flex-1 items-start gap-space-sm rounded-lg p-1 transition-colors hover:bg-surface-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container"
+        >
+          {contenuto}
+        </Link>
+      ) : (
+        contenuto
+      )}
       <button
         type="button"
         aria-label="Chiudi avviso"
