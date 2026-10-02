@@ -94,3 +94,18 @@ export function RomboSegnalazione({
     </span>
   )
 }
+
+/**
+ * Simbolo della modalita' accanto a RAGNATELA, come nell'header della schermata Stitch mobile:
+ * quadratino rosso ruotato con l'icona "pest_control" piena
+ */
+export function SimboloRagnatela() {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex size-11 shrink-0 -rotate-3 items-center justify-center bg-(--rg-rosso) text-white shadow-[0_0_15px_rgba(226,35,40,0.6)] md:size-12"
+    >
+      <Icon nome="pest_control" piena size={36} />
+    </span>
+  )
+}

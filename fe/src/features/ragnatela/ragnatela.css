@@ -100,6 +100,24 @@
   background: #07090d;
 }
 
+/*
+ * Tessere "fiord" (blu notte) spente come la mappa delle schermate Stitch: il filtro e la sfumatura
+ * verso il nero ai bordi toccano solo la tela, cosi' i marker (che stanno fuori dal canvas) restano accesi.
+ */
+.rg-mappa .maplibregl-canvas {
+  filter: saturate(0.75) brightness(0.6) contrast(1.25);
+  mask-image: radial-gradient(ellipse at center, #000 35%, rgb(0 0 0 / 0.3) 100%);
+}
+
+/* Griglia tattica da 40 px e bagliore blu al centro, sopra la mappa */
+.rg-griglia-tattica {
+  background-image:
+    radial-gradient(ellipse at center, rgb(27 86 224 / 0.16) 0%, transparent 60%),
+    linear-gradient(to right, rgb(255 255 255 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
 .rg-mappa .maplibregl-ctrl-group {
   border-radius: 2px;
   background: rgb(18 21 27 / 0.92);
@@ -163,6 +181,34 @@
 
 .rg-campi select option {
   background: var(--rg-card);
+}
+
+/* Variante chiara (form "Nuova segnalazione" su card bianca): "High-Contrast White Field" del design */
+.rg-campi-chiari label[for] {
+  color: var(--rg-oro-testo);
+}
+
+.rg-campi-chiari input:not([type='radio']),
+.rg-campi-chiari textarea,
+.rg-campi-chiari select {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: var(--rg-inchiostro);
+}
+
+.rg-campi-chiari input::placeholder,
+.rg-campi-chiari textarea::placeholder {
+  color: #6b7280;
+}
+
+.rg-campi-chiari select option {
+  background: #fff;
+  color: var(--rg-inchiostro);
+}
+
+/* Freccia della select (Icon di components/ui): scura sul fondo chiaro */
+.rg-campi-chiari select + .material-symbols-outlined {
+  color: var(--rg-inchiostro-tenue);
 }
 
 /* ---------- Urgenza e conversazione ---------- */

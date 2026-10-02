@@ -6,14 +6,26 @@ import { caricaRagnatela } from './carica'
 // - Tastiera: scrivere "spidey" in qualsiasi pagina (maiuscole o minuscole), fuori dai campi di testo.
 // - Mobile: 5 tocchi sul logo NoseY entro 2 secondi. I tocchi non vengono bloccati: il logo resta
 //   il link alla home e lo scopre solo chi insiste.
-// Poi ~800 ms di fili di ragnatela (TransizioneRagnatela) e la pagina /ragnatela; con
-// prefers-reduced-motion si va diretti. Restituisce true durante la transizione.
+// Poi ~1 s di fili di ragnatela che si tendono (TransizioneRagnatela) e la pagina /ragnatela.
+// All'uscita (annunciaUscitaRagnatela, da Esc o "Torna a NoseY") la tela si ritira sopra NoseY.
+// Con prefers-reduced-motion niente animazioni. Restituisce la fase della transizione in corso.
 
 export const PERCORSO_RAGNATELA = '/ragnatela'
 const CODICE = 'spidey'
 const TOCCHI = 5
 const FINESTRA_TOCCHI = 2000
-export const DURATA_TRANSIZIONE = 800
+/** Fili che si tendono, poi la tela resta completa un attimo prima di aprire la pagina */
+export const DURATA_TRANSIZIONE = 1000
+/** Tela che si ritira all'uscita */
+export const DURATA_USCITA = 700
+const EVENTO_USCITA = 'nosey:esci-ragnatela'
+
+export type FaseTransizione = 'entrata' | 'uscita'
+
+/** Da chiamare subito prima di uscire da /ragnatela: App mostra la tela che si ritira */
+export function annunciaUscitaRagnatela() {
+  window.dispatchEvent(new Event(EVENTO_USCITA))
+}
 
 /** Stato della rotta: la pagina da cui si e' entrati, dove riporta "Torna a NoseY" */
 export type StatoRagnatela = { da: string }
@@ -26,11 +38,12 @@ function staScrivendo(elemento: EventTarget | null): boolean {
 
 const movimentoRidotto = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export function useCodiceSegreto(): boolean {
+export function useCodiceSegreto(): FaseTransizione | null {
   const navigate = useNavigate()
   const { pathname, search } = useLocation()
-  const [transizione, setTransizione] = useState(false)
+  const [fase, setFase] = useState<FaseTransizione | null>(null)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const timerUscita = useRef<ReturnType<typeof setTimeout>>(undefined)
   const buffer = useRef('')
   const tocchi = useRef<number[]>([])
   /** Pagina corrente letta dagli ascoltatori, che restano gli stessi tra un cambio di pagina e l'altro */
@@ -50,13 +63,25 @@ export function useCodiceSegreto(): boolean {
       navigate(PERCORSO_RAGNATELA, { state: stato })
       return
     }
-    setTransizione(true)
+    setFase('entrata')
     timer.current = setTimeout(() => {
       timer.current = undefined
-      setTransizione(false)
+      setFase(null)
       navigate(PERCORSO_RAGNATELA, { state: stato })
     }, DURATA_TRANSIZIONE)
   }, [navigate])
+
+  // Uscita: la tela copre tutto e si ritira mentre sotto ricompare NoseY
+  useEffect(() => {
+    function esci() {
+      if (movimentoRidotto()) return
+      clearTimeout(timerUscita.current)
+      setFase('uscita')
+      timerUscita.current = setTimeout(() => setFase(null), DURATA_USCITA)
+    }
+    window.addEventListener(EVENTO_USCITA, esci)
+    return () => window.removeEventListener(EVENTO_USCITA, esci)
+  }, [])
 
   useEffect(() => {
     function tasto(e: KeyboardEvent) {
@@ -93,10 +118,11 @@ export function useCodiceSegreto(): boolean {
   useEffect(
     () => () => {
       clearTimeout(timer.current)
+      clearTimeout(timerUscita.current)
       timer.current = undefined
     },
     [],
   )
 
-  return transizione
+  return fase
 }

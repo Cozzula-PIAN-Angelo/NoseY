@@ -8,7 +8,7 @@ import { useCodiceSegreto } from '@/features/ragnatela/useCodiceSegreto'
 // header fisso alto 64px (pt-16 sul main), pagina e footer.
 export default function App() {
   // Accesso segreto alla Modalita' Ragnatela ("spidey" o 5 tocchi sul logo), Decisione 25
-  const transizioneRagnatela = useCodiceSegreto()
+  const faseRagnatela = useCodiceSegreto()
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -30,7 +30,7 @@ export default function App() {
       {/* Avvisi a comparsa: uno solo per tutta l'app */}
       <Avvisi />
 
-      {transizioneRagnatela && <TransizioneRagnatela />}
+      {faseRagnatela && <TransizioneRagnatela key={faseRagnatela} fase={faseRagnatela} />}
     </div>
   )
 }

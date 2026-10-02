@@ -33,7 +33,7 @@ function Messaggio({ m }: { m: MessaggioRagnatela }) {
         className={cx(
           'max-w-full px-space-md py-space-sm font-body-md text-body-md break-words',
           suo
-            ? 'border-l-2 border-(--rg-oro) bg-(--rg-oro)/10 text-white shadow-[0_0_20px_-6px_rgba(223,153,53,0.35)]'
+            ? 'border-l-4 border-(--rg-oro) bg-(--rg-pannello) text-(--rg-inchiostro) shadow-[0_10px_25px_rgba(0,0,0,0.6)]'
             : 'border border-(--rg-bordo) bg-(--rg-rialzata) text-(--rg-testo)',
         )}
       >

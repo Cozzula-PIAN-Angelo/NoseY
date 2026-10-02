@@ -4,12 +4,12 @@ import { Icon } from '@/components/ui'
 import { Mappa, type Coordinate, type MarkerMappa } from '@/components/mappa'
 import { cx } from '@/lib/cx'
 import { DettaglioSegnalazione } from '@/features/ragnatela/DettaglioSegnalazione'
-import { RomboSegnalazione } from '@/features/ragnatela/Distintivi'
+import { RomboSegnalazione, SimboloRagnatela } from '@/features/ragnatela/Distintivi'
 import { BenvenutoRagnatela, ElencoSegnalazioni, FiltriStato, type FiltroStato } from '@/features/ragnatela/ElencoSegnalazioni'
 import { FormSegnalazione } from '@/features/ragnatela/FormSegnalazione'
 import { statoAl } from '@/features/ragnatela/sequenza'
 import { STATI, type NuovaSegnalazione, type Segnalazione } from '@/features/ragnatela/tipi'
-import { PERCORSO_RAGNATELA } from '@/features/ragnatela/useCodiceSegreto'
+import { annunciaUscitaRagnatela, PERCORSO_RAGNATELA } from '@/features/ragnatela/useCodiceSegreto'
 import { useSegnalazioni } from '@/features/ragnatela/useSegnalazioni'
 import '@/features/ragnatela/ragnatela.css'
 
@@ -28,6 +28,32 @@ const titoli: Record<Pannello['tipo'], { occhiello: string; titolo: string }> = 
   elenco: { occhiello: 'Dispaccio operativo', titolo: 'Le mie segnalazioni' },
   nuova: { occhiello: 'Nuovo dispaccio', titolo: 'Nuova segnalazione' },
   dettaglio: { occhiello: 'Dispaccio operativo', titolo: 'Dettaglio segnalazione' },
+}
+
+/**
+ * "Spider-segnale": pulsante rosso obliquo che apre "Nuova segnalazione", come quello al centro della
+ * barra mobile di Stitch. Su desktop sta sulla mappa, piu' grande e con un anello che pulsa.
+ */
+// La posizione (relative nella barra, absolute sulla mappa) la decide chi lo usa, con className
+function SpiderSegnale({ onClick, grande = false, className }: { onClick: () => void; grande?: boolean; className?: string }) {
+  return (
+    <button
+      type="button"
+      aria-label="Nuova segnalazione"
+      title="Nuova segnalazione"
+      onClick={onClick}
+      className={cx(
+        'rg-obliquo rg-azione z-10 flex cursor-pointer items-center justify-center border-2 border-white',
+        grande ? 'size-16 shadow-[0_0_30px_rgba(226,35,40,0.75)]' : 'size-14',
+        className,
+      )}
+    >
+      {grande && <span aria-hidden="true" className="absolute -inset-1.5 border-2 border-(--rg-rosso)/60 motion-safe:animate-ping" />}
+      <span className="rg-dritto">
+        <Icon nome="crisis_alert" size={grande ? 32 : 28} />
+      </span>
+    </button>
+  )
 }
 
 /** Pagina da cui si e' entrati (stato della rotta), solo se e' un percorso interno valido */
@@ -52,7 +78,11 @@ export default function Ragnatela() {
   const titoloPannello = useRef<HTMLHeadingElement>(null)
   const pannelloPrima = useRef('elenco|false')
 
-  const esci = useCallback(() => navigate(da), [navigate, da])
+  // Uscita con la tela che si ritira (la mostra App, sopra la pagina di NoseY che ricompare)
+  const esci = useCallback(() => {
+    annunciaUscitaRagnatela()
+    navigate(da)
+  }, [navigate, da])
 
   // Header e footer del sito restano sotto: fuori dal Tab e dallo screen reader, pagina ferma
   useEffect(() => {
@@ -101,7 +131,8 @@ export default function Ragnatela() {
   }
 
   function nuova() {
-    setPunto(null)
+    // Se il form e' gia' aperto non si azzera il punto scelto
+    if (pannello.tipo !== 'nuova') setPunto(null)
     setPannello({ tipo: 'nuova' })
     setFoglioAperto(true)
   }
@@ -136,6 +167,7 @@ export default function Ragnatela() {
       <header className="z-20 shrink-0 border-b border-white/10 bg-[#0e1015]/95 shadow-[0_4px_30px_rgba(0,0,0,0.85)] backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between gap-space-md px-4 md:h-20 md:px-6 lg:px-10">
           <div className="flex items-center gap-3">
+            <SimboloRagnatela />
             <h1 className="rg-obliquo border border-red-400/40 bg-(--rg-rosso) px-3 py-1 shadow-[0_0_20px_rgba(226,35,40,0.6)] md:px-4 md:py-1.5">
               <span className="rg-dritto rg-titolo text-xl font-bold tracking-wider text-white md:text-2xl">Ragnatela</span>
             </h1>
@@ -152,10 +184,10 @@ export default function Ragnatela() {
             <button
               type="button"
               onClick={esci}
-              className="rg-obliquo cursor-pointer border border-white/20 bg-(--rg-superficie) px-4 py-2 text-white transition-colors hover:bg-(--rg-rialzata)"
+              className="rg-obliquo cursor-pointer bg-(--rg-pannello) px-4 py-2 text-(--rg-inchiostro) shadow-[0_4px_14px_rgba(0,0,0,0.5)] transition-colors hover:bg-slate-200"
             >
               <span className="rg-dritto rg-titolo text-sm font-semibold tracking-wider">
-                <Icon nome="logout" size={18} className="text-(--rg-oro)" />
+                <Icon nome="logout" size={18} className="text-(--rg-rosso)" />
                 Torna a NoseY
               </span>
             </button>
@@ -183,14 +215,16 @@ export default function Ragnatela() {
             <Mappa
               centro={centro}
               zoom={14}
+              stile="fiord"
               marker={marker}
               puntoScelto={scelta ? punto : null}
               onScegliPunto={scelta ? setPunto : undefined}
               etichetta={scelta ? 'Mappa: tocca il punto dove serve aiuto' : 'Mappa delle mie segnalazioni'}
               className="rg-mappa h-full"
             />
-            {/* Radar decorativo sopra la mappa: anelli, mirino e cono che ruota */}
+            {/* Radar decorativo sopra la mappa: griglia, anelli, mirino e cono che ruota */}
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+              <div className="rg-griglia-tattica absolute inset-0" />
               <div className="rg-radar aspect-square w-[min(120vw,900px)] rounded-full opacity-70" />
               <svg className="absolute inset-0 size-full" xmlns="http://www.w3.org/2000/svg">
                 <line x1="50%" x2="50%" y1="0" y2="100%" stroke="rgba(255,255,255,0.10)" strokeDasharray="4,6" />
@@ -207,6 +241,8 @@ export default function Ragnatela() {
                 {punto ? 'Punto scelto: tocca di nuovo per spostarlo' : 'Tocca la mappa dove serve aiuto'}
               </p>
             )}
+            {/* Spider-segnale sulla mappa (su mobile sta al centro della barra in basso) */}
+            <SpiderSegnale onClick={nuova} grande className="absolute right-5 bottom-10 hidden md:flex" />
           </div>
 
           <div className="hidden flex-wrap items-center justify-between gap-3 border border-white/10 bg-(--rg-superficie) px-4 py-2.5 md:flex">
@@ -228,10 +264,10 @@ export default function Ragnatela() {
             foglioAperto ? 'flex' : 'hidden',
           )}
         >
-          <div className="flex items-center justify-between gap-3 border-b border-white/10 p-4 md:border md:bg-(--rg-superficie)">
+          <div className="flex items-center justify-between gap-3 bg-(--rg-pannello) p-4 text-(--rg-inchiostro) md:border-t-4 md:border-(--rg-rosso) md:shadow-[0_12px_30px_rgba(0,0,0,0.6)]">
             <div>
-              <span className="rg-titolo text-xs font-bold tracking-widest text-(--rg-oro)">{t.occhiello}</span>
-              <h2 ref={titoloPannello} tabIndex={-1} className="rg-titolo text-xl font-bold tracking-wide text-white md:text-2xl">
+              <span className="rg-titolo text-xs font-bold tracking-widest text-(--rg-oro-testo)">{t.occhiello}</span>
+              <h2 ref={titoloPannello} tabIndex={-1} className="rg-titolo text-xl font-bold tracking-wide md:text-2xl">
                 {t.titolo}
               </h2>
             </div>
@@ -239,7 +275,7 @@ export default function Ragnatela() {
               type="button"
               aria-label="Chiudi il pannello e torna alla mappa"
               onClick={() => setFoglioAperto(false)}
-              className="flex size-9 cursor-pointer items-center justify-center border border-white/10 bg-(--rg-card) text-slate-300 hover:text-white md:hidden"
+              className="flex size-9 cursor-pointer items-center justify-center border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-(--rg-inchiostro) md:hidden"
             >
               <Icon nome="close" size={20} />
             </button>
@@ -300,16 +336,7 @@ export default function Ragnatela() {
             <Icon nome="explore" size={22} />
             <span className="rg-titolo text-[11px] font-bold tracking-wider">Radar</span>
           </button>
-          <button
-            type="button"
-            aria-label="Nuova segnalazione"
-            onClick={nuova}
-            className="rg-obliquo rg-azione -mt-6 flex size-14 cursor-pointer items-center justify-center border-2 border-white"
-          >
-            <span className="rg-dritto">
-              <Icon nome="crisis_alert" size={28} />
-            </span>
-          </button>
+          <SpiderSegnale onClick={nuova} className="relative -mt-6" />
           <button
             type="button"
             aria-pressed={foglioAperto && pannello.tipo !== 'nuova'}

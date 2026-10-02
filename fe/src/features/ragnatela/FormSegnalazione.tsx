@@ -59,28 +59,32 @@ export function FormSegnalazione({ punto, onInvia }: FormSegnalazioneProps) {
   }
 
   return (
-    <form noValidate onSubmit={invia} className="rg-campi flex flex-col gap-space-md">
+    <form
+      noValidate
+      onSubmit={invia}
+      className="rg-campi rg-campi-chiari flex flex-col gap-space-md border-t-4 border-(--rg-rosso) bg-(--rg-pannello) p-4 text-(--rg-inchiostro) shadow-[0_12px_30px_rgba(0,0,0,0.7)]"
+    >
       <div
         id={`${id}-punto`}
         tabIndex={-1}
         className={cx(
           'flex items-start gap-space-sm border px-space-md py-space-sm',
-          erroreP ? 'border-(--rg-rosso) bg-(--rg-rosso)/10' : 'border-(--rg-bordo) bg-(--rg-card)',
+          erroreP ? 'border-(--rg-rosso) bg-(--rg-rosso)/10' : 'border-slate-300 bg-slate-100',
         )}
       >
-        <Icon nome={punto ? 'where_to_vote' : 'touch_app'} size={22} className={punto ? 'text-(--rg-verde)' : 'text-(--rg-oro)'} />
+        <Icon nome={punto ? 'where_to_vote' : 'touch_app'} size={22} className={punto ? 'text-(--rg-verde-scuro)' : 'text-(--rg-rosso)'} />
         <div className="flex min-w-0 flex-col">
-          <span className="rg-titolo text-xs font-bold tracking-widest text-(--rg-oro)">Punto sulla mappa *</span>
+          <span className="rg-titolo text-xs font-bold tracking-widest text-(--rg-oro-testo)">Punto sulla mappa *</span>
           {punto ? (
-            <span className="font-body-sm text-body-sm tabular-nums text-(--rg-testo)">
+            <span className="font-body-sm text-body-sm tabular-nums text-(--rg-inchiostro)">
               {punto.lat.toFixed(5)}, {punto.lng.toFixed(5)} · tocca di nuovo la mappa per spostarlo
             </span>
           ) : erroreP ? (
-            <span role="alert" className="font-body-sm text-body-sm font-semibold text-red-300">
+            <span role="alert" className="font-body-sm text-body-sm font-semibold text-(--rg-rosso-scuro)">
               {erroreP}
             </span>
           ) : (
-            <span className="font-body-sm text-body-sm text-(--rg-testo-tenue)">Tocca la mappa nel punto dove serve aiuto.</span>
+            <span className="font-body-sm text-body-sm text-(--rg-inchiostro-tenue)">Tocca la mappa nel punto dove serve aiuto.</span>
           )}
         </div>
       </div>
@@ -126,7 +130,7 @@ export function FormSegnalazione({ punto, onInvia }: FormSegnalazioneProps) {
 
       {/* Urgenza come pillole: sono radio veri, quindi frecce e Tab funzionano da soli */}
       <fieldset className="flex flex-col gap-space-xs">
-        <legend className="rg-titolo mb-space-xs text-xs font-bold tracking-[0.08em] text-(--rg-oro)">Urgenza</legend>
+        <legend className="rg-titolo mb-space-xs text-xs font-bold tracking-[0.08em] text-(--rg-oro-testo)">Urgenza</legend>
         <div className="flex flex-wrap gap-space-sm">
           {urgenze.map((u) => (
             <label key={u} className="cursor-pointer">
@@ -141,10 +145,10 @@ export function FormSegnalazione({ punto, onInvia }: FormSegnalazioneProps) {
               <span
                 className={cx(
                   'rg-obliquo inline-flex border px-space-md py-1.5 transition-colors',
-                  'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-white',
+                  'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-(--rg-rosso)',
                   urgenza === u
                     ? cx('border-transparent', URGENZE[u].colore, u === 'BASSA' ? 'text-slate-900' : 'text-white')
-                    : 'border-white/15 bg-(--rg-card) text-(--rg-testo-tenue) hover:bg-(--rg-rialzata) hover:text-white',
+                    : 'border-slate-300 bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-(--rg-inchiostro)',
                 )}
               >
                 <span className="rg-dritto rg-titolo gap-1 text-xs font-bold tracking-wider">
@@ -164,9 +168,9 @@ export function FormSegnalazione({ punto, onInvia }: FormSegnalazioneProps) {
         </span>
       </button>
 
-      <p className="font-body-sm text-body-sm text-(--rg-testo-tenue)">
+      <p className="font-body-sm text-body-sm text-(--rg-inchiostro-tenue)">
         È un gioco: le segnalazioni restano solo su questo dispositivo e non arrivano a nessuno. Per
-        un&apos;emergenza vera chiama il <strong className="text-white">112</strong>.
+        un&apos;emergenza vera chiama il <strong className="text-(--rg-inchiostro)">112</strong>.
       </p>
     </form>
   )
