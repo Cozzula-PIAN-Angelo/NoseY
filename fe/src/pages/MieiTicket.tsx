@@ -1,18 +1,17 @@
 import { useRef, useState } from 'react'
 import { BadgeStato } from '@/components/eventi'
 import { Link } from 'react-router'
-import { Button, Caricamento, Icon, MessaggioErrore, StatoVuoto, stilePulsante } from '@/components/ui'
+import { Caricamento, Icon, MessaggioErrore, StatoVuoto, stilePulsante } from '@/components/ui'
 import { useMieiTicketQuery } from '@/features/eventi/apiEventi'
-import { FinestraTicket } from '@/features/eventi/FinestraTicket'
 import { TicketEvento } from '@/features/eventi/TicketEvento'
 import { cx } from '@/lib/cx'
 import { giorno } from '@/lib/formato'
 import type { TicketResponse, Uuid } from '@/types/api'
 
 // I miei ticket (FE1-08), rotta /tickets (solo con il login), come la schermata Stitch
-// "I Miei Ticket (Snella & Ordinata)": schede Attivi / Passati, ticket aperto a sinistra con il QR,
-// elenco a destra. Il backend li manda gia' ordinati: prima programmati e in corso, poi gli altri.
-// "Visualizza ticket" apre il ticket grande con il Tear Ticket di React Bits (FinestraTicket).
+// "I Miei Ticket (Snella & Ordinata)": schede Attivi / Passati, ticket aperto a sinistra (il QR
+// solo con "Visualizza ticket", vedi TicketEvento), elenco a destra. Il backend li manda gia'
+// ordinati: prima programmati e in corso, poi gli altri.
 
 type Scheda = 'attivi' | 'passati'
 
@@ -23,8 +22,6 @@ export default function MieiTicket() {
   const [scheda, setScheda] = useState<Scheda>('attivi')
   const [selezionatoId, setSelezionatoId] = useState<Uuid | null>(null)
   const dettaglio = useRef<HTMLDivElement>(null)
-  /** Ticket aperto nella finestra "Visualizza ticket" */
-  const [visualizzato, setVisualizzato] = useState<TicketResponse | null>(null)
 
   /** Da telefono la lista sta sotto il ticket aperto: dopo la scelta si torna su a mostrarlo */
   function apri(id: Uuid) {
@@ -98,16 +95,10 @@ export default function MieiTicket() {
         <div className="grid items-start gap-space-lg lg:grid-cols-12">
           <div ref={dettaglio} className="flex scroll-mt-20 flex-col gap-space-sm lg:col-span-7">
             <TicketEvento ticket={aperto} conEvento />
-            <div className="flex flex-wrap gap-space-sm">
-              {/* Il ticket grande, con il Tear Ticket di React Bits */}
-              <Button icona="confirmation_number" onClick={() => setVisualizzato(aperto)}>
-                Visualizza ticket
-              </Button>
-              <Link to={`/events/${aperto.evento.id}`} className={stilePulsante({ variant: 'secondary' })}>
-                <Icon nome="visibility" size={18} />
-                Vedi evento
-              </Link>
-            </div>
+            <Link to={`/events/${aperto.evento.id}`} className={cx(stilePulsante({ variant: 'secondary' }), 'self-start')}>
+              <Icon nome="visibility" size={18} />
+              Vedi evento
+            </Link>
           </div>
 
           <section aria-labelledby="titolo-pass" className="flex flex-col gap-space-sm lg:col-span-5">
@@ -151,8 +142,6 @@ export default function MieiTicket() {
           </section>
         </div>
       )}
-
-      <FinestraTicket ticket={visualizzato} onChiudi={() => setVisualizzato(null)} />
     </div>
   )
 }
