@@ -5,6 +5,10 @@
 **Metodologia:** revisione di sicurezza *white-box* (analisi del codice sorgente di frontend e backend)
 **Oggetto:** repository NoseY — frontend (`fe/`, React + Vite + TypeScript) e backend (`be/`, Spring Boot + JPA/Hibernate + PostgreSQL)
 
+> **Aggiornamento (2 ottobre 2026).** La **Parte II** in fondo al documento aggiunge la *verifica
+> dinamica* — gli stessi payload inviati davvero a un'istanza in esecuzione, come raccomandato qui
+> sotto — e due classi d'attacco ulteriori: **CSRF** e **attacchi all'autenticazione**.
+
 > **Nota sul metodo.** La valutazione è stata condotta leggendo il codice sorgente (analisi statica),
 > non inviando payload d'attacco a un server in esecuzione (analisi dinamica). Per un progetto di
 > queste dimensioni l'analisi statica è conclusiva sui due temi trattati, perché SQLi e XSS si
@@ -127,3 +131,166 @@ lato frontend ed email — sono quelle raccomandate dalle linee guida OWASP per 
 vulnerabilità. Le raccomandazioni della sezione 4 sono rafforzativi facoltativi e non correzioni.
 
 > Valutazione svolta sull'applicazione del team in ambiente locale, a scopo didattico e difensivo.
+
+---
+---
+
+# Parte II — Verifica dinamica e attacchi aggiuntivi
+
+**Data:** 2 ottobre 2026
+**Ambito:** verifica *dinamica* delle due vulnerabilità della Parte I (SQLi, XSS) più due classi
+d'attacco ulteriori: **CSRF** e **attacchi all'autenticazione** (brute force, furto credenziali,
+enumerazione utenti).
+**Metodologia:** test *black/grey-box* — payload reali inviati a un'istanza in esecuzione: backend su
+`localhost:8080` (profilo di sviluppo) e frontend sui dati finti (`VITE_DATI_FINTI=true`).
+
+> **Rapporto con la Parte I.** La Parte I (analisi del codice) concludeva "nessuna vulnerabilità" e
+> raccomandava un test dinamico come verifica complementare. Questa Parte II è quel test: conferma sul
+> campo i risultati su SQLi e XSS ed estende la valutazione a CSRF e autenticazione. Tutte le prove
+> sono state eseguite in locale, sull'applicazione del team, a scopo difensivo.
+
+---
+
+## 6. Sintesi della Parte II
+
+| Attacco | Prova dinamica | Esito |
+|---|---|---|
+| SQL injection | payload nel login e nella ricerca | **Respinto** — nessuna iniezione |
+| Cross-Site Scripting (XSS) | `<script>` / `<img onerror>` in un messaggio di chat | **Respinto** — reso come testo |
+| CSRF | `POST /api/events` da un'origine esterna, senza token | **Respinto** — `403` |
+| Autenticazione | brute force, lettura hash nel DB, enumerazione | **Respinto** — `429`, BCrypt, risposte identiche |
+
+Nessuna vulnerabilità rilevata su nessuna delle quattro classi. Di seguito il dettaglio.
+
+---
+
+## 7. SQL injection — verifica dinamica
+
+**Login.** Payload classici nel campo email, con il server in esecuzione:
+
+| Payload (campo `email`) | Risposta |
+|---|---|
+| `' OR '1'='1` | `400 VALIDAZIONE` |
+| `admin'--` | `400 VALIDAZIONE` |
+| `' OR 1=1--` | `400 VALIDAZIONE` |
+
+Il bypass non avviene: il valore viene scartato già dalla validazione del formato email, e comunque
+raggiungerebbe il database solo come parametro legato.
+
+**Ricerca artisti (`GET /api/artists?search=`).** I payload sono stati trattati come testo da cercare:
+
+| Payload (`search=`) | Risposta | Risultati |
+|---|---|---|
+| `rock` | `200` | 0 |
+| `' OR '1'='1` | `200` | 0 |
+| `'; DROP TABLE utente;--` | `200` | 0 |
+| `x' UNION SELECT password_hash FROM utente--` | `200` | 0 |
+
+Dopo i payload `DROP TABLE` e `UNION SELECT`, un controllo diretto sul database ha confermato che la
+tabella `utente` era **intatta** e che **nessun hash di password** era trapelato nella risposta.
+
+## 8. Cross-Site Scripting (XSS) — verifica dinamica
+
+Prova dal vivo nella chat (frontend sui dati finti). In un messaggio è stato inviato il payload:
+
+```
+<img src=x onerror="window.__xssFired=true"><script>window.__xssFired=true</script>
+```
+
+Risultato:
+
+- il messaggio è comparso in chat **come testo**, con i tag visibili e non interpretati;
+- la variabile sentinella `window.__xssFired` è rimasta **`false`**: lo script non è partito;
+- nel DOM **non** è stato creato alcun tag `<img>` o `<script>` a partire dal payload.
+
+Conferma dinamica di quanto rilevato nella Parte I: React applica l'escape automatico e il contenuto
+dell'utente non diventa mai HTML eseguibile.
+
+---
+
+## 9. CSRF (Cross-Site Request Forgery)
+
+### 9.1 Prova
+
+Simulata la richiesta che farebbe un sito malevolo: una scrittura verso l'API con un'origine esterna
+e **senza** header `Authorization` (che un altro sito non può aggiungere né leggere dal `localStorage`
+di NoseY):
+
+```
+POST http://localhost:8080/api/events
+Origin: https://sito-malevolo.example
+(nessun header Authorization)
+```
+
+**Risposta: `403 Forbidden`.** L'evento non è stato creato.
+
+### 9.2 Perché NoseY è immune
+
+| Elemento | In NoseY | Effetto |
+|---|---|---|
+| Dove sta il token | header `Authorization: Bearer …` | il browser **non** lo allega da solo a una richiesta cross-site |
+| Sessione | `STATELESS`, nessun cookie di sessione | non c'è nulla che il browser invii automaticamente |
+| `localStorage` | leggibile solo dall'origine di NoseY | un altro dominio non può rubarne il token |
+
+In `SecurityConfig.java` la protezione CSRF di Spring è disattivata (`.csrf(disable)`): **non è una
+falla**, perché quella protezione serve solo all'autenticazione basata su cookie/sessione, che qui non
+si usa. Il commento nel codice lo dichiara esplicitamente.
+
+---
+
+## 10. Attacchi all'autenticazione
+
+### 10.1 Brute force / credential stuffing
+
+Inviati 12 tentativi di login consecutivi con password errata sulla stessa email:
+
+| Tentativi | Risposta |
+|---|---|
+| dal 1° al 10° | `401 CREDENZIALI_ERRATE` |
+| dall'11° in poi | `429 TROPPE_RICHIESTE` |
+
+Il limite è definito in `application.yml` (`app.limiti.login-falliti`): **10 tentativi falliti per
+email ogni 15 minuti**. Superata la soglia, il `429` scatta anche con la password corretta, rendendo
+impraticabile provare molte password in sequenza.
+
+### 10.2 Password salvate nel database
+
+Lettura diretta della colonna `password_hash`: le password sono salvate con **BCrypt** (prefisso
+`$2a$10$`, 60 caratteri), non in chiaro. BCrypt è volutamente lento e con *salt*, quindi anche in caso
+di furto del database le password non sono ricavabili con un costo ragionevole. Il codice usa
+`BCryptPasswordEncoder` (`SecurityConfig.java`) e limita la password a 72 byte, il limite reale di
+BCrypt.
+
+### 10.3 Enumerazione utenti
+
+Login con password errata su un'email **inesistente** e su un'email **esistente**: la risposta è
+**identica** in entrambi i casi (`401 CREDENZIALI_ERRATE`, messaggio «Email o password errate»), quindi
+non si riesce a dedurre quali email siano registrate. Gli stati «email non verificata» e «account
+sospeso» vengono rivelati **solo dopo** una password corretta, perciò non sono sfruttabili per
+l'enumerazione.
+
+### 10.4 Durata del token
+
+I token JWT **scadono** (24 ore, `JWT_DURATA` in `application.yml` / `render.yaml`): un token rubato
+non è valido per sempre. Il logout, inoltre, **revoca** il token lato server.
+
+---
+
+## 11. Nota di trasparenza sul test
+
+Durante la prova di brute force è stata usata un'email *di prova* (`bruteforce-test@example.com`) per
+non bloccare account reali. Un singolo tentativo della sezione 10.3 ha usato un'email reale del team,
+aggiungendo **1** tentativo fallito al suo contatore (su 10 disponibili): nessun blocco, e il
+contatore si azzera dopo 15 minuti o al primo accesso riuscito. Tutte le prove sono state svolte in
+locale, sull'applicazione del team, a scopo didattico e difensivo.
+
+---
+
+## 12. Conclusione della Parte II
+
+La verifica dinamica **conferma** i risultati della Parte I su SQL injection e XSS e li **estende** a
+CSRF e agli attacchi all'autenticazione: su tutte e quattro le classi NoseY si è comportato come
+atteso, respingendo gli attacchi. Le difese in gioco — query parametrizzate, escape automatico di
+React, token nell'header anziché nei cookie, BCrypt con *rate limit* e token a scadenza — sono quelle
+raccomandate dalle linee guida OWASP. Restano valide le raccomandazioni facoltative della sezione 4
+(in particolare l'header `Content-Security-Policy` come difesa in profondità).

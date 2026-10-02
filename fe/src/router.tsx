@@ -12,6 +12,7 @@ import Accesso from '@/pages/Accesso'
 import Chat from '@/pages/Chat'
 import Componenti from '@/pages/Componenti'
 import CookiePolicy from '@/pages/CookiePolicy'
+import PrivacyPolicy from '@/pages/PrivacyPolicy'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
 import EsploraEventi from '@/pages/EsploraEventi'
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       { path: 'artists', element: <CatalogoArtisti /> },
       { path: 'artists/:artistaId', element: <SchedaArtista /> },
       { path: 'cookies', element: <CookiePolicy /> },
+      { path: 'privacy', element: <PrivacyPolicy /> },
       {
         path: 'ragnatela',
         element: (

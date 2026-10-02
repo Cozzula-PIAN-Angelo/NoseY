@@ -3,8 +3,8 @@ import { Marchio } from './Marchio'
 
 // Footer di tutte le pagine, dalle schermate Stitch (stesse classi). Tolte le scritte tecniche di Stitch
 // («WebSocket STOMP Attivo» sempre verde, «AES-256 Passcode Pass» inventata) e «Radar Sicurezza»,
-// che non esiste (FE1-17): solo dati veri. Privacy e termini non hanno ancora una pagina: restano testo;
-// la Cookie Policy (/cookies) si'.
+// che non esiste (FE1-17): solo dati veri. Termini non ha ancora una pagina: resta testo; Privacy
+// Policy (/privacy) e Cookie Policy (/cookies) si'.
 export function PiePagina() {
   return (
     <footer className="mt-space-xl w-full bg-surface-container-lowest">
@@ -26,7 +26,9 @@ export function PiePagina() {
             © {new Date().getFullYear()} NoseY Live Experience System. Tutti i diritti riservati.
           </p>
           <div className="flex items-center gap-space-md font-body-sm text-body-sm text-on-surface-variant">
-            <span>Privacy Policy</span>
+            <Link to="/privacy" className="hover:text-on-surface hover:underline">
+              Privacy Policy
+            </Link>
             <Link to="/cookies" className="hover:text-on-surface hover:underline">
               Cookie Policy
             </Link>
