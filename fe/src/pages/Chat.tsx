@@ -4,21 +4,36 @@ import { Button, Caricamento, Icon, MessaggioErrore, StatoVuoto, TextField, stil
 import { useListaChatQuery } from '@/features/social/apiSocial'
 import { Conversazione } from '@/features/social/Conversazione'
 import { ElencoChat } from '@/features/social/ElencoChat'
+import { EventoChat } from '@/features/social/EventoChat'
+import { STATO_CONNESSIONE } from '@/features/social/statoConnessione'
 import { cx } from '@/lib/cx'
+import { useStatoConnessione, type StatoConnessione } from '@/lib/websocket'
 import PaginaNonTrovata from '@/pages/PaginaNonTrovata'
 
 // Chat (FE2-12), rotte /chat e /chat/:chatId (solo con il login), come la schermata Stitch
 // "Community, Amicizie & Chat Live": a sinistra l'elenco delle chat con il filtro per nome, al centro
-// la conversazione aperta. Su schermi stretti si vede una cosa per volta: /chat l'elenco,
+// la conversazione aperta, a destra (da lg, con una chat aperta) l'evento in cui ci si e' conosciuti
+// (card "Extra: chat a tre colonne", passo 2). Su schermi stretti si vede una cosa per volta: /chat l'elenco,
 // /chat/:chatId la conversazione (con la freccia per tornare all'elenco).
 // Una chat che non e' nell'elenco non e' dell'utente (ListaChat le restituisce tutte, anche quelle
 // in sola lettura): pagina 404. L'elenco si ricarica a ogni apertura della pagina, cosi' una chat
 // appena nata non risulta inesistente per colpa della cache.
+// In alto, al posto del titolo, la barra sottile di Stitch con lo stato vero della connessione
+// (card "Extra: chat a tre colonne"), senza le scritte tecniche ("STOMP /WS CONNECTED", "E2EE").
+
+/** Frase della barra di stato; colore del pallino da STATO_CONNESSIONE, come nel resto della chat */
+const FRASI_CONNESSIONE: Record<StatoConnessione, string> = {
+  connesso: 'Connesso in tempo reale: i messaggi arrivano subito',
+  connessione: 'Connessione in corso…',
+  riconnessione: 'Riconnessione… i messaggi arriveranno appena torna la linea',
+  assente: 'Non connesso: i nuovi messaggi compariranno ricaricando la pagina',
+}
 
 export default function Chat() {
   const { chatId } = useParams()
   const { data: lista, isFetching, error, refetch } = useListaChatQuery(undefined, { refetchOnMountOrArgChange: true })
   const [filtro, setFiltro] = useState('')
+  const connessione = useStatoConnessione()
 
   const aperta = chatId ? lista?.find((c) => c.id === chatId) : undefined
   if (chatId && lista && !aperta && !isFetching) return <PaginaNonTrovata />
@@ -76,34 +91,31 @@ export default function Chat() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-space-lg px-margin-mobile py-space-xl md:px-margin">
-      <header
+    <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-space-md px-margin-mobile py-space-lg md:px-margin">
+      {/* Il titolo resta per gli screen reader; a vista c'e' la barra di stato, come in Stitch */}
+      <h1 className="sr-only">Chat</h1>
+      <div
         className={cx(
-          'flex-col gap-space-md sm:flex-row sm:items-end sm:justify-between',
+          'flex-wrap items-center justify-between gap-space-sm rounded-xl bg-surface-container-low px-space-md py-space-xs',
           // Su schermi stretti, con una chat aperta, conta solo la conversazione
           chatId ? 'hidden lg:flex' : 'flex',
         )}
       >
-        <div className="flex flex-col gap-space-xs">
-          <h1 className="flex items-center gap-space-xs font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg">
-            <Icon nome="forum" size={32} className="text-primary" />
-            Chat
-          </h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Le conversazioni con i tuoi amici, in tempo reale.
-          </p>
-        </div>
-        <Link to="/friends" className={cx(stilePulsante({ variant: 'secondary' }), 'self-start')}>
-          <Icon nome="diversity_3" size={18} />
+        <p role="status" className="flex items-center gap-space-xs font-label-code-status text-label-code-status uppercase text-on-surface-variant">
+          <span aria-hidden="true" className={cx('size-2 rounded-full', STATO_CONNESSIONE[connessione].colore)} />
+          {FRASI_CONNESSIONE[connessione]}
+        </p>
+        <Link to="/friends" className={stilePulsante({ variant: 'ghost', size: 'sm' })}>
+          <Icon nome="diversity_3" size={16} />
           Amici e richieste
         </Link>
-      </header>
+      </div>
 
       <div className="grid grid-cols-1 items-start gap-space-md lg:grid-cols-12">
         <section
           aria-label="Le tue chat"
           className={cx(
-            'flex-col gap-space-sm rounded-xl bg-surface-glass p-space-sm shadow-xl backdrop-blur-2xl lg:col-span-4',
+            'flex-col gap-space-sm rounded-xl bg-surface-glass p-space-sm shadow-xl backdrop-blur-2xl lg:col-span-3',
             chatId ? 'hidden lg:flex' : 'flex',
           )}
         >
@@ -119,7 +131,13 @@ export default function Chat() {
           <div className="lg:max-h-[680px] lg:overflow-y-auto">{elenco}</div>
         </section>
 
-        <div className={cx('lg:col-span-8', chatId ? 'block' : 'hidden lg:block')}>{conversazione}</div>
+        <div className={cx(aperta ? 'lg:col-span-6' : 'lg:col-span-9', chatId ? 'block' : 'hidden lg:block')}>{conversazione}</div>
+
+        {aperta && (
+          <aside aria-label="Evento in comune" className="hidden lg:col-span-3 lg:block">
+            <EventoChat chat={aperta} />
+          </aside>
+        )}
       </div>
     </div>
   )

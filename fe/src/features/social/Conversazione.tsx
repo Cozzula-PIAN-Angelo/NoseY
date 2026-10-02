@@ -22,7 +22,7 @@ import { etichettaGiorno, ora, stessoGiorno } from './tempiChat'
 // - Sopra il primo messaggio di ogni gruppo l'etichetta "Sofia • 22:38" / "Tu • 22:40", come in Stitch
 //   (card "Extra: nome e ora sopra i messaggi"): un gruppo inizia quando cambia chi scrive, cambia il
 //   giorno o passano piu' di 5 minuti. L'ora resta anche sotto ogni messaggio.
-// Altezza: la finestra meno la barra in alto (e, da lg, l'intestazione della pagina), cosi' il
+// Altezza: la finestra meno la barra in alto (e, da lg, la barra di stato della pagina), cosi' il
 // campo di scrittura resta sempre visibile.
 // Va montata con key={chat.id}: cambiando chat riparte da capo (scorrimento compreso).
 
@@ -124,7 +124,7 @@ export function Conversazione({ chat }: { chat: ChatResponse }) {
   return (
     <section
       aria-label={`Chat con ${nome}`}
-      className="flex h-[calc(100dvh-8rem)] max-h-[760px] min-h-[420px] flex-col lg:h-[calc(100dvh-15rem)] overflow-hidden rounded-xl bg-surface-glass shadow-2xl backdrop-blur-2xl"
+      className="flex h-[calc(100dvh-8rem)] max-h-[760px] min-h-[420px] flex-col lg:h-[calc(100dvh-12rem)] overflow-hidden rounded-xl bg-surface-glass shadow-2xl backdrop-blur-2xl"
     >
       <header className="flex shrink-0 items-center gap-space-sm bg-surface-container px-space-md py-space-sm">
         <Link
