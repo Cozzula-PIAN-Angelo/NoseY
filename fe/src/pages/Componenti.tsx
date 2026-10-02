@@ -194,7 +194,7 @@ export default function Componenti() {
   const [erroreModulo, setErroreModulo] = useState<FetchBaseQueryError | null>(null)
   const [paginaEventi, setPaginaEventi] = useState(0)
   const [paginaNotifiche, setPaginaNotifiche] = useState(4)
-  const [stileMappa, setStileMappa] = useState<StileMappa>('dark')
+  const [stileMappa, setStileMappa] = useState<StileMappa>('fiord')
   const [puntoScelto, setPuntoScelto] = useState<Coordinate | null>(null)
   // Eventi da GET /api/events (FE1-03): in sviluppo rispondono i dati finti MSW
   const { data: eventiMappa = [], error: erroreEventi } = useListaEventiQuery()
