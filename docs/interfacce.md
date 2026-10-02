@@ -214,6 +214,7 @@ Convenzioni:
 | `/tickets` | I miei ticket e pass | login | MieiTicket | I Miei Ticket (Snella & Ordinata) |
 | `/artists` | Catalogo artisti | pubblica | ListaArtisti | Lineup & Catalogo Artisti |
 | `/artists/:artistaId` | Scheda artista | pubblica | VediArtista | — |
+| `/cookies` | Cookie Policy: cosa salva il sito nel browser e quali servizi esterni contatta | pubblica | — | — |
 | `/friends` | Amici e richieste (ricevute, inviate) | login | ListaAmici, ListaRichieste... | Community (colonna Social) |
 | `/chat` | Elenco delle chat | login | ListaChat | Community & Chat |
 | `/chat/:chatId` | Conversazione | login | ListaMessaggi, WebSocket | Community & Chat |
