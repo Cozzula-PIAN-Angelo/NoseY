@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router'
 import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
-import { Caricamento } from '@/components/ui'
+import { CaricamentoRagnatela } from '@/features/ragnatela/CaricamentoRagnatela'
 import { caricaRagnatela } from '@/features/ragnatela/carica'
 import AdminArtisti from '@/pages/AdminArtisti'
 import AdminUtenti from '@/pages/AdminUtenti'
@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
       {
         path: 'ragnatela',
         element: (
-          <Suspense fallback={<Caricamento riquadro testo="Tendo la ragnatela..." className="m-space-lg" />}>
+          <Suspense fallback={<CaricamentoRagnatela />}>
             <Ragnatela />
           </Suspense>
         ),

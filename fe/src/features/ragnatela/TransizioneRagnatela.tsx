@@ -1,7 +1,7 @@
 import { DURATA_TRANSIZIONE, DURATA_USCITA, type FaseTransizione } from './useCodiceSegreto'
 
 // Transizione della Modalita' Ragnatela: fili di ragnatela astratti che si tendono sullo schermo
-// all'entrata (~1 s) e si ritirano verso il centro all'uscita (~0,7 s, sopra NoseY che ricompare).
+// all'entrata (~1,6 s) e si ritirano verso il centro all'uscita (~1 s, sopra NoseY che ricompare).
 // Animata con SMIL (<animate>) invece che con il CSS, cosi' non trascina ragnatela.css nel bundle
 // principale. Colori uguali a ragnatela.css (--rg-sfondo, --rg-rosso).
 // Montata solo durante la transizione: con prefers-reduced-motion non compare mai.
@@ -32,8 +32,8 @@ function tempi(fase: FaseTransizione) {
     return {
       sfondo: { da: 0, a: OPACITA_SFONDO, inizio: 0, durata: D * 0.5 },
       alone: { valori: '0;0.35;0.15', inizio: 0, durata: D },
-      raggio: (i: number) => ({ da: 1, a: 0, inizio: i * 15, durata: D * 0.38 }),
-      anello: (i: number) => ({ da: 1, a: 0, inizio: D * 0.25 + i * 45, durata: D * 0.26 }),
+      raggio: (i: number) => ({ da: 1, a: 0, inizio: i * D * 0.015, durata: D * 0.38 }),
+      anello: (i: number) => ({ da: 1, a: 0, inizio: D * 0.25 + i * D * 0.045, durata: D * 0.26 }),
     }
   }
   const U = DURATA_USCITA
@@ -41,8 +41,8 @@ function tempi(fase: FaseTransizione) {
     sfondo: { da: OPACITA_SFONDO, a: 0, inizio: U * 0.35, durata: U * 0.65 },
     alone: { valori: '0.15;0', inizio: 0, durata: U * 0.6 },
     // Prima gli anelli, dall'esterno verso l'interno, poi i raggi verso il centro
-    raggio: (i: number) => ({ da: 0, a: 1, inizio: U * 0.28 + i * 10, durata: U * 0.43 }),
-    anello: (i: number) => ({ da: 0, a: 1, inizio: (ANELLI.length - 1 - i) * 35, durata: U * 0.32 }),
+    raggio: (i: number) => ({ da: 0, a: 1, inizio: U * 0.28 + i * U * 0.014, durata: U * 0.43 }),
+    anello: (i: number) => ({ da: 0, a: 1, inizio: (ANELLI.length - 1 - i) * U * 0.05, durata: U * 0.32 }),
   }
 }
 

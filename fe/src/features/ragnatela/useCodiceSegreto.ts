@@ -6,7 +6,7 @@ import { caricaRagnatela } from './carica'
 // - Tastiera: scrivere "spidey" in qualsiasi pagina (maiuscole o minuscole), fuori dai campi di testo.
 // - Mobile: 5 tocchi sul logo NoseY entro 2 secondi. I tocchi non vengono bloccati: il logo resta
 //   il link alla home e lo scopre solo chi insiste.
-// Poi ~1 s di fili di ragnatela che si tendono (TransizioneRagnatela) e la pagina /ragnatela.
+// Poi ~1,6 s di fili di ragnatela che si tendono (TransizioneRagnatela) e la pagina /ragnatela.
 // All'uscita (annunciaUscitaRagnatela, da Esc o "Torna a NoseY") la tela si ritira sopra NoseY.
 // Con prefers-reduced-motion niente animazioni. Restituisce la fase della transizione in corso.
 
@@ -15,9 +15,9 @@ const CODICE = 'spidey'
 const TOCCHI = 5
 const FINESTRA_TOCCHI = 2000
 /** Fili che si tendono, poi la tela resta completa un attimo prima di aprire la pagina */
-export const DURATA_TRANSIZIONE = 1000
+export const DURATA_TRANSIZIONE = 1600
 /** Tela che si ritira all'uscita */
-export const DURATA_USCITA = 700
+export const DURATA_USCITA = 1000
 const EVENTO_USCITA = 'nosey:esci-ragnatela'
 
 export type FaseTransizione = 'entrata' | 'uscita'
