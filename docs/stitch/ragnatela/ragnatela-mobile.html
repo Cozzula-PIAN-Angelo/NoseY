@@ -1,0 +1,382 @@
+<!DOCTYPE html><html class="dark" lang="it"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+<meta content="mobile_tab" name="shell-type">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        background-color: #0d0e12;
+        color: #e3e2e6;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+    }
+    ::-webkit-scrollbar { display: none; }
+    .font-hero {
+      font-family: 'Oswald', sans-serif;
+    }
+    .slanted-btn {
+      transform: skewX(-12deg);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slanted-btn-inner {
+      transform: skewX(12deg);
+    }
+    .cinematic-smoke {
+      background: radial-gradient(circle at 20% 15%, rgba(40, 44, 55, 0.8) 0%, rgba(18, 19, 24, 0.95) 50%, #0d0e12 100%);
+    }
+    .spider-glow {
+      box-shadow: 0 0 35px rgba(226, 35, 40, 0.35);
+    }
+  </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-dark": "#121316",
+            "surface-deep": "#0d0e12",
+            "scarlet-red": "#e22328",
+            "scarlet-dark": "#b81418",
+            "ochre-gold": "#b27c39",
+            "ochre-light": "#fbba70",
+            "card-white": "#ffffff",
+            "text-dark": "#0a0a0c",
+            "cobalt-blue": "#0040cb"
+          },
+          fontFamily: {
+            "headline-lg": ["Oswald", "sans-serif"],
+            "headline-md": ["Oswald", "sans-serif"],
+            "body-lg": ["Plus Jakarta Sans", "sans-serif"],
+            "body-md": ["Plus Jakarta Sans", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-[#0d0e12] font-['Plus Jakarta Sans'] text-[#e3e2e6] flex flex-col min-h-screen selection:bg-[#e22328] selection:text-white pb-28">
+<!-- TOP BAR CINEMATICA (MARVEL STYLE) -->
+<header class="fixed top-0 inset-x-0 z-50 bg-[#0d0e12]/90 backdrop-blur-xl pt-safe border-b border-white/10 shadow-2xl">
+<div class="h-16 px-4 flex items-center justify-between">
+<!-- Logo + Live Tag -->
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-none bg-[#e22328] flex items-center justify-center shadow-[0_0_15px_rgba(226,35,40,0.6)] -rotate-3">
+<span class="material-symbols-outlined text-white text-[20px]" style="font-variation-settings: 'FILL' 1;">pest_control</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-hero text-2xl font-bold tracking-wider text-white uppercase drop-shadow">Ragnatela</span>
+<div class="px-2 py-0.5 bg-[#e22328] text-white text-[9px] font-hero font-bold tracking-widest uppercase transform -skew-x-12">
+<span class="inline-block transform skew-x-12">LIVE RADAR</span>
+</div>
+</div>
+</div>
+<!-- Actions: Notifications & Avatar -->
+<div class="flex items-center gap-2.5">
+<a class="relative w-10 h-10 flex items-center justify-center rounded-sm bg-white/5 border border-white/15 text-white hover:bg-white/10 transition-colors" data-path="notifiche" href="#">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#e22328] shadow-[0_0_8px_#e22328]"></span>
+</a>
+<a class="w-10 h-10 rounded-sm overflow-hidden border border-white/20 p-0.5 bg-white/5" data-path="profilo" href="#">
+<img alt="Peter Parker Profile" class="w-full h-full object-cover grayscale contrast-125" src="https://lh3.googleusercontent.com/aida/AEtjO1VjTEkA51QcJ_0-nRlxPhPlRkV_GOSb1tYQgZO-wCTMTwYJ3ZkT_XwAOBFQ0f9gMEIBpgFCTfecEBvWJc3sDwGNFQiAz_4uuKOw3CES4mhVNEEM00aWjBz1xoMPLGuLlNlLV7IRjbdRRIKuiZAI3qOigRtgJpedZTpGDNIa96cg_w0TE_4dZwEtuO00L6HPIWKQzri4Ag8U8mdw2lgBShMMEMrncb7WM9bOw1Tiq3rSn8N6-NwiCqov1f4">
+</a>
+</div>
+</div>
+</header>
+<main class="flex flex-col relative w-full pt-16 cinematic-smoke">
+<!-- HERO SECTION ADOTTATA DALLA FOTO REFERENCE -->
+<section class="relative w-full overflow-hidden border-b border-white/10 bg-gradient-to-b from-[#16181f] via-[#111217] to-[#0d0e12] pt-4 pb-6 px-4">
+<!-- Smoke Ambient Layer -->
+<div class="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-600 via-transparent to-transparent"></div>
+<!-- Spider-Man & High Contrast White Block layout matching the photo -->
+<div class="relative w-full rounded-none overflow-hidden bg-[#181a20] border border-white/10 shadow-2xl flex flex-col">
+<!-- Visual Container with Spider-Man Cutout pose from IMAGE_2 -->
+
+<!-- Geometric High-Contrast Pure White Card (Exact replica style from image) -->
+<div class="relative z-10 bg-white p-5 text-[#0a0a0c] mx-3 mb-3 shadow-[0_20px_40px_rgba(0,0,0,0.8)] border-t-2 border-[#e22328] overflow-hidden"><div class="flex items-center justify-between gap-2 mb-2 flex-wrap"><div class="flex items-center gap-1.5"><div class="bg-[#e22328] text-white px-2 py-0.5 font-hero font-bold tracking-widest text-[10px] uppercase shadow-sm">RAGNATELA</div><span class="text-[10px] font-bold tracking-[0.16em] uppercase text-[#b27c39] font-['Plus_Jakarta_Sans']">LIVE DISPATCH • PROTOCOLLO 01</span></div><div class="flex items-center gap-1 bg-[#101217] text-white px-2 py-0.5"><span class="w-1.5 h-1.5 rounded-full bg-[#e22328] animate-ping"></span><span class="font-hero text-[9px] font-bold tracking-wider text-white uppercase">ATTIVO 24/7</span></div></div><h2 class="font-hero text-2xl font-bold uppercase tracking-tight text-[#0a0a0c] leading-none mb-2">RAGNATELA: LA RETE DI PROTEZIONE URBANA</h2><p class="text-xs text-slate-600 leading-relaxed font-medium mb-4">La piattaforma tattica di monitoraggio civico e coordinamento emergenze in tempo reale. Monitora il radar urbano, segnala incidenti critici e coordina le risposte di soccorso nelle strade della città.</p><div class="flex items-center gap-2 flex-wrap"><button class="slanted-btn bg-[#e22328] hover:bg-[#b81418] text-white px-4 py-2.5 shadow-[0_4px_14px_rgba(226,35,40,0.4)] active:scale-95 transition-transform" type="button"><span class="slanted-btn-inner font-hero font-bold tracking-wider text-xs uppercase flex items-center gap-1.5"><span class="">ATTIVA MONITORAGGIO</span><span class="material-symbols-outlined text-[15px]">arrow_forward</span></span></button><button class="slanted-btn bg-[#101217] hover:bg-slate-800 text-white px-4 py-2.5 border border-white/20 active:scale-95 transition-transform" type="button"><span class="slanted-btn-inner font-hero font-bold tracking-wider text-xs uppercase flex items-center gap-1.5"><span class="">GUIDA AL PROTOCOLLO</span></span></button></div></div>
+</div>
+</section>
+<!-- RADAR MAP SECTION (DARK CINEMATIC WITH TACTICAL WEB) -->
+<section class="relative w-full px-4 pt-5 pb-2">
+<!-- Section Header -->
+<div class="flex items-end justify-between mb-3">
+<div>
+<span class="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#b27c39]">MONITORAGGIO URBANO</span>
+<h3 class="font-hero text-xl font-bold uppercase tracking-wide text-white">MAPPA RADAR TATTICA</h3>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 rounded-sm">
+<span class="w-2 h-2 rounded-full bg-[#e22328] animate-ping"></span>
+<span class="text-[11px] font-hero tracking-wider text-slate-200 uppercase">14 EVENTI ATTIVI</span>
+</div>
+</div>
+<!-- Tactical Radar Viewport -->
+<div class="relative w-full h-[320px] rounded-none overflow-hidden border border-white/15 bg-[#101217] shadow-2xl">
+<!-- Dark Satellite Inverted Street Matrix -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center opacity-45 filter contrast-125 brightness-90 grayscale" data-location="Rome, Italy" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD4UPpJp4XwTJtWhRFZA_tgDDKb5B8yu9AjOuMfK35BeQaxTFPjYB2rW6HyDObYrnXrCuOz4rKdzjtkTvySRHKVI4s71KWg0nlNVje0o3ymzhkQzJtR_6100rS83oUHLIzX1XwInGHHxi5nfxjZxgnjDy14iJtCgqhJhheF7ghXNdlLqE8Oo1K-xDzf-6bRL6f_dt5tsQBd_ihqnipJFmbaGmix-MubAsdW9TnwobBnmVRM5kOcbu0o'); filter: invert(1) hue-rotate(200deg) contrast(1.4) brightness(0.65);"></div>
+<!-- SVG Spider Web & Vector Grid Lines -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialGradient cx="50%" cy="50%" id="dark-beacon" r="50%">
+<stop offset="0%" stop-color="#e22328" stop-opacity="0.3"></stop>
+<stop offset="70%" stop-color="#0040cb" stop-opacity="0.1"></stop>
+<stop offset="100%" stop-color="#000000" stop-opacity="0"></stop>
+</radialGradient>
+<pattern height="40" id="tactical-grid" patternUnits="userSpaceOnUse" width="40">
+<path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-opacity="0.07" stroke-width="0.7"></path>
+</pattern>
+</defs>
+<rect fill="url(#tactical-grid)" height="100%" width="100%"></rect>
+<!-- Center Pulse -->
+<circle cx="180" cy="150" fill="url(#dark-beacon)" r="120"></circle>
+<!-- Web Network Threads -->
+<line stroke="#e22328" stroke-dasharray="3,3" stroke-opacity="0.75" stroke-width="2" x1="180" x2="110" y1="150" y2="105"></line>
+<line stroke="#b7c4ff" stroke-dasharray="4,4" stroke-opacity="0.7" stroke-width="1.8" x1="180" x2="265" y1="150" y2="190"></line>
+<line stroke="#fbba70" stroke-dasharray="2,2" stroke-opacity="0.6" stroke-width="1.5" x1="180" x2="70" y1="150" y2="230"></line>
+</svg>
+<!-- Spider-Man Central Tactical Node -->
+<div class="absolute left-[180px] top-[150px] -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-none">
+<div class="relative w-11 h-11 flex items-center justify-center">
+<span class="absolute inset-0 rounded-full bg-[#e22328]/30 animate-ping"></span>
+<span class="absolute w-8 h-8 rounded-full bg-[#e22328] shadow-[0_0_20px_#e22328] border-2 border-white flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-[17px]">shield_person</span>
+</span>
+</div>
+<span class="px-2 py-0.5 bg-[#0a0a0c] border border-[#e22328] text-[9px] font-hero font-bold tracking-wider text-white uppercase mt-0.5">PATTUGLIA 01</span>
+</div>
+<!-- Hotspot Pin 1: Urgenza Alta (Scarlet Red Diamond) -->
+<div class="absolute left-[110px] top-[105px] -translate-x-1/2 -translate-y-1/2 z-20 cursor-pointer group">
+<div class="w-8 h-8 bg-[#e22328] border-2 border-white text-white flex items-center justify-center shadow-[0_0_15px_rgba(226,35,40,0.8)] transform -rotate-45 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[17px] transform rotate-45">car_crash</span>
+</div>
+</div>
+<!-- Hotspot Pin 2: In Corso (Cobalt Blue Square) -->
+<div class="absolute left-[265px] top-[190px] -translate-x-1/2 -translate-y-1/2 z-20 cursor-pointer group">
+<div class="w-7 h-7 bg-[#0040cb] border-2 border-white text-white flex items-center justify-center shadow-[0_0_12px_rgba(0,64,203,0.8)] transform -rotate-45 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[15px] transform rotate-45">storefront</span>
+</div>
+</div>
+<!-- Hotspot Pin 3: Sorvegliato (Ochre Gold) -->
+<div class="absolute left-[70px] top-[230px] -translate-x-1/2 -translate-y-1/2 z-10 cursor-pointer group">
+<div class="w-6 h-6 bg-[#b27c39] border border-white text-white flex items-center justify-center shadow-md transform -rotate-45">
+<span class="material-symbols-outlined text-[13px] transform rotate-45">pets</span>
+</div>
+</div>
+<!-- Floating Tactical Controls (Right Edge) -->
+<div class="absolute top-3 right-3 z-20 flex flex-col gap-1.5">
+<button aria-label="Centra Mappa" class="w-9 h-9 bg-black/85 border border-white/20 text-white flex items-center justify-center hover:bg-[#e22328] transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">my_location</span>
+</button>
+<button aria-label="Zoom In" class="w-9 h-9 bg-black/85 border border-white/20 text-white flex items-center justify-center hover:bg-[#e22328] transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+<button aria-label="Zoom Out" class="w-9 h-9 bg-black/85 border border-white/20 text-white flex items-center justify-center hover:bg-[#e22328] transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+</div>
+<!-- Overlay Alert Card on Radar -->
+<div class="absolute bottom-2 inset-x-2 z-20 bg-white p-3 shadow-2xl border-l-4 border-l-[#e22328] flex items-center justify-between text-[#0a0a0c]">
+<div class="min-w-0 pr-2">
+<div class="flex items-center gap-1.5 mb-0.5">
+<span class="text-[9px] font-hero font-bold tracking-widest uppercase bg-[#e22328] text-white px-1.5 py-0.2">URGENTE</span>
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">CORSO VITTORIO EMANUELE</span>
+</div>
+<p class="font-hero text-sm font-bold uppercase truncate text-[#0a0a0c]">Incidente multiplo con pedone bloccato</p>
+</div>
+<button class="slanted-btn bg-[#e22328] hover:bg-[#b81418] text-white px-3 py-1.5 shrink-0" type="button">
+<span class="slanted-btn-inner font-hero text-[10px] font-bold uppercase tracking-wider">APRI</span>
+</button>
+</div>
+</div>
+<!-- Tactical Quick Search Input -->
+<div class="mt-3 relative">
+<span class="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[19px] text-[#b27c39]">search</span>
+<input class="w-full h-11 pl-10 pr-4 bg-white/5 border border-white/15 text-white placeholder:text-slate-400 text-xs font-medium focus:outline-none focus:border-[#e22328] focus:bg-[#12141a] transition-all rounded-none" placeholder="CERCA PER VIA, QUARTIERE O TIPO DI CRIMINE..." type="text">
+</div>
+<!-- Slanted Tactical Filters -->
+<div class="flex items-center gap-2 overflow-x-auto py-3 no-scrollbar">
+<button class="shrink-0 slanted-btn bg-[#e22328] text-white px-3.5 py-1.5" type="button">
+<span class="slanted-btn-inner font-hero text-xs font-bold uppercase tracking-wider">TUTTE (17)</span>
+</button>
+<button class="shrink-0 slanted-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3.5 py-1.5" type="button">
+<span class="slanted-btn-inner font-hero text-xs font-bold uppercase tracking-wider text-slate-200">APERTE (14)</span>
+</button>
+<button class="shrink-0 slanted-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3.5 py-1.5" type="button">
+<span class="slanted-btn-inner font-hero text-xs font-bold uppercase tracking-wider text-slate-200">IN CORSO (3)</span>
+</button>
+<button class="shrink-0 slanted-btn bg-white/10 hover:bg-white/20 border border-white/20 text-white px-3.5 py-1.5" type="button">
+<span class="slanted-btn-inner font-hero text-xs font-bold uppercase tracking-wider text-slate-200">RISOLTE (28)</span>
+</button>
+</div>
+</section>
+<!-- FEED EMERGENZE: STRUTTURA A CARD BIANCHE GEOMETRICHE (STILE FOTO REFERENCE) -->
+<section class="px-4 pt-2 pb-6 flex flex-col gap-3">
+<div class="flex items-end justify-between pt-2 pb-1 border-b border-white/10">
+<div>
+<span class="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#b27c39]">DISPACCIO OPERATIVO</span>
+<h3 class="font-hero text-xl font-bold uppercase tracking-wide text-white">EMERGENZE IN CORSO</h3>
+</div>
+<span class="text-[11px] font-hero tracking-wider text-slate-400 uppercase">ORDINA: PIÙ RECENTI</span>
+</div>
+<!-- CARD 1: PURE WHITE CONTRAST CARD (CRITICAL INCIDENT) -->
+<article class="bg-white p-4 text-[#0a0a0c] shadow-[0_10px_25px_rgba(0,0,0,0.6)] border-l-4 border-l-[#e22328] relative cursor-pointer">
+<div class="flex items-start justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold tracking-[0.14em] uppercase text-[#b27c39] font-['Plus_Jakarta_Sans']">
+              PERSONA IN PERICOLO
+            </span>
+<div class="flex items-center gap-1" title="Urgenza Massima">
+<span class="w-1.5 h-3 bg-[#e22328]"></span>
+<span class="w-1.5 h-3 bg-[#e22328]"></span>
+<span class="w-1.5 h-3 bg-[#e22328]"></span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-hero text-xs font-bold text-[#e22328] block tracking-wider">350 METRI</span>
+<span class="text-[10px] text-slate-400 font-semibold uppercase">2 MIN FA</span>
+</div>
+</div>
+<h4 class="font-hero text-lg font-bold uppercase tracking-tight text-[#0a0a0c] leading-snug mb-1">
+          PERSONE BLOCCATE IN ASCENSORE ALLAGATO
+        </h4>
+<p class="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">
+          Via Nazionale 42 • Cabina bloccata tra piano terra e seminterrato con infiltrazione d'acqua progressiva.
+        </p>
+<div class="pt-2.5 border-t border-slate-200 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#e22328] animate-ping"></span>
+<span class="text-[11px] font-bold text-[#0a0a0c] uppercase tracking-wide">2 squadre in avvicinamento</span>
+</div>
+<button class="slanted-btn bg-[#e22328] hover:bg-[#b81418] text-white px-3.5 py-1.5" type="button">
+<span class="slanted-btn-inner font-hero text-[10px] font-bold uppercase tracking-wider">INTERVIENI</span>
+</button>
+</div>
+</article>
+<!-- CARD 2: PURE WHITE CONTRAST CARD (SPIDER-MAN ENGAGED) -->
+<article class="bg-white p-4 text-[#0a0a0c] shadow-[0_10px_25px_rgba(0,0,0,0.6)] border-l-4 border-l-[#0040cb] relative cursor-pointer">
+<div class="flex items-start justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold tracking-[0.14em] uppercase text-[#b27c39] font-['Plus_Jakarta_Sans']">
+              CRIMINE IN CORSO
+            </span>
+<div class="flex items-center gap-1" title="Urgenza Media">
+<span class="w-1.5 h-3 bg-[#0040cb]"></span>
+<span class="w-1.5 h-3 bg-[#0040cb]"></span>
+<span class="w-1.5 h-3 bg-slate-200"></span>
+</div>
+</div>
+<div class="text-right">
+<span class="font-hero text-xs font-bold text-[#0040cb] block tracking-wider">800 METRI</span>
+<span class="text-[10px] text-slate-400 font-semibold uppercase">8 MIN FA</span>
+</div>
+</div>
+<h4 class="font-hero text-lg font-bold uppercase tracking-tight text-[#0a0a0c] leading-snug mb-1">
+          FURTO IN CORSO IN ESERCIZIO COMMERCIALE
+        </h4>
+<p class="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">
+          Via del Plebiscito • Allarme perimetrale attivo, vetrata forzata da tre individui.
+        </p>
+<div class="pt-2.5 border-t border-slate-200 flex items-center justify-between">
+<div class="flex items-center gap-1.5 px-2 py-0.5 bg-[#b27c39]/15 border border-[#b27c39]/40">
+<span class="material-symbols-outlined text-[#b27c39] text-[15px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-[10px] font-hero font-bold tracking-wider text-[#b27c39] uppercase">PRESO IN CARICO DA SPIDER-MAN</span>
+</div>
+<button class="slanted-btn bg-[#0a0a0c] hover:bg-slate-800 text-white px-3 py-1.5" type="button">
+<span class="slanted-btn-inner font-hero text-[10px] font-bold uppercase tracking-wider">DETTAGLI</span>
+</button>
+</div>
+</article>
+<!-- CARD 3: PURE WHITE CONTRAST CARD (RESOLVED ANIMAL RESCUE) -->
+<article class="bg-white p-4 text-[#0a0a0c] shadow-[0_10px_25px_rgba(0,0,0,0.6)] border-l-4 border-l-emerald-600 relative cursor-pointer opacity-95">
+<div class="flex items-start justify-between gap-2 mb-1.5">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-bold tracking-[0.14em] uppercase text-[#b27c39] font-['Plus_Jakarta_Sans']">
+              SOCCORSO CIVILE
+            </span>
+<span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 font-hero text-[9px] font-bold tracking-wider uppercase">RISOLTA</span>
+</div>
+<div class="text-right">
+<span class="font-hero text-xs font-bold text-emerald-700 block tracking-wider">1.2 KM</span>
+<span class="text-[10px] text-slate-400 font-semibold uppercase">25 MIN FA</span>
+</div>
+</div>
+<h4 class="font-hero text-lg font-bold uppercase tracking-tight text-[#0a0a0c] leading-snug mb-1">
+          GATTINO INTRAPPOLATO SU CORNICIONE ALTO
+        </h4>
+<p class="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-3">
+          Piazza Navona • Animale recuperato in quota e affidato all'ENPA locale.
+        </p>
+<div class="pt-2 border-t border-slate-200 flex items-center justify-between text-xs text-emerald-700">
+<span class="font-semibold flex items-center gap-1 text-[11px]">
+<span class="material-symbols-outlined text-[15px]">task_alt</span>
+            Completato con successo
+          </span>
+<span class="material-symbols-outlined text-[18px] text-slate-400">chevron_right</span>
+</div>
+</article>
+<!-- BOTTONE CINEMATICO SCARLET RED PER INVIO SEGNALAZIONE -->
+<div class="mt-4 pt-2">
+<button class="w-full slanted-btn bg-[#e22328] hover:bg-[#b81418] text-white py-3.5 shadow-[0_6px_25px_rgba(226,35,40,0.5)] active:scale-[0.99] transition-transform" type="button">
+<span class="slanted-btn-inner font-hero font-bold tracking-widest text-sm uppercase flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">e911_emergency</span>
+<span class="">INVIA NUOVA SEGNALAZIONE</span>
+</span>
+</button>
+</div>
+</section>
+</main>
+<!-- BOTTOM BAR CINEMATICA (DARK MARVEL THEME) -->
+<nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-[#0d0e12]/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
+<div class="flex justify-around items-center h-18 px-2 relative py-1">
+<!-- Tab 1: Mappa (Active) -->
+<a aria-current="page" class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-[#e22328]" data-path="mappa-radar" href="#">
+<span class="material-symbols-outlined text-[22px]">explore</span>
+<span class="font-hero text-[11px] font-bold uppercase tracking-wider">RADAR</span>
+</a>
+<!-- Tab 2: Segnalazioni -->
+<a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-slate-400 hover:text-white transition-colors" data-path="elenco-segnalazioni" href="#">
+<span class="material-symbols-outlined text-[22px]">view_timeline</span>
+<span class="font-hero text-[11px] font-bold uppercase tracking-wider">FEED</span>
+</a>
+<!-- Center Action Button: Scarlet Red Marvel Slanted Emblem -->
+<div class="flex items-center justify-center -mt-6">
+<button aria-label="Segnala Emergenza Rapida" class="slanted-btn w-14 h-14 bg-[#e22328] hover:bg-[#b81418] text-white shadow-[0_0_25px_rgba(226,35,40,0.7)] border-2 border-white transition-transform active:scale-95" type="button">
+<span class="slanted-btn-inner flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">crisis_alert</span>
+</span>
+</button>
+</div>
+<!-- Tab 3: Notifiche -->
+<a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-slate-400 hover:text-white transition-colors relative" data-path="notifiche" href="#">
+<div class="relative flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 rounded-full bg-[#e22328]"></span>
+</div>
+<span class="font-hero text-[11px] font-bold uppercase tracking-wider">ALLERTE</span>
+</a>
+<!-- Tab 4: Profilo -->
+<a class="flex flex-col items-center justify-center gap-1 w-16 h-14 text-slate-400 hover:text-white transition-colors" data-path="profilo" href="#">
+<span class="material-symbols-outlined text-[22px]">person</span>
+<span class="font-hero text-[11px] font-bold uppercase tracking-wider">EROE</span>
+</a>
+</div>
+</nav>
+
+
+
+
+</body></html>

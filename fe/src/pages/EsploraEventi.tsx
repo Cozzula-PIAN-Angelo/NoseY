@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { CardEvento } from '@/components/eventi'
+import { CardEvento, CardEventoPrincipale } from '@/components/eventi'
 import { Button, Icon, MessaggioErrore, Paginazione, Scheletro, StatoVuoto, TextField, stilePulsante } from '@/components/ui'
 import { useListaEventiQuery } from '@/features/eventi/apiEventi'
 import { filtraEventi, TESTI_POSIZIONE, type Periodo } from '@/features/eventi/filtriEventi'
 import { FinestraMappaEventi } from '@/features/eventi/FinestraMappaEventi'
 import { usePosizioneUtente } from '@/features/eventi/usePosizioneUtente'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { cx } from '@/lib/cx'
 
 // Esplora eventi (FE1-19), rotta /events (pubblica), come la schermata Stitch "Lista & Modale Mappa
 // Radar": ricerca per titolo, filtri per periodo, "vicino a te", griglia di card (passo 1) e la mappa
-// degli eventi trovati in una finestra (passo 2).
+// degli eventi trovati in una finestra (passo 2). In prima pagina il primo evento trovato e' grande
+// (CardEventoPrincipale), gli altri in griglia a pagine che riempiono sempre le righe.
 // Solo dati veri di ListaEventiMappa: niente prezzo, capienza, genere o indirizzo (l'API non li ha).
 // La posizione la usa il backend e cambia l'ORDINE, mai il numero degli eventi (requisito della traccia).
 
@@ -24,8 +26,14 @@ const PERIODI: { valore: Periodo; etichetta: string }[] = [
   { valore: 'weekend', etichetta: 'Questo weekend' },
 ]
 
-/** Card per pagina: 4 righe da 3 su schermo largo */
-const PER_PAGINA = 12
+/**
+ * Card per pagina, oltre all'evento principale (solo in prima pagina, CardEventoPrincipale):
+ * 9 = 3 righe da 3 su schermo largo (e su telefono, una colonna); 10 = 5 righe da 2 sul tablet
+ * (dai 640px, "sm", ai 1023px, prima di "lg"), cosi' nessuna riga resta con una card sola.
+ */
+const PER_PAGINA = 9
+const PER_PAGINA_TABLET = 10
+const TABLET = '(min-width: 640px) and (max-width: 1023px)'
 
 export default function EsploraEventi() {
   const { stato, posizione, chiedi, dimentica } = usePosizioneUtente()
@@ -40,19 +48,27 @@ export default function EsploraEventi() {
   const [paginaScelta, setPaginaScelta] = useState({ filtri, numero: 0 })
   const numero = paginaScelta.filtri === filtri ? paginaScelta.numero : 0
 
+  const perPagina = useMediaQuery(TABLET) ? PER_PAGINA_TABLET : PER_PAGINA
+
   const trovati = filtraEventi(eventi, cerca, periodo)
-  const totalePagine = Math.ceil(trovati.length / PER_PAGINA)
+  // Il primo (il piu' vicino, o il prossimo in programma) e' il principale; gli altri vanno a pagine
+  const [principale, ...altri] = trovati
+  const totalePagine = Math.ceil(altri.length / perPagina)
   const pagina = Math.min(numero, Math.max(0, totalePagine - 1))
-  const visibili = trovati.slice(pagina * PER_PAGINA, (pagina + 1) * PER_PAGINA)
+  const visibili = altri.slice(pagina * perPagina, (pagina + 1) * perPagina)
   const inCorso = eventi.filter((e) => e.stato === 'IN_CORSO').length
 
   let contenuto
   if (isLoading) {
     contenuto = (
-      <div role="status" aria-label="Caricamento degli eventi" className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }, (_, i) => (
-          <Scheletro key={i} className="aspect-[4/3]" />
-        ))}
+      // Come la pagina vera: la card grande del principale, poi una riga piena della griglia
+      <div role="status" aria-label="Caricamento degli eventi" className="flex flex-col gap-space-md">
+        <Scheletro className="aspect-[16/9] md:aspect-auto md:h-80" />
+        <div className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: perPagina === PER_PAGINA_TABLET ? 4 : 3 }, (_, i) => (
+            <Scheletro key={i} className="aspect-[4/3]" />
+          ))}
+        </div>
       </div>
     )
   } else if (error) {
@@ -84,30 +100,45 @@ export default function EsploraEventi() {
     )
   } else {
     contenuto = (
-      <div className="flex flex-col gap-space-md">
-        <ul className={cx('grid gap-space-md sm:grid-cols-2 lg:grid-cols-3', isFetching && 'opacity-60 transition-opacity')}>
-          {visibili.map((e) => (
-            <li key={e.id} className="flex">
-              <CardEvento
-                evento={e}
-                azioni={
-                  <Link to={`/events/${e.id}`} className={stilePulsante({ size: 'sm' })}>
-                    <Icon nome="visibility" size={16} />
-                    Vedi evento
-                  </Link>
-                }
-              />
-            </li>
-          ))}
-        </ul>
+      <div className={cx('flex flex-col gap-space-md', isFetching && 'opacity-60 transition-opacity')}>
+        {pagina === 0 && (
+          <CardEventoPrincipale
+            evento={principale}
+            azioni={
+              <Link to={`/events/${principale.id}`} className={stilePulsante()}>
+                <Icon nome="visibility" size={18} />
+                Vedi evento
+              </Link>
+            }
+          />
+        )}
+        {/* Con un solo evento trovato c'e' solo il principale: niente griglia vuota sotto */}
+        {visibili.length > 0 && (
+          <ul className="grid gap-space-md sm:grid-cols-2 lg:grid-cols-3">
+            {visibili.map((e) => (
+              <li key={e.id} className="flex">
+                <CardEvento
+                  evento={e}
+                  azioni={
+                    <Link to={`/events/${e.id}`} className={stilePulsante({ size: 'sm' })}>
+                      <Icon nome="visibility" size={16} />
+                      Vedi evento
+                    </Link>
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        )}
         <Paginazione
           contenuto={visibili}
           pagina={pagina}
-          dimensione={PER_PAGINA}
-          totaleElementi={trovati.length}
+          dimensione={perPagina}
+          totaleElementi={altri.length}
           totalePagine={totalePagine}
           onCambia={(n) => setPaginaScelta({ filtri, numero: n })}
-          nomeElementi="eventi"
+          // Conta solo quelli della griglia: il principale e' a parte, sopra
+          nomeElementi="altri eventi"
         />
       </div>
     )

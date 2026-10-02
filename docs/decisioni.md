@@ -747,3 +747,43 @@ Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
   gli utenti finti saltano JwtFilter, cioe' proprio quello che il test deve provare.
 - **Server su porta casuale con un client HTTP** (come `WebSocketSicurezzaTest`): obbliga a
   salvare davvero i dati e a cancellarli a mano, senza vantaggi per richieste HTTP sincrone.
+
+---
+
+## Decisione 25: easter egg "Modalita' Ragnatela" solo frontend, dati nel localStorage
+
+### Scelta
+
+- Pagina nascosta `/ragnatela` (`fe/src/pages/Ragnatela.tsx` + `fe/src/features/ragnatela/`): si
+  segnala un'emergenza sulla mappa e "Spider-Man" risponde. Si apre scrivendo `spidey` fuori dai
+  campi di testo o con 5 tocchi sul logo entro 2 secondi (`useCodiceSegreto`, montato in `App`).
+  Non compare in barra, menu o footer. Design: schermate Stitch in `docs/stitch/ragnatela/`.
+- **Solo frontend**: nessun endpoint, entita', handler MSW o tipo di `types/api`. Le segnalazioni
+  stanno nel `localStorage` del browser (chiave `nosey.ragnatela.v1`), ogni accesso in try/catch.
+- Le risposte sono simulate. All'invio si programmano gia' tutte, con testo e istante
+  (`sequenza.ts`), e stato, messaggi visibili e "sta scrivendo" si ricalcolano dall'ora corrente.
+  Dopo un refresh i tempi riprendono e i messaggi gia' dovuti compaiono subito.
+- La pagina e' caricata con `React.lazy`, quindi Oswald e i suoi stili non pesano sulle altre
+  pagine. Resta dentro `App` come livello `fixed` sopra header e footer, che diventano `inert`:
+  sessione, WebSocket e avvisi a comparsa continuano a funzionare.
+- `components/mappa` ha una variante di marker in piu', `tipo: 'personalizzato'`, con disegno e
+  descrizione per lo screen reader passati da fuori. I marker esistenti non cambiano.
+
+### Motivazione
+
+- E' un gioco: non deve toccare backend, database e API del team, ne' creare dati da migrare o
+  moderare. Il localStorage basta per far ritrovare le proprie segnalazioni sullo stesso browser.
+- Programmare le risposte all'invio rende la sequenza deterministica e facile da ricalcolare: niente
+  timer da salvare, basta confrontare gli istanti con `Date.now()`.
+- Restare dentro `App` evita di staccare WebSocket e controllo della sessione ogni volta che si
+  entra nella modalita'.
+
+### Alternative scartate
+
+- **Endpoint e tabella sul backend**: lavoro e rischi (validazione, moderazione, sicurezza) fuori
+  proporzione per un easter egg.
+- **Handler MSW**: funzionerebbe solo con i dati finti e sparirebbe con l'API vera.
+- **Rotta fuori da `App` con un layout proprio**: piu' immersiva, ma staccherebbe WebSocket e
+  controllo della sessione e obbligherebbe a montare un secondo `<Avvisi />`.
+- **Timer salvati invece degli istanti**: dopo un refresh andrebbero ricostruiti, e un messaggio
+  "dovuto" mentre la pagina era chiusa si perderebbe o arriverebbe in ritardo.
