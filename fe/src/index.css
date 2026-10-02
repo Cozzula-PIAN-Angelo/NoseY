@@ -64,6 +64,10 @@
   --color-on-tertiary-fixed-variant: #653e00;
   --color-accent-gold-piercing: #f59e0b;
   --color-accent-gold-glow: rgba(245, 158, 11, 0.18);
+  /* Oro dell'anello del logo, per la Y del marchio (dai pixel dell'immagine, un po' schiariti) */
+  --color-oro-anello-chiaro: #f6dca0;
+  --color-oro-anello: #ddb374;
+  --color-oro-anello-scuro: #b8873f;
 
   /* Errore */
   --color-error: #ffb4ab;
@@ -95,6 +99,9 @@
 
   /* Font */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Marchio "NoseY": "ose" in Righteous (insegna al neon), N e Y in Syne, la Y dorata (components/layout/Marchio) */
+  --font-marchio: 'Righteous', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-marchio-y: 'Syne', 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-display-hero: var(--font-sans);
   --font-display-hero-mobile: var(--font-sans);
   --font-headline-lg: var(--font-sans);

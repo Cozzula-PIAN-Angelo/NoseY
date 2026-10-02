@@ -1,3 +1,5 @@
+import { Marchio } from './Marchio'
+
 // Footer di tutte le pagine, dalle schermate Stitch (stesse classi). Tolte le scritte tecniche di Stitch
 // («WebSocket STOMP Attivo» sempre verde, «AES-256 Passcode Pass» inventata) e «Radar Sicurezza»,
 // che non esiste (FE1-17): solo dati veri. Privacy e termini non hanno ancora una pagina: restano testo.
@@ -8,8 +10,8 @@ export function PiePagina() {
         <div className="mb-space-lg flex flex-col items-start justify-between gap-space-lg md:flex-row md:items-center">
           <div className="flex flex-col gap-space-xs">
             <div className="flex items-center gap-space-sm">
-              <img src="/logo-nosey.png" alt="" className="h-6 w-auto object-contain" />
-              <span className="font-headline-sm text-headline-sm tracking-tight text-on-surface">NoseY</span>
+              <img src="/logo-nosey.png" alt="" className="h-8 w-auto object-contain" />
+              <Marchio className="text-[22px] text-on-surface" />
             </div>
             <p className="max-w-sm font-body-sm text-body-sm text-on-surface-variant">
               Piattaforma notturna d'élite per la scoperta di eventi dal vivo, ticketing sicuro e community
