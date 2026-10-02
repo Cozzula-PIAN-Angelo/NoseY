@@ -2,3 +2,4 @@
 // Import: import { BadgeStato, CardEvento } from '@/components/eventi'
 export { BadgeStato } from './BadgeStato'
 export { CardEvento } from './CardEvento'
+export { CardEventoPrincipale } from './CardEventoPrincipale'
