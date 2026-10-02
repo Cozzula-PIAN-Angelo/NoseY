@@ -46,7 +46,8 @@ export function RigaAmicizia({ amicizia }: { amicizia: AmiciziaResponse }) {
 
   return (
     <li className="flex flex-wrap items-center justify-between gap-space-sm rounded-lg bg-surface-container-low p-space-sm">
-      <div className="flex min-w-0 flex-1 items-center gap-space-sm">
+      {/* min-w-48: da telefono le azioni vanno a capo invece di schiacciare nome ed evento (FE2-15) */}
+      <div className="flex min-w-48 flex-1 items-center gap-space-sm">
         <AvatarAmico amico={utente} anello="ring-surface-container-low" />
         <div className="flex min-w-0 flex-col">
           <span className="truncate font-label-btn text-label-btn text-on-surface">{nome}</span>
@@ -56,7 +57,7 @@ export function RigaAmicizia({ amicizia }: { amicizia: AmiciziaResponse }) {
           <EventoInComune eventoId={eventoId} />
         </div>
       </div>
-      <div className="flex shrink-0 flex-wrap items-center justify-end gap-space-xs">
+      <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-space-xs">
         <PulsanteAmicizia utente={utente} statoAmicizia={stato} amiciziaId={id} eventoId={eventoId} chatId={chatId} />
         {stato === 'AMICI' && (
           <Button
