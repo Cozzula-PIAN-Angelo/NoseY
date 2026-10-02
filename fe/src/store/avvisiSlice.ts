@@ -33,11 +33,14 @@ const avvisiSlice = createSlice({
   reducers: {
     mostraAvviso: {
       reducer(stato, azione: PayloadAction<Avviso>) {
+        // Stessa chiave: il vecchio sparisce, il nuovo arriva in fondo con il tempo che riparte.
+        // Solo modifiche alla bozza di Immer, senza restituire un array nuovo (le due cose insieme
+        // Immer non le permette)
         const { chiave } = azione.payload
-        // Stessa chiave: il vecchio sparisce, il nuovo arriva in fondo con il tempo che riparte
-        const altri = chiave ? stato.filter((a) => a.chiave !== chiave) : stato
-        altri.push(azione.payload)
-        return altri.slice(-MASSIMO_AVVISI)
+        const vecchio = chiave ? stato.findIndex((a) => a.chiave === chiave) : -1
+        if (vecchio !== -1) stato.splice(vecchio, 1)
+        stato.push(azione.payload)
+        if (stato.length > MASSIMO_AVVISI) stato.shift()
       },
       prepare(avviso: NuovoAvviso) {
         const durata = avviso.durata ?? (avviso.tipo === 'errore' ? 8000 : 5000)
