@@ -1,7 +1,9 @@
 // Tear Ticket di React Bits (https://reactbits.dev/micro/tear-ticket), variante TypeScript + Tailwind,
-// scaricata dal registro: https://reactbits.dev/r/TearTicket-TS-TW.json. Unica modifica: "b" → "_"
-// nella mappa dei ponti (variabile non usata, il nostro tsconfig la rifiuta). L'adattamento ai
-// ticket di NoseY sta in features/eventi. Dipendenza: motion.
+// scaricata dal registro: https://reactbits.dev/r/TearTicket-TS-TW.json. Modifiche (segnate "NoseY"):
+// - "b" → "_" nella mappa dei ponti (variabile non usata, il nostro tsconfig la rifiuta);
+// - con defaultTorn/torn gia' true al montaggio la matrice restava visibile: l'effetto su "geo"
+//   chiama reset() dopo quello su "used" che la nasconde, quindi lì la si rinasconde.
+// L'adattamento ai ticket di NoseY sta in features/eventi. Dipendenza: motion.
 
 'use client';
 
@@ -530,6 +532,8 @@ const TearTicket: React.FC<TearTicketProps> = ({
   }, [used]);
   useEffect(() => {
     reset();
+    // NoseY: reset() rimette visibile la matrice; se il ticket nasce gia' strappato va rinascosta
+    if (used && stubRef.current) stubRef.current.style.visibility = 'hidden';
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geo]);
   useEffect(() => {
@@ -717,6 +721,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
             className="pointer-events-none absolute inset-0 h-full w-full overflow-visible [&_path]:fill-none [&_path]:opacity-0 [&_path]:[stroke:var(--tt-bg)] [&_path]:[stroke-linecap:round]"
             aria-hidden="true"
           >
+            {/* NoseY: "_" invece di "b", non usata */}
             {geo.bridges.map((_, i) => (
               <g key={i}>
                 <path
