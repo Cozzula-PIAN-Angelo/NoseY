@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
 import { BadgeStato } from '@/components/eventi'
-import { Icon, useAvviso } from '@/components/ui'
+import { Button, Icon } from '@/components/ui'
 import { dataOra, intervallo } from '@/lib/formato'
 import type { TicketResponse } from '@/types/api'
+import { FinestraTicket } from './FinestraTicket'
 
 type TicketEventoProps = {
   ticket: TicketResponse
@@ -11,21 +11,12 @@ type TicketEventoProps = {
   conEvento?: boolean
 }
 
-// Ticket di un'iscrizione (FE1-06), come nella schermata Stitch "I Miei Ticket":
-// QR e codice da mostrare all'ingresso, titolare, data di emissione.
+// Ticket di un'iscrizione (FE1-06), come nella schermata Stitch "I Miei Ticket": titolare e data
+// di emissione. QR e codice completo non si vedono qui: valgono per entrare, quindi stanno solo nel
+// ticket grande (FinestraTicket, Tear Ticket di React Bits) che si apre con "Visualizza ticket".
+// Al loro posto, l'inizio e la fine del codice, come nell'elenco dei pass.
 export function TicketEvento({ ticket, conEvento = false }: TicketEventoProps) {
-  const avviso = useAvviso()
-  const [copiato, setCopiato] = useState(false)
-
-  async function copia() {
-    try {
-      await navigator.clipboard.writeText(ticket.codice)
-      setCopiato(true)
-      setTimeout(() => setCopiato(false), 2000)
-    } catch {
-      avviso.attenzione('Copia non riuscita', 'Seleziona il codice e copialo a mano.')
-    }
-  }
+  const [aperto, setAperto] = useState(false)
 
   return (
     <section aria-label={`Ticket per ${ticket.evento.titolo}`} className="flex flex-col gap-space-md rounded-2xl bg-surface-card p-space-lg">
@@ -39,27 +30,22 @@ export function TicketEvento({ ticket, conEvento = false }: TicketEventoProps) {
         </header>
       )}
 
-      <div className="flex flex-col items-center gap-space-md rounded-xl bg-surface-container-lowest p-space-md sm:flex-row sm:items-start">
-        {/* Il QR contiene solo il codice del ticket */}
-        <div className="shrink-0 rounded-xl bg-white p-space-sm">
-          <QRCodeSVG value={ticket.codice} size={128} level="M" title={`Codice QR del ticket ${ticket.codice}`} />
+      <div className="flex flex-col items-center gap-space-md rounded-xl bg-surface-container-lowest p-space-md sm:flex-row">
+        <span aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+          <Icon nome="qr_code_2" size={36} />
+        </span>
+
+        <div className="flex w-full min-w-0 flex-col items-center gap-1 text-center sm:items-start sm:text-left">
+          <span className="font-label-code-status text-label-code-status uppercase text-outline">Codice del ticket</span>
+          <code className="font-mono text-body-sm text-secondary">
+            {ticket.codice.slice(0, 4)}…{ticket.codice.slice(-4)}
+          </code>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">Apri il ticket per mostrare il QR all'ingresso.</p>
         </div>
 
-        <div className="flex w-full min-w-0 flex-col gap-space-xs">
-          <span className="font-label-code-status text-label-code-status uppercase text-outline">Codice del ticket</span>
-          <div className="flex items-center gap-space-xs rounded-lg bg-surface-container px-space-sm py-space-xs">
-            <code className="min-w-0 flex-1 select-all break-all font-mono text-body-sm text-primary">{ticket.codice}</code>
-            <button
-              type="button"
-              onClick={copia}
-              className="flex shrink-0 items-center gap-1 rounded-md px-space-xs py-1 font-label-sm text-label-sm text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container"
-            >
-              <Icon nome={copiato ? 'check' : 'content_copy'} size={16} />
-              <span aria-live="polite">{copiato ? 'Copiato' : 'Copia'}</span>
-            </button>
-          </div>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">Mostra il codice all'ingresso.</p>
-        </div>
+        <Button icona="confirmation_number" className="shrink-0" onClick={() => setAperto(true)}>
+          Visualizza ticket
+        </Button>
       </div>
 
       <dl className="grid grid-cols-2 gap-space-md">
@@ -74,6 +60,8 @@ export function TicketEvento({ ticket, conEvento = false }: TicketEventoProps) {
           <dd className="font-label-btn text-label-btn text-on-surface">{dataOra(ticket.emessoIl)}</dd>
         </div>
       </dl>
+
+      <FinestraTicket ticket={aperto ? ticket : null} onChiudi={() => setAperto(false)} />
     </section>
   )
 }
