@@ -1,8 +1,10 @@
+import { Link } from 'react-router'
 import { Marchio } from './Marchio'
 
 // Footer di tutte le pagine, dalle schermate Stitch (stesse classi). Tolte le scritte tecniche di Stitch
 // («WebSocket STOMP Attivo» sempre verde, «AES-256 Passcode Pass» inventata) e «Radar Sicurezza»,
-// che non esiste (FE1-17): solo dati veri. Privacy e termini non hanno ancora una pagina: restano testo.
+// che non esiste (FE1-17): solo dati veri. Privacy e termini non hanno ancora una pagina: restano testo;
+// la Cookie Policy (/cookies) si'.
 export function PiePagina() {
   return (
     <footer className="mt-space-xl w-full bg-surface-container-lowest">
@@ -25,6 +27,9 @@ export function PiePagina() {
           </p>
           <div className="flex items-center gap-space-md font-body-sm text-body-sm text-on-surface-variant">
             <span>Privacy Policy</span>
+            <Link to="/cookies" className="hover:text-on-surface hover:underline">
+              Cookie Policy
+            </Link>
             <span>Termini</span>
           </div>
         </div>

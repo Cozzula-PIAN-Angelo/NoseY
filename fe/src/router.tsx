@@ -11,6 +11,7 @@ import Amici from '@/pages/Amici'
 import Accesso from '@/pages/Accesso'
 import Chat from '@/pages/Chat'
 import Componenti from '@/pages/Componenti'
+import CookiePolicy from '@/pages/CookiePolicy'
 import CreaEvento from '@/pages/CreaEvento'
 import DettaglioEvento from '@/pages/DettaglioEvento'
 import EsploraEventi from '@/pages/EsploraEventi'
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       { path: 'events/:id', element: <DettaglioEvento /> },
       { path: 'artists', element: <CatalogoArtisti /> },
       { path: 'artists/:artistaId', element: <SchedaArtista /> },
+      { path: 'cookies', element: <CookiePolicy /> },
       {
         path: 'ragnatela',
         element: (
