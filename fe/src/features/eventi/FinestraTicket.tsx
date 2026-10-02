@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef } from 'react'
-import { Button } from '@/components/ui'
+import { useEffect, useId, useRef, useState } from 'react'
+import { Button, Icon, useAvviso } from '@/components/ui'
 import type { TicketResponse } from '@/types/api'
 import { TicketStrappabile } from './TicketStrappabile'
 
@@ -9,8 +9,9 @@ type FinestraTicketProps = {
   onChiudi: () => void
 }
 
-// Finestra "Visualizza ticket" di I miei ticket: il ticket grande, da mostrare all'ingresso,
-// con il Tear Ticket di React Bits (TicketStrappabile). Stesso <dialog> nativo di ConfirmDialog:
+// Finestra "Visualizza ticket": il ticket grande, da mostrare all'ingresso, con il Tear Ticket di
+// React Bits (TicketStrappabile) e sotto il codice completo da copiare. QR e codice completo si
+// vedono solo qui, mai aperti nella pagina. Stesso <dialog> nativo di ConfirmDialog:
 // blocca la pagina, porta il focus dentro, si chiude con Esc, col pulsante o cliccando fuori.
 
 export function FinestraTicket({ ticket, onChiudi }: FinestraTicketProps) {
@@ -24,7 +25,7 @@ export function FinestraTicket({ ticket, onChiudi }: FinestraTicketProps) {
     if (!dialog) return
     if (aperta && !dialog.open) {
       dialog.showModal()
-      // Il browser darebbe il focus alla matrice (role="button" del Tear Ticket, qui disattivata)
+      // Il focus parte da "Chiudi", non dal primo elemento (ora "Copia")
       chiudi.current?.focus()
     }
     if (!aperta && dialog.open) dialog.close()
@@ -64,6 +65,8 @@ export function FinestraTicket({ ticket, onChiudi }: FinestraTicketProps) {
           {/* key: cambiando ticket il Tear Ticket riparte (strappato o intero) */}
           <TicketStrappabile key={ticket.id} ticket={ticket} />
 
+          <CodiceCompleto key={`codice-${ticket.id}`} codice={ticket.codice} />
+
           <p className="max-w-md text-center font-body-md text-body-md text-on-surface-variant">
             {usato
               ? 'L’evento è concluso o annullato: il ticket non serve più per entrare.'
@@ -76,5 +79,43 @@ export function FinestraTicket({ ticket, onChiudi }: FinestraTicketProps) {
         </div>
       )}
     </dialog>
+  )
+}
+
+// ---------------------------------------------------------------- Codice completo
+
+/**
+ * Il codice intero, con "Copia" (stesso comportamento che aveva TicketEvento): vale quanto il QR,
+ * quindi come il QR si vede solo qui dentro, a ticket aperto
+ */
+function CodiceCompleto({ codice }: { codice: string }) {
+  const avviso = useAvviso()
+  const [copiato, setCopiato] = useState(false)
+
+  async function copia() {
+    try {
+      await navigator.clipboard.writeText(codice)
+      setCopiato(true)
+      setTimeout(() => setCopiato(false), 2000)
+    } catch {
+      avviso.attenzione('Copia non riuscita', 'Seleziona il codice e copialo a mano.')
+    }
+  }
+
+  return (
+    <div className="flex w-full max-w-md flex-col gap-space-xs">
+      <span className="font-label-code-status text-label-code-status uppercase text-outline">Codice del ticket</span>
+      <div className="flex items-center gap-space-xs rounded-lg bg-surface-container px-space-sm py-space-xs">
+        <code className="min-w-0 flex-1 select-all break-all font-mono text-body-sm text-primary">{codice}</code>
+        <button
+          type="button"
+          onClick={copia}
+          className="flex shrink-0 items-center gap-1 rounded-md px-space-xs py-1 font-label-sm text-label-sm text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-container"
+        >
+          <Icon nome={copiato ? 'check' : 'content_copy'} size={16} />
+          <span aria-live="polite">{copiato ? 'Copiato' : 'Copia'}</span>
+        </button>
+      </div>
+    </div>
   )
 }
