@@ -25,8 +25,10 @@ export function FinestraTicket({ ticket, onChiudi }: FinestraTicketProps) {
     if (!dialog) return
     if (aperta && !dialog.open) {
       dialog.showModal()
-      // Il focus parte da "Chiudi", non dal primo elemento (ora "Copia")
-      chiudi.current?.focus()
+      // Il focus parte da "Chiudi", non dal primo elemento (ora "Copia"), ma senza scorrere fin
+      // laggiu': da telefono la finestra e' piu' alta dello schermo e si vede prima il ticket
+      chiudi.current?.focus({ preventScroll: true })
+      dialog.scrollTop = 0
     }
     if (!aperta && dialog.open) dialog.close()
   }, [aperta])

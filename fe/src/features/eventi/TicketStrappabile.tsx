@@ -14,6 +14,7 @@ import type { TicketResponse } from '@/types/api'
 // matrice non si strappa mai a mano: i ticket attivi restano interi, quelli di eventi conclusi
 // o annullati compaiono gia' strappati, con il timbro e la copertina in grigio.
 // Da telefono il ticket diventa verticale: in orizzontale si rimpicciolirebbe e il QR non si leggerebbe.
+// In verticale l'evento sta in alto e il QR, piu' grande, in basso sopra la matrice.
 
 const ORIZZONTALE = { width: 680, height: 280, stubSize: 170 }
 const VERTICALE = { width: 340, height: 600, stubSize: 140 }
@@ -45,7 +46,7 @@ export function TicketStrappabile({ ticket }: { ticket: TicketResponse }) {
 
   const qr = (
     <div className="shrink-0 rounded-lg bg-white p-1.5 shadow-lg">
-      <QRCodeSVG value={codice} size={stretto ? 132 : 112} level="M" title={`Codice QR del ticket ${codice}`} />
+      <QRCodeSVG value={codice} size={stretto ? 152 : 112} level="M" title={`Codice QR del ticket ${codice}`} />
     </div>
   )
 
@@ -102,8 +103,9 @@ export function TicketStrappabile({ ticket }: { ticket: TicketResponse }) {
       <div className={cx('relative flex h-full gap-space-sm p-space-md', stretto ? 'flex-col items-center justify-between' : 'items-end justify-between')}>
         {stretto ? (
           <>
-            <div className="mt-space-lg">{qr}</div>
+            {/* Da telefono: prima l'evento, poi il QR in basso, piu' vicino al pollice di chi lo mostra */}
             <div className="w-full">{datiEvento}</div>
+            <div className="mb-space-sm">{qr}</div>
           </>
         ) : (
           <>
