@@ -9,8 +9,9 @@ import { giorno } from '@/lib/formato'
 import type { TicketResponse, Uuid } from '@/types/api'
 
 // I miei ticket (FE1-08), rotta /tickets (solo con il login), come la schermata Stitch
-// "I Miei Ticket (Snella & Ordinata)": schede Attivi / Passati, ticket aperto a sinistra con il QR,
-// elenco a destra. Il backend li manda gia' ordinati: prima programmati e in corso, poi gli altri.
+// "I Miei Ticket (Snella & Ordinata)": schede Attivi / Passati, ticket aperto a sinistra (il QR
+// solo con "Visualizza ticket", vedi TicketEvento), elenco a destra. Il backend li manda gia'
+// ordinati: prima programmati e in corso, poi gli altri.
 
 type Scheda = 'attivi' | 'passati'
 
