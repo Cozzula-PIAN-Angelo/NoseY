@@ -19,6 +19,9 @@ import { etichettaGiorno, ora, stessoGiorno } from './tempiChat'
 //   dell'amico che arriva mentre e' aperta.
 // - puoiScrivere = false (amicizia rimossa, account non attivo): si legge, ma al posto del campo
 //   c'e' l'avviso di sola lettura.
+// - Sopra il primo messaggio di ogni gruppo l'etichetta "Sofia • 22:38" / "Tu • 22:40", come in Stitch
+//   (card "Extra: nome e ora sopra i messaggi"): un gruppo inizia quando cambia chi scrive, cambia il
+//   giorno o passano piu' di 5 minuti. L'ora resta anche sotto ogni messaggio.
 // Altezza: la finestra meno la barra in alto (e, da lg, l'intestazione della pagina), cosi' il
 // campo di scrittura resta sempre visibile.
 // Va montata con key={chat.id}: cambiando chat riparte da capo (scorrimento compreso).
@@ -96,16 +99,21 @@ export function Conversazione({ chat }: { chat: ChatResponse }) {
       <ol className="flex flex-col gap-space-sm" aria-label={`Messaggi con ${nome}`}>
         {messaggi.map((m, i) => {
           const precedente = messaggi[i - 1]
+          const nuovoGiorno = !precedente || !stessoGiorno(precedente.inviatoIl, m.inviatoIl)
+          const inizioGruppo =
+            nuovoGiorno ||
+            precedente.mittenteId !== m.mittenteId ||
+            Date.parse(m.inviatoIl) - Date.parse(precedente.inviatoIl) > PAUSA_GRUPPO_MS
           return (
             <Fragment key={m.id}>
-              {(!precedente || !stessoGiorno(precedente.inviatoIl, m.inviatoIl)) && (
+              {nuovoGiorno && (
                 <li className="my-space-xs flex justify-center" aria-hidden="true">
                   <span className="rounded-full bg-surface-container-lowest/80 px-space-md py-1 font-label-code-status text-[11px] text-on-surface-variant first-letter:uppercase">
                     {etichettaGiorno(m.inviatoIl)}
                   </span>
                 </li>
               )}
-              <Messaggio messaggio={m} mio={m.mittenteId === io} amico={amico} />
+              <Messaggio messaggio={m} mio={m.mittenteId === io} amico={amico} inizioGruppo={inizioGruppo} />
             </Fragment>
           )
         })}
@@ -173,13 +181,24 @@ export function Conversazione({ chat }: { chat: ChatResponse }) {
   )
 }
 
+/** Oltre questa pausa fra due messaggi della stessa persona l'etichetta "Nome • ora" si ripete */
+const PAUSA_GRUPPO_MS = 5 * 60_000
+
 type MessaggioProps = {
   messaggio: MessaggioResponse
   mio: boolean
   amico: ChatResponse['amico']
+  /** Primo messaggio di un gruppo: sopra la bolla l'etichetta "Nome • ora" */
+  inizioGruppo: boolean
 }
 
-function Messaggio({ messaggio: m, mio, amico }: MessaggioProps) {
+function Messaggio({ messaggio: m, mio, amico, inizioGruppo }: MessaggioProps) {
+  // Solo per chi guarda: lo screen reader legge gia' il nome (sr-only) e l'ora (sotto la bolla)
+  const etichetta = inizioGruppo && (
+    <span aria-hidden="true" className={cx('font-label-code-status text-[10px] text-outline', mio ? 'mr-1' : 'ml-1')}>
+      {mio ? 'Tu' : amico.nome} • {ora(m.inviatoIl)}
+    </span>
+  )
   const orario = (
     <time
       dateTime={m.inviatoIl}
@@ -199,6 +218,7 @@ function Messaggio({ messaggio: m, mio, amico }: MessaggioProps) {
     return (
       <li className="ml-auto flex max-w-[82%] flex-col items-end gap-1">
         <span className="sr-only">Tu:</span>
+        {etichetta}
         <div className="whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-primary p-space-md font-body-md text-body-md text-on-primary shadow-md">
           {m.testo}
         </div>
@@ -211,6 +231,7 @@ function Messaggio({ messaggio: m, mio, amico }: MessaggioProps) {
       <Avatar utente={amico} dimensione="sm" className="mb-5" />
       <div className="flex min-w-0 flex-col items-start gap-1">
         <span className="sr-only">{amico.nome}:</span>
+        {etichetta}
         <div className="whitespace-pre-wrap break-words rounded-2xl rounded-bl-sm bg-surface-container p-space-md font-body-md text-body-md text-on-surface shadow-md">
           {m.testo}
         </div>
