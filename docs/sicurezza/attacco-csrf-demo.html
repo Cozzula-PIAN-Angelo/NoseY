@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+	<meta charset="UTF-8"/>
+	<title>Sito innocuo — vinci un buono sconto!</title>
+	<style>
+		body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; background:#f4f4f4; color:#111; }
+		h1 { color: #b00020; }
+		pre { background:#1e1e1e; color:#9cdcfe; padding:16px; border-radius:8px; overflow:auto; white-space:pre-wrap; }
+		.esito { font-weight:bold; padding:12px; border-radius:6px; margin-top:16px; }
+		.bloccato { background:#e6ffed; color:#06600c; border:1px solid #06600c; }
+		.riuscito { background:#ffe6e6; color:#b00020; border:1px solid #b00020; }
+		.in-corso { background:#fff8e1; color:#8a6d00; border:1px solid #8a6d00; }
+	</style>
+</head>
+<body>
+	<h1>🎁 Congratulazioni! Hai vinto un buono sconto NoseY</h1>
+	<p>Questa pagina simula un sito ostile, ospitato su un'origine diversa da quella dell'app NoseY
+	   (<code>app.cors.allowed-origins</code> in <code>application.yml</code> non la include).
+	   Apri questa pagina (<code>file://</code>, oppure servila su una porta diversa, es. :5500) mentre
+	   in un'altra scheda sei loggato nell'app vera su <code>http://localhost:5173</code>.</p>
+	<p>Appena la pagina si apre, in background prova a mandare una richiesta <strong>POST /api/events</strong>
+	   all'API NoseY (<code>http://localhost:8080</code>) per creare un evento a tua insaputa — il classico
+	   schema del CSRF: un'azione di scrittura innescata da un sito che non controlli, mentre sei autenticato
+	   altrove.</p>
+
+	<h2>Richiesta forgiata (quello che la pagina manda davvero)</h2>
+	<pre id="richiesta"></pre>
+
+	<h2>Esito</h2>
+	<div id="esito" class="esito in-corso">In corso…</div>
+
+	<script>
+		const baseUrl = "http://localhost:8080";
+		const corpo = {
+			titolo: "Evento creato dall'attacco CSRF (demo)",
+			dataEvento: new Date(Date.now() + 10 * 24 * 3600 * 1000).toISOString(),
+			dataFine: new Date(Date.now() + 11 * 24 * 3600 * 1000).toISOString(),
+			lat: 45.07,
+			lng: 7.69
+		};
+
+		document.getElementById("richiesta").textContent =
+			"POST " + baseUrl + "/api/events\n" +
+			"Origin: " + window.location.origin + " (o \"null\" se aperta da file://)\n" +
+			"Content-Type: application/json\n" +
+			"(nessun header Authorization: una pagina esterna non puo' leggerlo dal sito vero)\n\n" +
+			JSON.stringify(corpo, null, 2);
+
+		fetch(baseUrl + "/api/events", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			// credentials: 'include' non cambierebbe nulla: NoseY non usa cookie di sessione.
+			body: JSON.stringify(corpo)
+		})
+			.then(async (risposta) => {
+				const testo = await risposta.text();
+				const esito = document.getElementById("esito");
+				if (risposta.status === 201) {
+					esito.className = "esito riuscito";
+					esito.textContent = "⚠️ RIUSCITO (201): l'evento e' stato creato senza autenticazione. " +
+						"Vulnerabilita' reale.";
+				} else {
+					esito.className = "esito bloccato";
+					esito.textContent = "✅ Bloccato — HTTP " + risposta.status + ": " + testo;
+				}
+			})
+			.catch((errore) => {
+				// Un TypeError qui e' tipicamente il browser che blocca la richiesta per CORS
+				// prima ancora di mandarla: il server potrebbe non essere mai stato raggiunto.
+				const esito = document.getElementById("esito");
+				esito.className = "esito bloccato";
+				esito.textContent = "✅ Bloccato dal browser (probabile CORS), nemmeno arrivato al server: " + errore;
+			});
+	</script>
+</body>
+</html>
