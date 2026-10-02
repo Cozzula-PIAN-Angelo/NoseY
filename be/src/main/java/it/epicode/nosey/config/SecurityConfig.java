@@ -56,7 +56,7 @@ public class SecurityConfig {
 								"/api/auth/password/forgot", "/api/auth/password/reset").permitAll()
 						.requestMatchers(HttpMethod.GET,
 								"/api/events", "/api/events/{id}", "/api/events/{id}/photos", "/api/events/{id}/pois",
-								"/api/artists", "/api/artists/{artistaId}",
+								"/api/artists", "/api/artists/{artistaId}", "/api/artists/{artistaId}/events",
 								// Avatar, foto e immagini artista: un tag img non puo' mandare il token (decisione 9).
 								"/api/users/{utenteId}/avatar",
 								"/api/events/{id}/photos/{fotoId}/image",

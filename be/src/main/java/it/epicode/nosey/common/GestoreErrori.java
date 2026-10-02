@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -85,6 +86,13 @@ public class GestoreErrori {
 	@ExceptionHandler(NoResourceFoundException.class)
 	public ResponseEntity<ErroreResponse> gestisci(NoResourceFoundException ex) {
 		return risposta(CodiceErrore.NON_TROVATO, "Risorsa non trovata", Map.of());
+	}
+
+	// Un percorso che esiste ma non con quel metodo (es. GET su un percorso solo POST/PATCH/DELETE):
+	// senza questo handler specifico finirebbe nel catch-all Exception.class, cioe' un 500.
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	public ResponseEntity<ErroreResponse> gestisci(HttpRequestMethodNotSupportedException ex) {
+		return risposta(CodiceErrore.METODO_NON_SUPPORTATO, "Metodo non supportato per questo percorso", Map.of());
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)

@@ -54,8 +54,12 @@ Tutti gli endpoint REST stanno sotto `/api`.
   `main` si fa **Manual Deploy** a mano, e anche le modifiche a `render.yaml` non si sincronizzano da sole.
 - **Avvio lento.** Sul piano gratuito il backend si sospende senza traffico e riparte in circa 3 minuti
   (`Started NoseyApplication in 174 seconds`). Il primo accesso dopo una pausa puo' non rispondere.
-- **Email.** Senza il profilo `smtp` gira `LogEmailService`: i codici di verifica e di reset si leggono
-  nei log di `nosey-be` (Logs, cerca `[EMAIL FINTA]`). `BrevoEmailService` non esiste ancora.
+- **Email.** Online gira `BrevoEmailService` (profilo `prod`), che invia via API HTTP di Brevo: servono
+  `SPRING_PROFILES_ACTIVE=prod`, `BREVO_API_KEY` e `MAIL_FROM` (un mittente confermato in Brevo) tra le
+  variabili di `nosey-be`. I valori si inseriscono a mano su Render (Environment): la chiave non va mai nel
+  repository. Senza il profilo `prod` gira `LogEmailService`: i codici si leggono nei log di `nosey-be`
+  (Logs, cerca `[EMAIL FINTA]`). Con `prod` attivo ma chiave o mittente vuoti l'email non parte e nei log
+  compare un errore.
 - **WebSocket.** Il backend non imposta heartbeat STOMP: se una connessione ferma a lungo cade, il client
   si riconnette da solo.
 
@@ -63,7 +67,7 @@ Tutti gli endpoint REST stanno sotto `/api`.
 
 1. `https://nosey-be.onrender.com/api/stato` risponde `{"servizio":"attivo","database":"nosey"}`.
 2. Nei log di `nosey-be` compaiono `Successfully applied 3 migrations` (Flyway) e `Started NoseyApplication`.
-3. Su `https://nosey-fe.onrender.com`: registrazione, poi il codice a 6 cifre dai log (`[EMAIL FINTA]`), poi login.
+3. Su `https://nosey-fe.onrender.com`: registrazione, poi il codice a 6 cifre ricevuto via email, poi login.
 4. Creare un evento e caricare una foto: l'immagine sta nel database (decisione 4), non su file.
 5. Con due utenti amici, un messaggio di chat: passa dal WebSocket (`/user/queue/messages`).
 
@@ -98,7 +102,7 @@ be/
     notification/           notifiche persistite e live
     friendship/             richieste di amicizia
     chat/                   messaggi fra amici
-    mail/                   invio email (SMTP Gmail)
+    mail/                   invio email (Brevo online, SMTP Gmail in locale)
     ai/                     miglioramento della descrizione dell'evento
     common/                 eccezioni, gestione errori, DTO condivisi
   src/main/resources/application.yml
