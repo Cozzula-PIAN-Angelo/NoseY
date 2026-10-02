@@ -1106,6 +1106,13 @@ CambiaStatoUtente        PATCH /api/admin/users/{utenteId}/status
             403 RUOLO_INSUFFICIENTE (ruolo uguale o superiore al tuo, o sei tu), 409 UTENTE_ANONIMIZZATO
   - Effetti: SOSPESO → revoca tutti i token dell'utente · i suoi eventi restano (decisione D14)
 
+ListaArtistiAdmin        GET /api/admin/artists?search=
+  - Accesso: ADMIN
+  - Query: search @Size(max = 100), facoltativo (contiene, senza distinzione di maiuscole)
+  - DTO resp: List<ArtistaResponse>, anche i disattivati, in ordine alfabetico
+  - Note: a differenza di ListaArtisti (sezione 6), serve per poter riattivare un artista
+          disattivato dal pannello admin
+
 CreaArtista              POST /api/admin/artists   (multipart/form-data, come CreaFoto)
   - Accesso: ADMIN
   - Parametri

@@ -17,6 +17,11 @@ public interface ArtistaRepository extends JpaRepository<Artista, UUID> {
 	// Con ?search=: contiene, senza distinzione di maiuscole/minuscole.
 	List<Artista> findByAttivoTrueAndNomeContainingIgnoreCaseOrderByNomeAsc(String search);
 
+	// ListaArtistiAdmin (sezione 12): anche i disattivati, in ordine alfabetico.
+	List<Artista> findByOrderByNomeAsc();
+
+	List<Artista> findByNomeContainingIgnoreCaseOrderByNomeAsc(String search);
+
 	// CreaArtista (sezione 12): nome unico senza distinzione di maiuscole/minuscole.
 	boolean existsByNomeIgnoreCase(String nome);
 
