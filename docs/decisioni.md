@@ -719,3 +719,31 @@ Accettato: foto e descrizioni degli eventi sono gia' pubbliche sulla mappa.
   aggiornerebbero nelle altre pagine.
 - **Pannello a tendina sotto la campanella**: non previsto in `interfacce.md`; la pagina
   `/notifications` fa gia' tutto.
+
+---
+
+## Decisione 24: test HTTP della sicurezza con MockMvc, senza spring-security-test
+
+### Scelta
+
+- `SicurezzaHttpTest` (BE2-17) prova SecurityConfig e JwtFilter con richieste HTTP vere su
+  MockMvc. La catena di Spring Security si aggiunge a mano con
+  `addFilters(context.getBean("springSecurityFilterChain", Filter.class))`.
+- I token sono veri, emessi da `TokenService` o firmati nel test con un segreto diverso o una
+  scadenza passata. Nessun utente finto (`@WithMockUser`).
+- Come per gli altri test (decisione 10): `@SpringBootTest` + `@Transactional` sul database
+  locale. MockMvc gira nel thread del test, quindi vede i dati non ancora salvati e il rollback
+  cancella tutto.
+
+### Motivazione
+
+- Nessuna dipendenza nuova nel `pom.xml`: MockMvc fa parte di `spring-test`, gia' incluso nello starter.
+- Con token veri si prova anche la parte che si rompe piu' facilmente: firma, scadenza, jti
+  revocato e ruolo letto dal token.
+
+### Alternative scartate
+
+- **`spring-security-test` (`springSecurity()`, `@WithMockUser`)**: una dipendenza in piu', e
+  gli utenti finti saltano JwtFilter, cioe' proprio quello che il test deve provare.
+- **Server su porta casuale con un client HTTP** (come `WebSocketSicurezzaTest`): obbliga a
+  salvare davvero i dati e a cancellarli a mano, senza vantaggi per richieste HTTP sincrone.
