@@ -72,7 +72,7 @@ export default function Profilo() {
               <FormCambioPassword email={utente.email} />
             </Sezione>
             <Sezione titolo="Elimina account" testo="Cancella i tuoi dati personali e chiude l’account per sempre.">
-              <EliminaAccount />
+              <EliminaAccount email={utente.email} />
             </Sezione>
           </div>
         </div>
