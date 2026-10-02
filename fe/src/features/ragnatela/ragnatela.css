@@ -1,0 +1,226 @@
+/*
+ * Modalita' Ragnatela (easter egg, Decisione 25): stile "Cinematic Vigilante" delle schermate Stitch
+ * in docs/stitch/ragnatela/. Lo importa solo la pagina /ragnatela (caricata a parte), quindi Oswald
+ * e queste regole non pesano sulle altre pagine. Tutto sta sotto .modalita-ragnatela: i token di
+ * index.css (@theme) restano quelli di NoseY.
+ * Le regole qui sotto non sono in un @layer, quindi vincono sulle utility di Tailwind: e' cosi' che
+ * i campi di components/ui prendono l'aspetto del design senza toccarne il codice.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap');
+
+.modalita-ragnatela {
+  /* Colori della schermata "Desktop Console Operativa" (spider-*) */
+  --rg-rosso: #e22328;
+  --rg-rosso-acceso: #ff1f26;
+  --rg-rosso-scuro: #b71115;
+  --rg-oro: #df9935;
+  --rg-oro-tenue: #b27c39;
+  /* Oro leggibile sulle card bianche */
+  --rg-oro-testo: #8a5a1c;
+  --rg-blu: #1b56e0;
+  --rg-verde: #10b981;
+  --rg-verde-scuro: #047857;
+  --rg-sfondo: #0b0d11;
+  --rg-superficie: #12151b;
+  --rg-card: #181c24;
+  --rg-rialzata: #212733;
+  --rg-bordo: #2d3442;
+  --rg-testo: #e3e2e6;
+  --rg-testo-tenue: #9da3ae;
+  /* Card bianche "ad alto contrasto" */
+  --rg-pannello: #ffffff;
+  --rg-inchiostro: #0b0d11;
+  --rg-inchiostro-tenue: #4b5563;
+
+  color: var(--rg-testo);
+  background-color: var(--rg-sfondo);
+  background-image:
+    radial-gradient(circle at 50% 50%, rgb(226 35 40 / 0.06) 0%, transparent 65%),
+    linear-gradient(to right, rgb(255 255 255 / 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+.modalita-ragnatela ::selection {
+  background: var(--rg-rosso);
+  color: #fff;
+}
+
+/* Focus sempre visibile: anello bianco con alone rosso, si vede sia sul fondo scuro che sul bianco */
+.modalita-ragnatela :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgb(226 35 40 / 0.55);
+}
+
+/* Titoli ed etichette d'azione in Oswald maiuscolo */
+.rg-titolo {
+  font-family: 'Oswald', 'Plus Jakarta Sans', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Elementi obliqui (pulsanti, badge): il contenuto si raddrizza con .rg-dritto */
+.rg-obliquo {
+  transform: skewX(-12deg);
+}
+
+.rg-dritto {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transform: skewX(12deg);
+}
+
+/* Pulsante d'azione principale (rosso, obliquo) */
+.rg-azione {
+  background: var(--rg-rosso);
+  color: #fff;
+  box-shadow: 0 8px 24px -4px rgb(226 35 40 / 0.5);
+  transition: background-color 150ms, transform 150ms;
+}
+
+.rg-azione:hover:not(:disabled) {
+  background: var(--rg-rosso-acceso);
+}
+
+.rg-obliquo.rg-azione:active:not(:disabled) {
+  transform: skewX(-12deg) scale(0.98);
+}
+
+.rg-azione:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---------- Mappa ---------- */
+
+.rg-mappa.mappa-nosey {
+  border-radius: 2px;
+  background: #07090d;
+}
+
+.rg-mappa .maplibregl-ctrl-group {
+  border-radius: 2px;
+  background: rgb(18 21 27 / 0.92);
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.rg-mappa .maplibregl-ctrl-group button:hover {
+  background-color: var(--rg-rosso);
+}
+
+/* Cono del radar che ruota sopra la mappa (fermo con prefers-reduced-motion) */
+.rg-radar {
+  background: conic-gradient(from 0deg at 50% 50%, rgb(226 35 40 / 0.22) 0deg, rgb(27 86 224 / 0.06) 60deg, transparent 75deg);
+  mix-blend-mode: screen;
+  animation: rg-giro 6s linear infinite;
+}
+
+@keyframes rg-giro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Campi del form (TextField, TextArea, Select di components/ui) ---------- */
+
+.rg-campi label[for] {
+  font-family: 'Oswald', 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: 0.08em;
+  color: var(--rg-oro);
+}
+
+.rg-campi input:not([type='radio']),
+.rg-campi textarea,
+.rg-campi select {
+  border-radius: 2px;
+  background: var(--rg-card);
+  border: 1px solid var(--rg-bordo);
+  color: #fff;
+  box-shadow: none;
+}
+
+.rg-campi input:not([type='radio']):focus,
+.rg-campi textarea:focus,
+.rg-campi select:focus {
+  border-color: var(--rg-rosso);
+  box-shadow: 0 0 0 3px rgb(226 35 40 / 0.25);
+  outline: none;
+}
+
+.rg-campi input:not([type='radio'])[aria-invalid='true'],
+.rg-campi textarea[aria-invalid='true'],
+.rg-campi select[aria-invalid='true'] {
+  border-color: var(--rg-rosso);
+}
+
+/* Titoli che ricevono il focus da codice (tabIndex -1): niente anello, non sono comandi */
+.modalita-ragnatela [tabindex='-1']:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+.rg-campi select option {
+  background: var(--rg-card);
+}
+
+/* ---------- Urgenza e conversazione ---------- */
+
+/* Barrette dell'urgenza Alta: alone che pulsa */
+.rg-pulsa {
+  animation: rg-pulsa 1.6s ease-in-out infinite;
+}
+
+@keyframes rg-pulsa {
+  50% {
+    box-shadow: 0 0 8px rgb(226 35 40 / 0.8);
+  }
+}
+
+/* Tre puntini di "Spider-Man sta scrivendo…" */
+.rg-puntino {
+  animation: rg-puntino 1.2s ease-in-out infinite;
+}
+
+.rg-puntino:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.rg-puntino:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes rg-puntino {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* Foglio dal basso su mobile */
+.rg-foglio {
+  animation: rg-sale 220ms ease-out;
+}
+
+@keyframes rg-sale {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rg-radar,
+  .rg-pulsa,
+  .rg-puntino,
+  .rg-foglio {
+    animation: none;
+  }
+}

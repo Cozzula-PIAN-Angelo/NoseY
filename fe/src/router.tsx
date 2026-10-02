@@ -1,6 +1,9 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter } from 'react-router'
 import App from '@/App'
 import { SoloConLogin, SoloOspiti, SoloRuolo } from '@/components/layout'
+import { Caricamento } from '@/components/ui'
+import { caricaRagnatela } from '@/features/ragnatela/carica'
 import AdminArtisti from '@/pages/AdminArtisti'
 import AdminUtenti from '@/pages/AdminUtenti'
 import CatalogoArtisti from '@/pages/CatalogoArtisti'
@@ -25,6 +28,9 @@ import Registrazione from '@/pages/Registrazione'
 import SchedaArtista from '@/pages/SchedaArtista'
 import VerificaEmail from '@/pages/VerificaEmail'
 
+// Easter egg "Modalita' Ragnatela" (Decisione 25): pagina scaricata solo quando serve, fuori dai menu
+const Ragnatela = lazy(caricaRagnatela)
+
 // Rotte concordate in docs/interfacce.md (TEAM-02). Percorsi in inglese, parametri con gli
 // stessi nomi dell'API. Tutte le rotte hanno la loro pagina (le ultime provvisorie le ha sostituite FE1-19).
 // L'accesso (login, ospite, ADMIN) lo decidono le rotte contenitore di components/layout/Protezioni.
@@ -40,6 +46,14 @@ export const router = createBrowserRouter([
       { path: 'events/:id', element: <DettaglioEvento /> },
       { path: 'artists', element: <CatalogoArtisti /> },
       { path: 'artists/:artistaId', element: <SchedaArtista /> },
+      {
+        path: 'ragnatela',
+        element: (
+          <Suspense fallback={<Caricamento riquadro testo="Tendo la ragnatela..." className="m-space-lg" />}>
+            <Ragnatela />
+          </Suspense>
+        ),
+      },
       // Catalogo dei componenti comuni (FE1-01), con dati di prova: solo in sviluppo, non in produzione
       ...(import.meta.env.DEV ? [{ path: 'componenti', element: <Componenti /> }] : []),
 
