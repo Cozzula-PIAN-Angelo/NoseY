@@ -35,7 +35,7 @@ export default function Mappa({
   puntoScelto,
   onScegliPunto,
   cerchio,
-  stile = 'dark',
+  stile = 'fiord',
   etichetta = 'Mappa',
   className,
 }: MappaProps) {
@@ -52,7 +52,11 @@ export default function Mappa({
     <div
       role="region"
       aria-label={etichetta}
-      className={cx('mappa-nosey relative h-96 w-full overflow-hidden rounded-xl bg-surface-container', className)}
+      className={cx(
+        'mappa-nosey relative h-96 w-full overflow-hidden rounded-xl bg-surface-container',
+        stile === 'fiord' && 'mappa-fiord',
+        className,
+      )}
     >
       <MapGL
         ref={mappa}

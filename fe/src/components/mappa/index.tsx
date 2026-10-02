@@ -16,6 +16,10 @@ export function Mappa(props: MappaProps) {
   )
 }
 
+// Indirizzi (Nominatim): anche questi senza MapLibre
+export { CercaIndirizzo } from './CercaIndirizzo'
+export { cercaIndirizzi, indirizzoDi, type Indirizzo } from './indirizzi'
+export { useIndirizzo, type StatoIndirizzo } from './useIndirizzo'
 export { arrotonda, type Coordinate, type MappaProps, type MarkerMappa, type StileMappa } from './tipi'
 // Le icone sono leggere (niente MapLibre): si possono usare anche in legende e card dei POI
 export { IconaEvento, IconaPoi, STILE_POI, STILE_STATO } from './IconaMarker'

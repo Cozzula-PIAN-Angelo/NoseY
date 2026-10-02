@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { Mappa, type Coordinate } from '@/components/mappa'
+import { CercaIndirizzo, Mappa, useIndirizzo, type Coordinate } from '@/components/mappa'
 import { Button, DateTimeField, Icon, TextArea, TextField } from '@/components/ui'
 import { nelFuturo } from '@/lib/date'
 import { LIMITI_EVENTI } from '@/types/api'
@@ -7,7 +7,8 @@ import { usePosizioneUtente } from './usePosizioneUtente'
 
 // Form dell'evento (FE1-07), lo stesso per la creazione e per la modifica.
 // Le date sono i valori dei campi datetime-local (ora locale): la conversione in ISO con il fuso
-// la fa chi invia (lib/date.ts). La posizione si sceglie cliccando sulla mappa.
+// la fa chi invia (lib/date.ts). La posizione si sceglie cliccando sulla mappa o cercando una via
+// (CercaIndirizzo); sotto la mappa si vede la via del punto scelto, non le coordinate.
 
 export type ValoriEvento = {
   titolo: string
@@ -42,7 +43,7 @@ export function validaEvento(v: ValoriEvento, iniziali: ValoriEvento): ErroriEve
   if (!v.fine) errori.fine = "Indica quando finisce l'evento"
   else if (v.fine !== iniziali.fine && !nelFuturo(v.fine)) errori.fine = 'La fine deve essere nel futuro'
   else if (v.inizio && new Date(v.fine) <= new Date(v.inizio)) errori.fine = "La fine deve essere dopo l'inizio"
-  if (!v.posizione) errori.posizione = 'Clicca sulla mappa per indicare dove si svolge'
+  if (!v.posizione) errori.posizione = 'Clicca sulla mappa o cerca una via per indicare dove si svolge'
   return errori
 }
 
@@ -75,6 +76,10 @@ export function FormEvento({
   const [valori, setValori] = useState<ValoriEvento>(iniziali)
   const [errori, setErrori] = useState<ErroriEvento>({})
   const posizioneUtente = usePosizioneUtente()
+  /** Punto dell'ultima via cercata: solo in quel caso la mappa segue il punto scelto */
+  const [centroCercato, setCentroCercato] = useState<Coordinate | null>(null)
+  const indirizzo = useIndirizzo(valori.posizione)
+  const centro = centroCercato ?? posizioneUtente.posizione ?? iniziali.posizione ?? CENTRO_PREDEFINITO
 
   const cambia = <K extends keyof ValoriEvento>(campo: K, valore: ValoriEvento[K]) => {
     setValori((v) => ({ ...v, [campo]: valore }))
@@ -144,26 +149,42 @@ export function FormEvento({
         <legend className="mb-space-xs font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
           Dove si svolge<span aria-hidden="true" className="ml-0.5 text-tertiary">*</span>
         </legend>
+        <CercaIndirizzo
+          vicinoA={centro}
+          onScegli={(r) => {
+            cambia('posizione', r.punto)
+            setCentroCercato(r.punto)
+          }}
+        />
         <Mappa
           etichetta="Scegli la posizione dell'evento: clicca sulla mappa"
-          // Il centro non segue il punto scelto: cliccando la mappa resta ferma
-          centro={posizioneUtente.posizione ?? iniziali.posizione ?? CENTRO_PREDEFINITO}
-          zoom={posizioneUtente.posizione || iniziali.posizione ? 15 : 12}
+          // Il centro non segue il punto cliccato (la mappa resta ferma), solo la via cercata
+          centro={centro}
+          zoom={centroCercato || posizioneUtente.posizione || iniziali.posizione ? 15 : 12}
           puntoScelto={valori.posizione}
           onScegliPunto={(p) => cambia('posizione', p)}
           className="h-80"
         />
         <div className="flex flex-wrap items-center justify-between gap-space-sm">
-          <p className="font-body-sm text-body-sm text-on-surface-variant">
-            {valori.posizione
-              ? `Posizione: ${valori.posizione.lat}, ${valori.posizione.lng} · trascina il segnaposto per spostarla`
-              : 'Clicca sulla mappa nel punto in cui si svolge l’evento.'}
+          {/* aria-live: chi usa lo screen reader sente la via appena arriva */}
+          <p aria-live="polite" className="font-body-sm text-body-sm text-on-surface-variant">
+            {indirizzo.stato !== 'nessun-punto' ? (
+              <>
+                Posizione: <span className="text-on-surface">{indirizzo.testo}</span> · trascina il segnaposto per spostarla
+              </>
+            ) : (
+              'Clicca sulla mappa o cerca una via per indicare dove si svolge l’evento.'
+            )}
           </p>
           <Button
             variant="ghost"
             size="sm"
             icona="my_location"
-            onClick={posizioneUtente.chiedi}
+            onClick={() => {
+              // La mappa torna a seguire la posizione dell'utente, non l'ultima via cercata
+              setCentroCercato(null)
+              posizioneUtente.chiedi()
+            }}
             inCorso={posizioneUtente.stato === 'in-attesa'}
           >
             Vai alla mia posizione
