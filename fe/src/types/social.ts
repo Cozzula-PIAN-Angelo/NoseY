@@ -132,7 +132,20 @@ export const CODE_WEBSOCKET = {
   notifiche: '/user/queue/notifications',
   /** ErroreWebSocket { codice, messaggio } (lib/errori.ts) */
   errori: '/user/queue/errors',
+  /** PresenzaEvento: un amico si e' collegato o scollegato (card "Extra: presenza online") */
+  presenza: '/user/queue/presence',
 } as const
+
+/**
+ * Presenza online degli amici (card "Extra: presenza online degli amici", backend da fare):
+ * online = almeno una connessione WebSocket aperta; la vedono solo gli amici (ACCETTATA).
+ * REST: GET /api/friendships/online → Uuid[] degli amici collegati adesso.
+ * Live: { utenteId, online } su /user/queue/presence quando un amico passa da 0 a 1 connessioni o viceversa.
+ */
+export type PresenzaEvento = {
+  utenteId: Uuid
+  online: boolean
+}
 
 /** Destinazione dell'invio di un messaggio */
 export const destinazioneInvio = (chatId: Uuid) => `/app/chats/${chatId}/send`

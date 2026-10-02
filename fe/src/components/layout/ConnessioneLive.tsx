@@ -10,7 +10,7 @@ import { selezionaToken } from '@/store/sessioneSlice'
 // Connessione WebSocket finche' c'e' una sessione (FE2-11, progettazione v4 sezione 11,
 // decisione 22). Il client e' in lib/websocket.ts; qui si decide quando aprirla e chiuderla:
 // - si apre con il token della sessione, si chiude all'uscita o se il token cambia
-// - dopo una riconnessione si ricaricano ContaNonLette, le chat e le notifiche: cio' che e'
+// - dopo una riconnessione si ricaricano ContaNonLette, le chat, le notifiche e gli amici online: cio' che e'
 //   arrivato mentre la connessione era giu' non e' passato dal WebSocket
 // - TOKEN_NON_VALIDO: si controlla la sessione con GET /api/users/me. Un 401 la chiude
 //   tramite apiSlice (avviso e login); se invece risponde, si riprova piu' tardi.
@@ -33,7 +33,7 @@ export function ConnessioneLive() {
 
     connetti(token, {
       riconnesso: () => {
-        dispatch(apiSocial.util.invalidateTags(['NonLette', 'Chat', 'Messaggi', 'Notifica']))
+        dispatch(apiSocial.util.invalidateTags(['NonLette', 'Chat', 'Messaggi', 'Notifica', 'Presenza']))
       },
       tokenNonValido: async () => {
         await dispatch(apiUtenti.endpoints.vediProfilo.initiate(undefined, { forceRefetch: true, subscribe: false }))

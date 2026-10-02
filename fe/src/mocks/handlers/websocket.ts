@@ -1,6 +1,7 @@
 // Finto server STOMP su /ws (FE2-11): con i dati finti il token e' finto e il backend vero lo
 // rifiuterebbe, quindi anche il WebSocket risponde da qui. Stesse regole della sezione 11:
-// CONNECT con un token finto valido, SEND solo verso /app/**, SUBSCRIBE solo alle tre code.
+// CONNECT con un token finto valido, SEND solo verso /app/**, SUBSCRIBE solo alle quattro code
+// (la quarta, /user/queue/presence, e' della card "Extra: presenza online degli amici").
 // Per far arrivare qualcosa live (chat, notifiche): pubblicaFinto(utenteId, 'messages', corpo).
 // InviaMessaggio (FE2-12) salva il messaggio nei dati finti e lo recapita a tutti e due i membri.
 import { ws } from 'msw'
@@ -11,8 +12,8 @@ import { accountDaRichiesta, inChatResponse, messaggi, trovaChat, type ChatFinta
 
 type Frame = { comando: string; header: Record<string, string>; corpo: string }
 
-type Coda = 'messages' | 'notifications' | 'errors'
-const CODE = ['/user/queue/messages', '/user/queue/notifications', '/user/queue/errors']
+type Coda = 'messages' | 'notifications' | 'errors' | 'presence'
+const CODE = ['/user/queue/messages', '/user/queue/notifications', '/user/queue/errors', '/user/queue/presence']
 
 type Connessione = {
   utenteId: Uuid
