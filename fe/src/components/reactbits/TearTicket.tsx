@@ -3,7 +3,8 @@
 // - "b" → "_" nella mappa dei ponti (variabile non usata, il nostro tsconfig la rifiuta);
 // - con defaultTorn/torn gia' true al montaggio la matrice restava visibile: l'effetto su "geo"
 //   chiama reset() dopo quello su "used" che la nasconde, quindi lì la si rinasconde;
-// - prop usedLabel al posto del testo fisso "Used" per i lettori di schermo (default invariato).
+// - prop usedLabel al posto del testo fisso "Used" per i lettori di schermo (default invariato);
+// - prop tearable (default true, invariato): false blocca solo lo strappo e tiene tilt e parallasse.
 // L'adattamento ai ticket di NoseY sta in features/eventi. Dipendenza: motion.
 
 'use client';
@@ -59,6 +60,11 @@ export interface TearTicketProps {
   stubBackground?: string;
   recenter?: boolean;
   disabled?: boolean;
+  /**
+   * NoseY: false = la matrice non si strappa (mouse, tocco, tastiera) ma il ticket resta vivo,
+   * con inclinazione 3D e parallasse; "disabled" invece spegne anche quelle e lo rende trasparente
+   */
+  tearable?: boolean;
   ariaLabel?: string;
   /** NoseY: testo annunciato ai lettori di schermo quando la matrice e' strappata ("" = nessuno) */
   usedLabel?: string;
@@ -251,6 +257,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
   stubBackground = '',
   recenter = true,
   disabled = false,
+  tearable = true,
   ariaLabel = 'Tear off the stub',
   usedLabel = 'Used',
   className = ''
@@ -560,7 +567,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
   };
   const onStubDown = (e: PointerEvent<HTMLDivElement>) => {
     const s = sim.current;
-    if (disabled || used || e.button !== 0 || s.id !== null || s.phase === 'drop') return;
+    if (disabled || !tearable || used || e.button !== 0 || s.id !== null || s.phase === 'drop') return;
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {}
@@ -629,7 +636,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
     run();
   };
   const onStubKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (disabled || used || (e.key !== 'Enter' && e.key !== ' ')) return;
+    if (disabled || !tearable || used || (e.key !== 'Enter' && e.key !== ' ')) return;
     e.preventDefault();
     if (!e.repeat) tearNow();
   };
@@ -659,6 +666,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
       data-instant={instant ? '' : undefined}
       data-grabbing={grabbing ? '' : undefined}
       data-disabled={disabled ? '' : undefined}
+      data-fixed={tearable ? undefined : ''}
       style={
         {
           '--tt-w': `${width}px`,
@@ -744,11 +752,12 @@ const TearTicket: React.FC<TearTicketProps> = ({
           <div
             ref={stubRef}
             className="pointer-events-none absolute inset-0 outline-none will-change-transform"
-            role="button"
-            tabIndex={disabled || used ? -1 : 0}
+            // NoseY: con tearable={false} la matrice non e' un comando ma un'immagine descritta
+            role={tearable ? 'button' : 'img'}
+            tabIndex={tearable ? (disabled || used ? -1 : 0) : undefined}
             aria-label={ariaLabel}
             aria-hidden={used || undefined}
-            aria-disabled={disabled || undefined}
+            aria-disabled={(tearable && disabled) || undefined}
             onPointerDown={onStubDown}
             onPointerMove={onStubMove}
             onPointerUp={onStubUp}
@@ -767,7 +776,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
               </svg>
             ) : null}
             <div
-              className="pointer-events-auto absolute inset-0 cursor-grab touch-none [background:var(--tt-stub-bg)] group-data-[grabbing]:cursor-grabbing group-data-[disabled]:cursor-default"
+              className="pointer-events-auto absolute inset-0 cursor-grab touch-none [background:var(--tt-stub-bg)] group-data-[grabbing]:cursor-grabbing group-data-[disabled]:cursor-default group-data-[fixed]:cursor-default group-data-[fixed]:touch-auto"
               style={{ clipPath: `path('${geo.stub}')` }}
             >
               <div className="absolute inset-y-0 right-0 [width:var(--tt-stub)] group-data-[orientation=vertical]:top-auto group-data-[orientation=vertical]:left-0 group-data-[orientation=vertical]:w-auto group-data-[orientation=vertical]:[height:var(--tt-stub)]">

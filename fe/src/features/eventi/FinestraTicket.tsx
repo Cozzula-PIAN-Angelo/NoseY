@@ -44,8 +44,9 @@ export function FinestraTicket({ ticket, onChiudi }: FinestraTicketProps) {
       onClick={(e) => {
         if (e.target === e.currentTarget) onChiudi()
       }}
-      // Da telefono il ticket verticale e' alto: se non ci sta la finestra scorre invece di tagliarlo
-      className="m-auto max-h-dvh w-full max-w-3xl overflow-y-auto bg-transparent p-0 text-on-surface backdrop:bg-surface-canvas/85 backdrop:backdrop-blur-md"
+      // Da telefono il ticket verticale e' alto: se non ci sta la finestra scorre invece di tagliarlo.
+      // In orizzontale mai: inclinazione 3D e ticket strappato (spostato al centro) sbordano di poco
+      className="m-auto max-h-dvh w-full max-w-3xl overflow-x-hidden overflow-y-auto bg-transparent p-0 text-on-surface backdrop:bg-surface-canvas/85 backdrop:backdrop-blur-md"
     >
       {ticket && (
         // Margini: il ticket e' inclinato di 2° e gli angoli non devono finire fuori dalla finestra

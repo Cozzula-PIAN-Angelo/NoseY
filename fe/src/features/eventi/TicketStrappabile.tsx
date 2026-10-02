@@ -70,9 +70,10 @@ export function TicketStrappabile({ ticket }: { ticket: TicketResponse }) {
       orientation={stretto ? 'vertical' : 'horizontal'}
       // Meno inclinato del default (4°): il ticket resta dentro il suo spazio
       rotate={2}
-      // Mai strappabile a mano (vedi sopra); senza questa classe "disabled" lo renderebbe trasparente
-      disabled
-      className="mx-auto data-[disabled]:opacity-100"
+      // Mai strappabile a mano (vedi sopra), ma con inclinazione 3D e parallasse al passaggio del
+      // mouse ("disabled" spegnerebbe anche quelle). Con le animazioni ridotte restano ferme.
+      tearable={false}
+      className="mx-auto"
       // Stato iniziale: chi lo mostra usa key={ticket.id}, cosi' cambiando ticket riparte da capo
       defaultTorn={usato}
       image={copertina}
@@ -80,8 +81,8 @@ export function TicketStrappabile({ ticket }: { ticket: TicketResponse }) {
       background="var(--color-surface-card)"
       color="var(--color-on-surface)"
       stubBackground="linear-gradient(160deg, var(--color-inverse-primary), var(--color-primary-container))"
-      // Per i lettori di schermo: la matrice e' un pulsante disattivato (non si strappa), che
-      // dice cosa c'e' scritto; da strappato si annuncia il timbro (quello visibile e' aria-hidden)
+      // Per i lettori di schermo: la matrice e' un'immagine che dice cosa c'e' scritto; da strappato
+      // si annuncia il timbro (quello visibile e' aria-hidden)
       ariaLabel={`Matrice d’ingresso del ${giorno(evento.dataEvento)}`}
       usedLabel={usato ? TIMBRO[evento.stato as keyof typeof TIMBRO] : ''}
       stub={
