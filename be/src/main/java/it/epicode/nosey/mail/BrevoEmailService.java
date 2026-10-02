@@ -6,11 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.thymeleaf.TemplateEngine;
 
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -32,8 +35,9 @@ public class BrevoEmailService extends EmailHtmlService {
 
 	@Autowired
 	public BrevoEmailService(TemplateEngine templateEngine, @Value("${app.mail.brevo.url}") String url,
-			@Value("${app.mail.brevo.api-key}") String apiKey, @Value("${app.mail.from}") String mittente) {
-		this(templateEngine, RestClient.builder(), url, apiKey, mittente);
+			@Value("${app.mail.brevo.api-key}") String apiKey, @Value("${app.mail.from}") String mittente,
+			@Value("${app.mail.brevo.timeout}") Duration timeout) {
+		this(templateEngine, RestClient.builder().requestFactory(requestFactory(timeout)), url, apiKey, mittente);
 	}
 
 	// Per i test: un builder legato a MockRestServiceServer.
@@ -43,6 +47,15 @@ public class BrevoEmailService extends EmailHtmlService {
 		this.restClient = builder.baseUrl(url).build();
 		this.apiKey = apiKey;
 		this.mittente = mittente;
+	}
+
+	// Timeout breve sia per la connessione sia per la risposta: se Brevo non risponde, l'invio
+	// (gia' @Async, dopo il commit) fallisce nel log invece di tenere occupato un thread.
+	private static JdkClientHttpRequestFactory requestFactory(Duration timeout) {
+		HttpClient httpClient = HttpClient.newBuilder().connectTimeout(timeout).build();
+		JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+		factory.setReadTimeout(timeout);
+		return factory;
 	}
 
 	@Override
